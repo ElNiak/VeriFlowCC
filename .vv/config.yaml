@@ -1,0 +1,200 @@
+# VeriFlowCC State Management Configuration
+version: "1.0.0"
+
+# V-Model stage transitions and gates
+transitions:
+  init:
+    allowed: [planning]
+    gate: null
+    description: "Initial state - ready to begin planning"
+
+  planning:
+    allowed: [requirements]
+    gate: planning_complete
+    criteria:
+      - requirements_documented
+      - acceptance_criteria_defined
+      - user_story_complete
+    description: "Planning and decomposition phase"
+
+  requirements:
+    allowed: [design, planning]  # Can go back for clarification
+    gate: requirements_verified
+    criteria:
+      - requirements_verified
+      - INVEST_criteria_met
+      - SMART_criteria_met
+    description: "Requirements analysis and verification"
+
+  design:
+    allowed: [coding, requirements]
+    gate: design_approved
+    criteria:
+      - architecture_documented
+      - interfaces_defined
+      - design_reviewed
+    description: "Architecture and design specification"
+
+  coding:
+    allowed: [testing, design]
+    gate: code_complete
+    criteria:
+      - code_complete
+      - code_compiles
+      - static_analysis_passed
+    description: "Implementation phase"
+
+  testing:
+    allowed: [validation, coding]  # Back to coding for fixes
+    gate: tests_passed
+    criteria:
+      - unit_tests_passed
+      - integration_tests_passed
+      - coverage_threshold_met
+    description: "Testing and quality assurance"
+
+  validation:
+    allowed: [complete, testing]
+    gate: acceptance_validated
+    criteria:
+      - acceptance_criteria_met
+      - stakeholder_approval
+      - ready_for_production
+    description: "Final validation and acceptance"
+
+  complete:
+    allowed: []  # Terminal state
+    gate: null
+    description: "Sprint complete and delivered"
+
+# Gate validation settings
+gates:
+  planning_complete:
+    validator: validate_planning_gate
+    required_artifacts:
+      - requirements.md
+      - user_stories.yaml
+    bypass_allowed: false
+
+  requirements_verified:
+    validator: validate_requirements_gate
+    required_artifacts:
+      - verified_requirements.json
+    bypass_allowed: false
+
+  design_approved:
+    validator: validate_design_gate
+    required_artifacts:
+      - architecture.md
+      - interfaces.yaml
+    bypass_allowed: false
+
+  code_complete:
+    validator: validate_coding_gate
+    required_artifacts:
+      - implementation.diff
+    bypass_allowed: false
+
+  tests_passed:
+    validator: validate_testing_gate
+    required_artifacts:
+      - test_report.json
+    bypass_allowed: false
+    coverage_threshold: 80
+
+  acceptance_validated:
+    validator: validate_acceptance_gate
+    required_artifacts:
+      - validation_report.md
+    bypass_allowed: false
+    triggers:
+      - update_changelog
+      - create_release_tag
+
+# Agent assignments per stage
+stage_agents:
+  planning:
+    primary: planner
+    model: opus-4.1
+    helpers: [context-fetcher]
+
+  requirements:
+    primary: requirements-analyst
+    model: opus-4.1
+    helpers: [context-fetcher]
+
+  design:
+    primary: architect-designer
+    model: sonnet-4
+    helpers: [context-fetcher]
+
+  coding:
+    primary: coder-implementer
+    model: sonnet-4
+    helpers: [context-fetcher, git-workflow]
+
+  testing:
+    primary: unit-test-writer
+    model: sonnet-4
+    helpers: [test-runner, context-fetcher]
+
+  validation:
+    primary: acceptance-validator
+    model: opus-4.1
+    helpers: [git-workflow, test-runner]
+
+# Checkpointing settings
+checkpointing:
+  automatic: true
+  on_gate_pass: true
+  on_stage_transition: true
+  use_git_tags: true
+  tag_format: "sprint-{sprint_id}-{stage}-{status}"
+
+# Rollback settings
+rollback:
+  enabled: true
+  require_confirmation: true
+  preserve_working_changes: true
+  create_backup_branch: true
+
+# File paths
+paths:
+  state_file: ".vv/state.json"
+  sprint_root: "sprints"
+  artifacts_dir: "artefacts"
+  decisions_log: "VV_DECISIONS.md"
+  memory_root: ".memory"
+
+# Performance settings
+performance:
+  state_lock_timeout: 5000  # ms
+  max_artifact_size: 10485760  # 10MB
+  cache_ttl: 3600  # seconds
+
+# Logging
+logging:
+  level: INFO
+  file: ".vv/verifflowcc.log"
+  rotate_size: 10485760  # 10MB
+  rotate_count: 5
+
+# Hook integration
+hooks:
+  enabled: true
+  enforcement_level: strict  # strict, warn, or disabled
+  timeout: 100  # ms per hook
+
+# Memory hierarchy settings
+memory:
+  enabled: true
+  token_budget:
+    default: 50000
+    planner: 60000
+    coder: 40000
+    tester: 40000
+  allocation:
+    project: 0.1
+    sprint: 0.2
+    stage: 0.3
+    agent: 0.4

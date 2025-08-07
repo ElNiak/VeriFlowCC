@@ -1,28 +1,28 @@
 # Agile V-Model <!-- docs/agile_v_model.md -->
 
-The V-Model is a software-development method often found in areas with high requirements on safety and security, which are common in highly regulated areas.  
+The V-Model is a software-development method often found in areas with high requirements on safety and security, which are common in highly regulated areas.
 Combining the traditional V-Model with a disciplined agile approach promises to allow as much agility as possible, while addressing the issues often found in AIoT initiatives: complex dependencies, different speeds of development, and the “first-time-right” requirements of those parts of the system which cannot be updated after the Start of Production (SOP).
 
 ![Agile V-Model overview](https://aiotplaybook.org/images/thumb/9/94/1.0_Agile_V-Model.png/2000px-1.0_Agile_V-Model.png)
 
 ## Contents
-- [Recap: The V-Model](#recap-the-v-model)  
-- [Evolution: The Agile V-Model](#evolution-the-agile-v-model)  
-- [The ACME:Vac vacuum-robot example](#the-acmevac-vacuum-robot-example)  
-- [Applying the Agile V-Model to ACME:Vac](#applying-the-agile-v-model-to-acmevac)  
-  - [Sprint 0](#sprint-0)  
-  - [Sprint n](#sprint-n)  
-  - [Sprint n+1](#sprint-n1)  
-  - [Summary](#summary)  
-- [Decoupling Development](#decoupling-development)  
-- [Stakeholders and Collaboration](#stakeholders-and-collaboration)  
-- [Agile V-Model and AIoT](#agile-v-model-and-aiot)  
-- [Issues and Concerns](#issues-and-concerns)  
+- [Recap: The V-Model](#recap-the-v-model)
+- [Evolution: The Agile V-Model](#evolution-the-agile-v-model)
+- [The ACME:Vac vacuum-robot example](#the-acmevac-vacuum-robot-example)
+- [Applying the Agile V-Model to ACME:Vac](#applying-the-agile-v-model-to-acmevac)
+  - [Sprint 0](#sprint-0)
+  - [Sprint n](#sprint-n)
+  - [Sprint n+1](#sprint-n1)
+  - [Summary](#summary)
+- [Decoupling Development](#decoupling-development)
+- [Stakeholders and Collaboration](#stakeholders-and-collaboration)
+- [Agile V-Model and AIoT](#agile-v-model-and-aiot)
+- [Issues and Concerns](#issues-and-concerns)
 - [Expert Opinion](#expert-opinion)
 
 ## Recap: The V-Model
 
-The V-Model is a systems-development life-cycle which has verification and validation “built in”. It is often used for the development of mission-critical systems (automotive, aviation, energy, military) and tends to be used in hardware-centric domains.  
+The V-Model is a systems-development life-cycle which has verification and validation “built in”. It is often used for the development of mission-critical systems (automotive, aviation, energy, military) and tends to be used in hardware-centric domains.
 Not surprisingly, the V-Model uses a V-shaped visual representation:
 
 ![Classic V-Model](https://aiotplaybook.org/images/thumb/9/9c/2.6-VModel.png/900px-2.6-VModel.png)
@@ -31,20 +31,20 @@ When applying the V-Model to AIoT, additional dimensions—hardware, software, A
 
 ## Evolution: The Agile V-Model
 
-The AIoT framework aims to strike a good balance between the agile software world and the less-agile world of safety-critical, complex AIoT product development. …  
+The AIoT framework aims to strike a good balance between the agile software world and the less-agile world of safety-critical, complex AIoT product development. …
 
 ![Agile V-Model detail](https://aiotplaybook.org/images/thumb/c/c2/2.1-AgileV.png/800px-2.1-AgileV.png)
 
 There are two options to implement this:
 
-- Each sprint becomes a complete V …  
+- Each sprint becomes a complete V …
 - The agile schedule introduces dedicated integration sprints …
 
 *(pros & cons list copied verbatim)*
 
 ## The ACME:Vac vacuum-robot example
 
-To illustrate the Agile V-Model, the realistic yet fictitious **ACME:Vac** example is introduced. …  
+To illustrate the Agile V-Model, the realistic yet fictitious **ACME:Vac** example is introduced. …
 
 ![Robot vacuum cleaner example](https://aiotplaybook.org/images/thumb/1/13/0.2.1_Robo_Vacuum.png/700px-0.2.1_Robo_Vacuum.png)
 
@@ -70,15 +70,15 @@ Many Scrum Masters start with a “Sprint 0” preparation sprint. In ACME:Vac t
 
 ![Agile V-Model – sprint n](https://aiotplaybook.org/images/thumb/6/69/2.6-AgileVModelBasic.png/1000px-2.6-AgileVModelBasic.png)
 
-1. **Story Map & Definition of Done (DoD)** – …  
-2. **Component Architecture** – …  
-3. **User Stories & Acceptance Criteria** – …  
-4. **Mapping** – …  
-5. **Coding / Doing** – …  
-6. **Component Integration** – …  
-7. **Verification** – …  
-8. **System Integration** – …  
-9. **Validation** – …  
+1. **Story Map & Definition of Done (DoD)** – …
+2. **Component Architecture** – …
+3. **User Stories & Acceptance Criteria** – …
+4. **Mapping** – …
+5. **Coding / Doing** – …
+6. **Component Integration** – …
+7. **Verification** – …
+8. **System Integration** – …
+9. **Validation** – …
 10. **Production** – …
 
 #### User Story & Acceptance Criteria
@@ -138,4 +138,3 @@ Sebastian Helbeck (VP & Platform Owner Power Tools Drive Train, Bosch Power Tool
 ---
 
 > *Page last edited on 27 June 2022 at 18:40.*
-

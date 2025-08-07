@@ -10,9 +10,9 @@ When “Verification flow” meets Claude’s intelligence for seamless V&amp;V 
 
 [ ] **Enforced V-Model Stages:** The system **must enforce sequential phases** – Planning, Design, Coding, Testing, and Validation – for each feature or user story. Progression is gated: *e.g.* code generation cannot begin until requirements and design are documented, and testing must succeed before validation completes. Skipping or reordering stages is disallowed without explicit user action (rollback or restart).
 
-[ ] **Multi-Agent Orchestration:** Utilize a **hierarchical multi-agent approach**. 
+[ ] **Multi-Agent Orchestration:** Utilize a **hierarchical multi-agent approach**.
     - A **Planner agent** (Claude Opus 4.1) orchestrates high-level strategy and planning, the Planner decomposes goals and delegates to sub-agents via a structured workflow.
-    - while specialized **Worker sub-agents** (Claude Sonnet 4) execute tasks for each stage (design, coding, testing, review). 
+    - while specialized **Worker sub-agents** (Claude Sonnet 4) execute tasks for each stage (design, coding, testing, review).
 
 [ ] **Claude Code Integration:** Leverage the Claude Code SDK and commands for agent actions. The agents should be able to **autonomously use Claude Code’s capabilities** – reading/writing files, editing code, running tests/shell commands, managing git – via **slash commands or MCP tools**. For example, the coding agent can apply code edits or run `npm test` through an MCP shell tool, with output fed back into the workflow.
 

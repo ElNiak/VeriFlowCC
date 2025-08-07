@@ -1,0 +1,50 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#ff6b6b', 'primaryTextColor':'#fff', 'primaryBorderColor':'#ff4757', 'lineColor':'#5f86c9', 'secondaryColor':'#4ecdc4', 'tertiaryColor':'#95e1d3'}}}%%
+
+C4Container
+    title Container diagram for VeriFlowCC
+
+    Person(developer, "Developer", "Software developer")
+
+    Container_Boundary(verifflowcc, "VeriFlowCC System") {
+        Container(cli, "CLI Interface", "Python/Typer", "Command-line interface for user interaction")
+        Container(orchestrator, "Workflow Orchestrator", "Python", "Manages V-Model pipeline execution and stage transitions")
+        Container(planner, "Planner Agent", "Python", "Strategic planning with Opus 4.1")
+        Container(workers, "Worker Agents", "Python", "Design, Coding, Testing agents using Sonnet 4")
+        Container(validator, "Validation Agent", "Python", "Final validation with Opus 4.1")
+        Container(context_mgr, "Context Manager", "Python", "Manages prompts, memory, and context isolation")
+        Container(file_mgr, "File Manager", "Python", "Handles file I/O and git operations")
+        Container(tool_interface, "Tool Interface", "Python", "MCP tool abstractions")
+        Container(memory, "Memory Store", "CLAUDE.md", "Persistent project memory and context")
+    }
+
+    System_Ext(claude_opus, "Claude Opus 4.1", "Strategic AI model")
+    System_Ext(claude_sonnet, "Claude Sonnet 4", "Tactical AI model")
+    System_Ext(filesystem, "File System", "Local project files")
+    System_Ext(git, "Git Repository", "Version control")
+    System_Ext(mcp, "MCP Servers", "External tools")
+
+    Rel(developer, cli, "Executes commands", "Terminal")
+    Rel(cli, orchestrator, "Initiates workflow", "Function calls")
+    Rel(orchestrator, planner, "Requests plan", "Internal API")
+    Rel(orchestrator, workers, "Delegates tasks", "Internal API")
+    Rel(orchestrator, validator, "Requests validation", "Internal API")
+
+    Rel(planner, claude_opus, "Sends prompts", "HTTPS")
+    Rel(workers, claude_sonnet, "Sends prompts", "HTTPS")
+    Rel(validator, claude_opus, "Sends prompts", "HTTPS")
+
+    Rel(planner, context_mgr, "Gets context", "Internal")
+    Rel(workers, context_mgr, "Gets context", "Internal")
+    Rel(validator, context_mgr, "Gets context", "Internal")
+
+    Rel(context_mgr, memory, "Reads/Writes", "File I/O")
+    Rel(file_mgr, filesystem, "Reads/Writes", "OS API")
+    Rel(file_mgr, git, "Checkpoints", "Git commands")
+
+    Rel(workers, file_mgr, "Code changes", "Internal")
+    Rel(workers, tool_interface, "Tool requests", "Internal")
+    Rel(tool_interface, mcp, "Invokes", "MCP Protocol")
+
+    Rel(orchestrator, file_mgr, "Checkpoints", "Internal")
+
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="2")
