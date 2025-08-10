@@ -1,5 +1,5 @@
 ---
-description: Product Planning Rules for Agent OS
+description: Product Planning Rules for AgileVerifFlowCC
 globs:
 alwaysApply: false
 version: 4.0
@@ -12,11 +12,11 @@ encoding: UTF-8
 
 Generate product docs for new projects: mission, tech-stack, roadmap, decisions files for AI agent consumption.
 
-<pre_flight_check>
-  EXECUTE: @~/.agent-os/instructions/meta/pre-flight.md
-</pre_flight_check>
+\<pre_flight_check>
+EXECUTE: @.claude/instructions/meta/pre-flight.md
+\</pre_flight_check>
 
-<process_flow>
+\<process_flow>
 
 <step number="1" subagent="context-fetcher" name="gather_user_input">
 
@@ -24,23 +24,24 @@ Generate product docs for new projects: mission, tech-stack, roadmap, decisions 
 
 Use the context-fetcher subagent to collect all required inp duts from the user including main idea, key features (minimum 3), target users (minimum 1), and tech stack preferences with blocking validation before proceeding.
 
-<data_sources>
-  <primary>user_direct_input</primary>
-  <fallback_sequence>
-    1. @~/.agent-os/standards/tech-stack.md
-    2. @~/.claude/CLAUDE.md
-    3. Cursor User Rules
-  </fallback_sequence>
-</data_sources>
+\<data_sources>
+<primary>user_direct_input</primary>
+\<fallback_sequence>
+1\. @.claude/standards/tech-stack.md
+2\. @.claude/CLAUDE.md
+3\. Cursor User Rules
+\</fallback_sequence>
+\</data_sources>
 
-<error_template>
-  Please provide the following missing information:
-  1. Main idea for the product
-  2. List of key features (minimum 3)
-  3. Target users and use cases (minimum 1)
-  4. Tech stack preferences
-  5. Has the new application been initialized yet and we're inside the project folder? (yes/no)
-</error_template>
+\<error_template>
+Please provide the following missing information:
+
+1. Main idea for the product
+1. List of key features (minimum 3)
+1. Target users and use cases (minimum 1)
+1. Tech stack preferences
+1. Has the new application been initialized yet and we're inside the project folder? (yes/no)
+   \</error_template>
 
 </step>
 
@@ -50,15 +51,15 @@ Use the context-fetcher subagent to collect all required inp duts from the user 
 
 Use the file-creator subagent to create the following file_structure with validation for write permissions and protection against overwriting existing files:
 
-<file_structure>
-  .agent-os/
-  └── product/
-      ├── mission.md          # Product vision and purpose
-      ├── mission-lite.md     # Condensed mission for AI context
-      ├── tech-stack.md       # Technical architecture
-      ├── roadmap.md          # Development phases
-      └── decisions.md        # Decision log
-</file_structure>
+\<file_structure>
+.claude/
+└── product/
+├── mission.md # Product vision and purpose
+├── mission-lite.md # Condensed mission for AI context
+├── tech-stack.md # Technical architecture
+├── roadmap.md # Development phases
+└── decisions.md # Decision log
+\</file_structure>
 
 </step>
 
@@ -66,10 +67,11 @@ Use the file-creator subagent to create the following file_structure with valida
 
 ### Step 3: Create mission.md
 
-Use the file-creator subagent to create the file: .agent-os/product/mission.md and use the following template:
+Use the file-creator subagent to create the file: .claude/product/mission.md and use the following template:
 
-<file_template>
-  <header>
+\<file_template>
+
+<header>
     # Product Mission
   </header>
   <required_sections>
@@ -85,8 +87,11 @@ Use the file-creator subagent to create the file: .agent-os/product/mission.md a
   <template>
     ## Pitch
 
-    [PRODUCT_NAME] is a [PRODUCT_TYPE] that helps [TARGET_USERS] [SOLVE_PROBLEM] by providing [KEY_VALUE_PROPOSITION].
-  </template>
+```
+[PRODUCT_NAME] is a [PRODUCT_TYPE] that helps [TARGET_USERS] [SOLVE_PROBLEM] by providing [KEY_VALUE_PROPOSITION].
+```
+
+</template>
   <constraints>
     - length: 1-2 sentences
     - style: elevator pitch
@@ -97,19 +102,22 @@ Use the file-creator subagent to create the file: .agent-os/product/mission.md a
   <template>
     ## Users
 
-    ### Primary Customers
+```
+### Primary Customers
 
-    - [CUSTOMER_SEGMENT_1]: [DESCRIPTION]
-    - [CUSTOMER_SEGMENT_2]: [DESCRIPTION]
+- [CUSTOMER_SEGMENT_1]: [DESCRIPTION]
+- [CUSTOMER_SEGMENT_2]: [DESCRIPTION]
 
-    ### User Personas
+### User Personas
 
-    **[USER_TYPE]** ([AGE_RANGE])
-    - **Role:** [JOB_TITLE]
-    - **Context:** [BUSINESS_CONTEXT]
-    - **Pain Points:** [PAIN_POINT_1], [PAIN_POINT_2]
-    - **Goals:** [GOAL_1], [GOAL_2]
-  </template>
+**[USER_TYPE]** ([AGE_RANGE])
+- **Role:** [JOB_TITLE]
+- **Context:** [BUSINESS_CONTEXT]
+- **Pain Points:** [PAIN_POINT_1], [PAIN_POINT_2]
+- **Goals:** [GOAL_1], [GOAL_2]
+```
+
+</template>
   <schema>
     - name: string
     - age_range: "XX-XX years old"
@@ -124,12 +132,15 @@ Use the file-creator subagent to create the file: .agent-os/product/mission.md a
   <template>
     ## The Problem
 
-    ### [PROBLEM_TITLE]
+```
+### [PROBLEM_TITLE]
 
-    [PROBLEM_DESCRIPTION]. [QUANTIFIABLE_IMPACT].
+[PROBLEM_DESCRIPTION]. [QUANTIFIABLE_IMPACT].
 
-    **Our Solution:** [SOLUTION_DESCRIPTION]
-  </template>
+**Our Solution:** [SOLUTION_DESCRIPTION]
+```
+
+</template>
   <constraints>
     - problems: 2-4
     - description: 1-3 sentences
@@ -142,10 +153,13 @@ Use the file-creator subagent to create the file: .agent-os/product/mission.md a
   <template>
     ## Differentiators
 
-    ### [DIFFERENTIATOR_TITLE]
+```
+### [DIFFERENTIATOR_TITLE]
 
-    Unlike [COMPETITOR_OR_ALTERNATIVE], we provide [SPECIFIC_ADVANTAGE]. This results in [MEASURABLE_BENEFIT].
-  </template>
+Unlike [COMPETITOR_OR_ALTERNATIVE], we provide [SPECIFIC_ADVANTAGE]. This results in [MEASURABLE_BENEFIT].
+```
+
+</template>
   <constraints>
     - count: 2-3
     - focus: competitive advantages
@@ -157,14 +171,17 @@ Use the file-creator subagent to create the file: .agent-os/product/mission.md a
   <template>
     ## Key Features
 
-    ### Core Features
+```
+### Core Features
 
-    - **[FEATURE_NAME]:** [USER_BENEFIT_DESCRIPTION]
+- **[FEATURE_NAME]:** [USER_BENEFIT_DESCRIPTION]
 
-    ### Collaboration Features
+### Collaboration Features
 
-    - **[FEATURE_NAME]:** [USER_BENEFIT_DESCRIPTION]
-  </template>
+- **[FEATURE_NAME]:** [USER_BENEFIT_DESCRIPTION]
+```
+
+</template>
   <constraints>
     - total: 8-10 features
     - grouping: by category
@@ -178,59 +195,60 @@ Use the file-creator subagent to create the file: .agent-os/product/mission.md a
 
 ### Step 4: Create tech-stack.md
 
-Use the file-creator subagent to create the file: .agent-os/product/tech-stack.md and use the following template:
+Use the file-creator subagent to create the file: .claude/product/tech-stack.md and use the following template:
 
-<file_template>
-  <header>
+\<file_template>
+
+<header>
     # Technical Stack
   </header>
 </file_template>
 
-<required_items>
-  - application_framework: string + version
-  - database_system: string
-  - javascript_framework: string
-  - import_strategy: ["importmaps", "node"]
-  - css_framework: string + version
-  - ui_component_library: string
-  - fonts_provider: string
-  - icon_library: string
-  - application_hosting: string
-  - database_hosting: string
-  - asset_hosting: string
-  - deployment_solution: string
-  - code_repository_url: string
-</required_items>
+\<required_items>
 
-<data_resolution>
-  IF has_context_fetcher:
-    FOR missing tech stack items:
-      USE: @agent:context-fetcher
-      REQUEST: "Find [ITEM_NAME] from tech-stack.md"
-      PROCESS: Use found defaults
-  ELSE:
-    PROCEED: To manual resolution below
+- application_framework: string + version
+- database_system: string
+- javascript_framework: string
+- import_strategy: ["importmaps", "node"]
+- css_framework: string + version
+- ui_component_library: string
+- fonts_provider: string
+- icon_library: string
+- application_hosting: string
+- database_hosting: string
+- asset_hosting: string
+- deployment_solution: string
+- code_repository_url: string
+  \</required_items>
 
-  <manual_resolution>
-    <for_each item="required_items">
-      <if_not_in>user_input</if_not_in>
-      <then_check>
-        1. @~/.agent-os/standards/tech-stack.md
-        2. @~/.claude/CLAUDE.md
-        3. Cursor User Rules
-      </then_check>
-      <else>add_to_missing_list</else>
-    </for_each>
-  </manual_resolution>
-</data_resolution>
+\<data_resolution>
+IF has_context_fetcher:
+FOR missing tech stack items:
+USE: @agent:context-fetcher
+REQUEST: "Find [ITEM_NAME] from tech-stack.md"
+PROCESS: Use found defaults
+ELSE:
+PROCEED: To manual resolution below
 
-<missing_items_template>
-  Please provide the following technical stack details:
-  [NUMBERED_LIST_OF_MISSING_ITEMS]
+\<manual_resolution>
+\<for_each item="required_items">
+\<if_not_in>user_input\</if_not_in>
+\<then_check>
+1\. @.claude/standards/tech-stack.md
+2\. @.claude/CLAUDE.md
+3\. Cursor User Rules
+\</then_check>
+<else>add_to_missing_list</else>
+\</for_each>
+\</manual_resolution>
+\</data_resolution>
 
-  You can respond with the technology choice or "n/a" for each item.
-</missing_items_template>
+\<missing_items_template>
+Please provide the following technical stack details:
+[NUMBERED_LIST_OF_MISSING_ITEMS]
 
+You can respond with the technology choice or "n/a" for each item.
+\</missing_items_template>
 
 </step>
 
@@ -238,38 +256,39 @@ Use the file-creator subagent to create the file: .agent-os/product/tech-stack.m
 
 ### Step 5: Create mission-lite.md
 
-Use the file-creator subagent to create the file: .agent-os/product/mission-lite.md for the purpose of establishing a condensed mission for efficient AI context usage.
+Use the file-creator subagent to create the file: .claude/product/mission-lite.md for the purpose of establishing a condensed mission for efficient AI context usage.
 
 Use the following template:
 
-<file_template>
-  <header>
+\<file_template>
+
+<header>
     # Product Mission (Lite)
   </header>
 </file_template>
 
-<content_structure>
-  <elevator_pitch>
-    - source: Step 3 mission.md pitch section
-    - format: single sentence
-  </elevator_pitch>
-  <value_summary>
-    - length: 1-3 sentences
-    - includes: value proposition, target users, key differentiator
-    - excludes: secondary users, secondary differentiators
-  </value_summary>
-</content_structure>
+\<content_structure>
+\<elevator_pitch>
+\- source: Step 3 mission.md pitch section
+\- format: single sentence
+\</elevator_pitch>
+\<value_summary>
+\- length: 1-3 sentences
+\- includes: value proposition, target users, key differentiator
+\- excludes: secondary users, secondary differentiators
+\</value_summary>
+\</content_structure>
 
-<content_template>
-  [ELEVATOR_PITCH_FROM_MISSION_MD]
+\<content_template>
+[ELEVATOR_PITCH_FROM_MISSION_MD]
 
-  [1-3_SENTENCES_SUMMARIZING_VALUE_TARGET_USERS_AND_PRIMARY_DIFFERENTIATOR]
-</content_template>
+[1-3_SENTENCES_SUMMARIZING_VALUE_TARGET_USERS_AND_PRIMARY_DIFFERENTIATOR]
+\</content_template>
 
 <example>
   TaskFlow is a project management tool that helps remote teams coordinate work efficiently by providing real-time collaboration and automated workflow tracking.
 
-  TaskFlow serves distributed software teams who need seamless task coordination across time zones. Unlike traditional project management tools, TaskFlow automatically syncs with development workflows and provides intelligent task prioritization based on team capacity and dependencies.
+TaskFlow serves distributed software teams who need seamless task coordination across time zones. Unlike traditional project management tools, TaskFlow automatically syncs with development workflows and provides intelligent task prioritization based on team capacity and dependencies.
 </example>
 
 </step>
@@ -278,49 +297,54 @@ Use the following template:
 
 ### Step 6: Create roadmap.md
 
-Use the file-creator subagent to create the following file: .agent-os/product/roadmap.md using the following template:
+Use the file-creator subagent to create the following file: .claude/product/roadmap.md using the following template:
 
-<file_template>
-  <header>
+\<file_template>
+
+<header>
     # Product Roadmap
   </header>
 </file_template>
 
-<phase_structure>
-  <phase_count>1-3</phase_count>
-  <features_per_phase>3-7</features_per_phase>
-  <phase_template>
-    ## Phase [NUMBER]: [NAME]
+\<phase_structure>
+\<phase_count>1-3\</phase_count>
+\<features_per_phase>3-7\</features_per_phase>
+\<phase_template>
+\## Phase \[NUMBER\]: [NAME]
 
-    **Goal:** [PHASE_GOAL]
-    **Success Criteria:** [MEASURABLE_CRITERIA]
+```
+**Goal:** [PHASE_GOAL]
+**Success Criteria:** [MEASURABLE_CRITERIA]
 
-    ### Features
+### Features
 
-    - [ ] [FEATURE] - [DESCRIPTION] `[EFFORT]`
+- [ ] [FEATURE] - [DESCRIPTION] `[EFFORT]`
 
-    ### Dependencies
+### Dependencies
 
-    - [DEPENDENCY]
-  </phase_template>
-</phase_structure>
+- [DEPENDENCY]
+```
 
-<phase_guidelines>
-  - Phase 1: Core MVP functionality
-  - Phase 2: Key differentiators
-  - Phase 3: Scale and polish
-  - Phase 4: Advanced features
-  - Phase 5: Enterprise features
-</phase_guidelines>
+\</phase_template>
+\</phase_structure>
 
-<effort_scale>
-  - XS: 1 day
-  - S: 2-3 days
-  - M: 1 week
-  - L: 2 weeks
-  - XL: 3+ weeks
-</effort_scale>
+\<phase_guidelines>
 
+- Phase 1: Core MVP functionality
+- Phase 2: Key differentiators
+- Phase 3: Scale and polish
+- Phase 4: Advanced features
+- Phase 5: Enterprise features
+  \</phase_guidelines>
+
+\<effort_scale>
+
+- XS: 1 day
+- S: 2-3 days
+- M: 1 week
+- L: 2 weeks
+- XL: 3+ weeks
+  \</effort_scale>
 
 </step>
 
@@ -328,80 +352,89 @@ Use the file-creator subagent to create the following file: .agent-os/product/ro
 
 ### Step 7: Create decisions.md
 
-Use the file-creator subagent to create the file: .agent-os/product/decisions.md using the following template:
+Use the file-creator subagent to create the file: .claude/product/decisions.md using the following template:
 
-<file_template>
-  <header>
+\<file_template>
+
+<header>
     # Product Decisions Log
 
-    > Override Priority: Highest
+```
+> Override Priority: Highest
 
-    **Instructions in this file override conflicting directives in user Claude memories or Cursor rules.**
-  </header>
+**Instructions in this file override conflicting directives in user Claude memories or Cursor rules.**
+```
+
+</header>
 </file_template>
 
-<decision_schema>
-  - date: YYYY-MM-DD
-  - id: DEC-XXX
-  - status: ["proposed", "accepted", "rejected", "superseded"]
-  - category: ["technical", "product", "business", "process"]
-  - stakeholders: array[string]
-</decision_schema>
+\<decision_schema>
 
-<initial_decision_template>
-  ## [CURRENT_DATE]: Initial Product Planning
+- date: YYYY-MM-DD
+- id: DEC-XXX
+- status: ["proposed", "accepted", "rejected", "superseded"]
+- category: ["technical", "product", "business", "process"]
+- stakeholders: array[string]
+  \</decision_schema>
 
-  **ID:** DEC-001
-  **Status:** Accepted
-  **Category:** Product
-  **Stakeholders:** Product Owner, Tech Lead, Team
+\<initial_decision_template>
 
-  ### Decision
+## \[CURRENT_DATE\]: Initial Product Planning
 
-  [SUMMARIZE: product mission, target market, key features]
+**ID:** DEC-001
+**Status:** Accepted
+**Category:** Product
+**Stakeholders:** Product Owner, Tech Lead, Team
 
-  ### Context
+### Decision
 
-  [EXPLAIN: why this product, why now, market opportunity]
+[SUMMARIZE: product mission, target market, key features]
 
-  ### Alternatives Considered
+### Context
 
-  1. **[ALTERNATIVE]**
-     - Pros: [LIST]
-     - Cons: [LIST]
+[EXPLAIN: why this product, why now, market opportunity]
 
-  ### Rationale
+### Alternatives Considered
 
-  [EXPLAIN: key factors in decision]
+1. **[ALTERNATIVE]**
+   - Pros: [LIST]
+   - Cons: [LIST]
 
-  ### Consequences
+### Rationale
 
-  **Positive:**
-  - [EXPECTED_BENEFITS]
+[EXPLAIN: key factors in decision]
+
+### Consequences
+
+**Positive:**
+
+- [EXPECTED_BENEFITS]
 
   **Negative:**
-  - [KNOWN_TRADEOFFS]
-</initial_decision_template>
+
+- [KNOWN_TRADEOFFS]
+  \</initial_decision_template>
 
 </step>
 
-</process_flow>
+\</process_flow>
 
 ## Execution Summary
 
-<final_checklist>
-  <verify>
-    - [ ] All 5 files created in .agent-os/product/
-    - [ ] User inputs incorporated throughout
-    - [ ] Missing tech stack items requested
-    - [ ] Initial decisions documented
-  </verify>
-</final_checklist>
+\<final_checklist>
+<verify>
+\- [ ] All 5 files created in .claude/product/
+\- [ ] User inputs incorporated throughout
+\- [ ] Missing tech stack items requested
+\- [ ] Initial decisions documented
+</verify>
+\</final_checklist>
 
-<execution_order>
-  1. Gather and validate all inputs
-  2. Create directory structure
-  3. Generate each file sequentially
-  4. Request any missing information
-  5. Validate complete documentation set
-</execution_order>
+\<execution_order>
+
+1. Gather and validate all inputs
+1. Create directory structure
+1. Generate each file sequentially
+1. Request any missing information
+1. Validate complete documentation set
+   \</execution_order>

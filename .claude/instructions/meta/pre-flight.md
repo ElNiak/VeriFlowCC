@@ -1,5 +1,5 @@
 ---
-description: Common Pre-Flight Steps for Agent OS Instructions
+description: Common Pre-Flight Steps for AgileVerifFlowCC Instructions
 globs:
 alwaysApply: false
 version: 1.0

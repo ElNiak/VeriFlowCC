@@ -1,33 +1,93 @@
+# =============================================================================
+# ⚙️ GLOBAL PRE-COMMIT CONFIGURATION
+# =============================================================================
+
 default_language_version:
   python: python3.10
+
+fast_fail: true
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
       - id: check-yaml
+        name: "YAML · Check YAML files"
       - id: end-of-file-fixer
+        name: "End of File · Fix end of file"
       - id: trailing-whitespace
+        name: "Whitespace · Remove trailing whitespace"
       - id: check-added-large-files
+        name: "Large Files · Check for large files"
+        args: [--maxkb=1024]
       - id: check-merge-conflict
+        name: "Merge Conflict · Check for merge conflicts"
       - id: check-toml
+        name: "TOML · Check TOML files"
       - id: debug-statements
+        name: "Debug Statements · Remove debug statements"
+
+  # =============================================================================
+  # 🐍 PYTHON SPECIFIC HOOKS
+  # =============================================================================
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.5.0
     hooks:
       - id: ruff
+        name: "🐍 python · Lint with Ruff"
         args: [--fix]
       - id: ruff-format
+        name: "🐍 python · Format with Ruff"
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.10.0
     hooks:
       - id: mypy
+        name: "🐍 python · Type check with Mypy"
         additional_dependencies: [types-pyyaml, types-jinja2]
         args: [--ignore-missing-imports, --no-strict-optional]
+
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: v0.23
+    hooks:
+      - id: validate-pyproject
+        name: "🐍 python · Validate pyproject.toml"
+        additional_dependencies: ["validate-pyproject-schema-store[all]"]
+
+
+# =============================================================================
+# 🟨 JAVASCRIPT SPECIFIC HOOKS
+# =============================================================================
+
+  - repo: https://github.com/biomejs/pre-commit
+    rev: "v0.6.1"
+    hooks:
+      - id: biome-check
+        name: "🟨 javascript · Lint, format, and safe fixes with Biome"
+        additional_dependencies: ["@biomejs/biome@1.9.4"]
+
+# =============================================================================
+# 🟩 SECURITY SPECIFIC HOOKS
+# =============================================================================
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.18.0
     hooks:
       - id: gitleaks
+        name: "Gitleaks · Scan for secrets in git history"
+
+# =============================================================================
+# 📝 MARKDOWN SPECIFIC HOOKS
+# =============================================================================
+
+  - repo: https://github.com/hukkin/mdformat
+    rev: 0.7.21
+    hooks:
+      - id: mdformat
+        name: "📝 markdown · Format markdown"
+        additional_dependencies:
+          - mdformat-gfm          # GitHub-Flavored Markdown support
+          - mdformat-ruff         # Python code formatting
+          - mdformat-frontmatter  # YAML frontmatter support
+          - ruff                  # Required for mdformat-ruff

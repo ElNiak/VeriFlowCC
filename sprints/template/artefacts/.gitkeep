@@ -1,7 +1,0 @@
-# This directory stores stage artifacts for the sprint
-# Files are added here as each stage completes:
-# - planning/requirements.md
-# - design/architecture.md
-# - coding/implementation.diff
-# - testing/test_report.json
-# - validation/acceptance_report.md

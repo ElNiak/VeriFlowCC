@@ -1,0 +1,1 @@
+Spawn then @agent-planner for the Implementation v&v phase, it must coordinate and spawn sequentially the next related agents for sprint $SPRINT_ID. Ultra think and double-check the requirements and design before proceeding.
