@@ -68,6 +68,15 @@ def init(
         "-f",
         help="Force reinitialize even if project already exists",
     ),
+    agilevv_dir_name: str = typer.Option(
+        ".agilevv",
+        "--dir",
+        "-d",
+        help=(
+            "Directory name for Agile V-Model project structure "
+            "(Note: this will be created in the current working directory)"
+        ),
+    ),
 ) -> None:
     """
     Initialize a new VeriFlowCC project.
@@ -76,7 +85,7 @@ def init(
     initial state, and template documents for backlog and architecture.
     """
     project_dir = Path.cwd()
-    agilevv_dir = project_dir / ".agilevv"
+    agilevv_dir = project_dir / agilevv_dir_name
 
     # Check if already initialized
     if agilevv_dir.exists() and not force:
@@ -90,6 +99,7 @@ def init(
         (agilevv_dir / "checkpoints").mkdir(exist_ok=True)
 
         # Create config.yaml with V-Model defaults
+        # TODO: Extract to the configurations to a separate file
         config = {
             "version": "1.0",
             "project_name": project_dir.name,
@@ -139,11 +149,11 @@ def init(
             },
         }
 
-        with open(agilevv_dir / "config.yaml", "w") as f:
+        with (agilevv_dir / "config.yaml").open("w") as f:
             yaml.dump(config, f, default_flow_style=False)
 
         # Create state.json
-        state = {
+        state: dict[str, Any] = {
             "current_sprint": None,
             "current_stage": None,
             "active_story": None,
@@ -151,10 +161,11 @@ def init(
             "checkpoint_history": [],
         }
 
-        with open(agilevv_dir / "state.json", "w") as f:
+        with (agilevv_dir / "state.json").open("w") as f:
             json.dump(state, f, indent=2)
 
         # Create backlog.md template
+        # TODO: Extract backlog template to a separate file
         backlog_template = """# Product Backlog
 
 ## Sprint 1
@@ -169,10 +180,11 @@ def init(
 - [ ] Future Feature 2
 """
 
-        with open(agilevv_dir / "backlog.md", "w") as f:
+        with (agilevv_dir / "backlog.md").open("w") as f:
             f.write(backlog_template)
 
         # Create architecture.md template
+        # TODO: Extract architecture template to a separate file
         architecture_template = """# System Architecture
 
 ## Overview
@@ -197,7 +209,7 @@ System architecture documentation for the project.
 - Data protection measures
 """
 
-        with open(agilevv_dir / "architecture.md", "w") as f:
+        with (agilevv_dir / "architecture.md").open("w") as f:
             f.write(architecture_template)
 
     console.print(
@@ -244,7 +256,7 @@ def plan(
 
     # Load and parse stories from backlog
     stories = []
-    with open(backlog_file) as f:
+    with backlog_file.open() as f:
         for line in f:
             line = line.strip()
             if line.startswith("- [ ]") or line.startswith("- [x]"):
@@ -277,13 +289,13 @@ def plan(
 
     # Update state
     state_file = agilevv_dir / "state.json"
-    with open(state_file) as f:
+    with state_file.open() as f:
         state = json.load(f)
 
     state["active_story"] = selected_story
     state["current_stage"] = "planning"
 
-    with open(state_file, "w") as f:
+    with state_file.open("w") as f:
         json.dump(state, f, indent=2)
 
     console.print(
@@ -320,7 +332,7 @@ def sprint(
 
     # Update state
     state_file = agilevv_dir / "state.json"
-    with open(state_file) as f:
+    with state_file.open() as f:
         state = json.load(f)
 
     state["active_story"] = story
@@ -341,7 +353,7 @@ def sprint(
     if "completed_stages" not in state:
         state["completed_stages"] = []
 
-    with open(state_file, "w") as f:
+    with state_file.open("w") as f:
         json.dump(state, f, indent=2)
 
     console.print(
@@ -358,13 +370,15 @@ def sprint(
 
     try:
         # Import Orchestrator if available, otherwise use placeholder
+        # TODO: Replace with actual Orchestrator import when implemented
+        # -> Once the Orchestrator class is implemented, remove this placeholder
         try:
             from verifflowcc.core.orchestrator import Orchestrator as RealOrchestrator
 
-            orchestrator = RealOrchestrator()
+            _ = RealOrchestrator()
         except ImportError:
             # Use the placeholder Orchestrator class defined at module level
-            orchestrator = Orchestrator()
+            _ = Orchestrator()
 
         with Progress(
             SpinnerColumn(),
@@ -378,13 +392,13 @@ def sprint(
                 progress.update(task, completed=1)
 
                 # Update state
-                with open(state_file) as f:
+                with state_file.open() as f:
                     state = json.load(f)
                 state["current_stage"] = stage.lower()
                 if "completed_stages" not in state:
                     state["completed_stages"] = []
                 state["completed_stages"].append(stage.lower())
-                with open(state_file, "w") as f:
+                with state_file.open("w") as f:
                     json.dump(state, f, indent=2)
     except KeyboardInterrupt:
         console.print("\n[yellow]Sprint execution interrupted by user[/yellow]")
@@ -422,7 +436,7 @@ def status(
 
     # Load state
     state_file = agilevv_dir / "state.json"
-    with open(state_file) as f:
+    with state_file.open() as f:
         state = json.load(f)
 
     if json_output:
@@ -535,7 +549,7 @@ def checkpoint(
     )
 
     # Load current state
-    with open(agilevv_dir / "state.json") as f:
+    with (agilevv_dir / "state.json").open() as f:
         state = json.load(f)
 
     # Create checkpoint
@@ -547,12 +561,12 @@ def checkpoint(
     }
 
     checkpoint_file = agilevv_dir / "checkpoints" / f"{checkpoint_name}.json"
-    with open(checkpoint_file, "w") as f:
+    with checkpoint_file.open("w") as f:
         json.dump(checkpoint_data, f, indent=2)
 
     # Update state history
     state["checkpoint_history"].append(checkpoint_name)
-    with open(agilevv_dir / "state.json", "w") as f:
+    with (agilevv_dir / "state.json").open("w") as f:
         json.dump(state, f, indent=2)
 
     console.print(
@@ -582,7 +596,7 @@ def checkpoint_list() -> None:
     table.add_column("Message", style="white")
 
     for checkpoint_file in checkpoints:
-        with open(checkpoint_file) as f:
+        with checkpoint_file.open() as f:
             data = json.load(f)
         table.add_row(data["name"], data.get("message", ""))
 
@@ -611,10 +625,10 @@ def checkpoint_restore(
         raise typer.Exit(0)
 
     # Restore state
-    with open(checkpoint_file) as f:
+    with checkpoint_file.open() as f:
         checkpoint_data = json.load(f)
 
-    with open(agilevv_dir / "state.json", "w") as f:
+    with (agilevv_dir / "state.json").open("w") as f:
         json.dump(checkpoint_data["state"], f, indent=2)
 
     console.print(f"[green]Restored to checkpoint:[/green] {name}")

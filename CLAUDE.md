@@ -36,7 +36,7 @@ uv run pytest -m integration  # integration tests only
 uv run pytest -m e2e  # end-to-end tests only
 
 # Run tests with coverage report
-uv run pytest --cov=verifflowcc --cov-report=term-missing
+uv run pytest --log-cli-level=DEBUG --cov=verifflowcc --cov-report=term-missing
 
 # Run tests in parallel (faster)
 uv run pytest -n auto
