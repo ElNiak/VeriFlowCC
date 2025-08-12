@@ -5,7 +5,12 @@
 default_language_version:
   python: python3.10
 
-fast_fail: true
+fail_fast: true
+
+# Exclude .claude directory from all hooks
+exclude: '^\.claude/'
+
+# TODO: add check Check for placeholders + no mock
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -40,20 +45,23 @@ repos:
       - id: ruff-format
         name: "🐍 python · Format with Ruff"
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.10.0
+  - repo: local
     hooks:
       - id: mypy
         name: "🐍 python · Type check with Mypy"
-        additional_dependencies: [types-pyyaml, types-jinja2]
-        args: [--ignore-missing-imports, --no-strict-optional]
+        entry: uv run mypy
+        language: system
+        types: [python]
+        args: [--ignore-missing-imports, --no-strict-optional, --no-incremental, --cache-dir=/dev/null]
+        require_serial: true
+        pass_filenames: true
 
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.23
     hooks:
       - id: validate-pyproject
         name: "🐍 python · Validate pyproject.toml"
-        additional_dependencies: ["validate-pyproject-schema-store[all]"]
+        additional_dependencies: ["validate-pyproject-schema-store[all]>=2024.11.11"]
 
 
 # =============================================================================

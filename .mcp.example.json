@@ -1,47 +1,54 @@
 {
-  "mcpServers": {
-    "sequential-thinking": {
-      "command": "npx",
+	"mcpServers": {
+		"sequential-thinking": {
+			"command": "npx",
 			"args": ["-y", "mcp-sequentialthinking-tools"],
 			"env": {
 				"MAX_HISTORY_SIZE": "1000"
 			}
-    },
-    "perplexity-ask": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "-e", "PERPLEXITY_API_KEY", "mcp/perplexity-ask"],
-      "env": {
-        "PERPLEXITY_API_KEY": "TODO-API-KEY"
-      }
-    },
-    "context7": {
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"],
-      "type": "stdio"
-    },
-    "serena": {
-      "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/oraios/serena",
-        "serena-mcp-server",
-        "--context",
-        "ide-assistant",
-        "--project",
-        "${PWD}",
-        "--tool-timeout",
-        "20",
-        "--mode",
-        "planning",
-        "--enable-web-dashboard",
-        "false"
-      ],
-      "type": "stdio"
-    },
-    "consult7": {
-      "command": "uvx",
-      "args": ["consult7", "google", "TODO-API-KEY"],
-      "type": "stdio"
-    }
-  }
+		},
+		"perplexity-ask": {
+			"command": "docker",
+			"args": [
+				"run",
+				"-i",
+				"--rm",
+				"-e",
+				"PERPLEXITY_API_KEY",
+				"mcp/perplexity-ask"
+			],
+			"env": {
+				"PERPLEXITY_API_KEY": "TODO-API-KEY"
+			}
+		},
+		"context7": {
+			"command": "npx",
+			"args": ["-y", "@upstash/context7-mcp"],
+			"type": "stdio"
+		},
+		"serena": {
+			"command": "uvx",
+			"args": [
+				"--from",
+				"git+https://github.com/oraios/serena",
+				"serena-mcp-server",
+				"--context",
+				"ide-assistant",
+				"--project",
+				"${PWD}",
+				"--tool-timeout",
+				"20",
+				"--mode",
+				"planning",
+				"--enable-web-dashboard",
+				"false"
+			],
+			"type": "stdio"
+		},
+		"consult7": {
+			"command": "uvx",
+			"args": ["consult7", "google", "TODO-API-KEY"],
+			"type": "stdio"
+		}
+	}
 }

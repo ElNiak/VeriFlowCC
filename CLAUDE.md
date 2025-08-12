@@ -36,10 +36,20 @@ uv run pytest -m integration  # integration tests only
 uv run pytest -m e2e  # end-to-end tests only
 
 # Run tests with coverage report
-uv run pytest --cov=verifflowcc --cov-report=term-missing
+uv run pytest --log-cli-level=DEBUG --cov=verifflowcc --cov-report=term-missing
 
 # Run tests in parallel (faster)
 uv run pytest -n auto
+
+# Test Isolation Features (NEW)
+# Run tests with isolated directories
+uv run pytest --keep-test-dirs  # Keep test directories for debugging
+
+# Run example tests
+uv run pytest tests/test_examples.py -v  # See isolation examples in action
+
+# Debug test environments
+uv run pytest tests/test_examples.py::TestDebuggingExamples -v -s
 ```
 
 ### Code Quality
@@ -143,6 +153,56 @@ tests/                # Test suite
 - Write tests for all new features
 - Use markers to categorize tests (unit, integration, e2e)
 - Follow AAA pattern (Arrange, Act, Assert)
+
+### Test Isolation Framework
+
+VeriFlowCC provides a comprehensive test isolation framework to ensure tests don't interfere with production or each other:
+
+#### PathConfig System
+
+- **Configurable base directory**: Tests use `.agilevv-test/` instead of `.agilevv/`
+- **Environment variable support**: `AGILEVV_BASE_DIR` controls the base directory
+- **Security features**: Prevents path traversal and enforces directory boundaries
+- **Test detection**: Automatically detects test environments based on directory naming
+
+#### Pytest Fixtures
+
+Three fixture scopes for different testing needs:
+
+1. **`isolated_agilevv_dir`** (function scope)
+
+   - Each test gets a unique directory
+   - Complete isolation between tests
+   - Automatic cleanup after each test
+
+1. **`shared_agilevv_dir`** (module scope)
+
+   - Shared directory for all tests in a module
+   - Useful for integration tests with shared state
+   - Cleaned up after module completes
+
+1. **`session_agilevv_dir`** (session scope)
+
+   - Single directory for entire test session
+   - For expensive setup that should only happen once
+   - Cleaned up after all tests complete
+
+#### AgileVVDirFactory
+
+Factory pattern for complex test setups:
+
+```python
+# Create test environment with pre-populated data
+config = agilevv_factory.create_with_backlog(stories=[...])
+config = agilevv_factory.create_with_sprint(sprint_num=1)
+config = agilevv_factory.create_full_structure()
+```
+
+#### Debugging Support
+
+- Use `--keep-test-dirs` flag to preserve test directories after tests
+- Helpful for debugging failed tests and inspecting test artifacts
+- Example: `uv run pytest --keep-test-dirs tests/failing_test.py`
 
 ### Error Handling
 
