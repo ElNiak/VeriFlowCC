@@ -5,7 +5,7 @@
 default_language_version:
   python: python3.10
 
-fast_fail: true
+fail_fast: true
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -53,7 +53,7 @@ repos:
     hooks:
       - id: validate-pyproject
         name: "🐍 python · Validate pyproject.toml"
-        additional_dependencies: ["validate-pyproject-schema-store[all]"]
+        additional_dependencies: ["validate-pyproject-schema-store[all]>=2024.11.11"]
 
 
 # =============================================================================
