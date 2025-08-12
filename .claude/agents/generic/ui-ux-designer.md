@@ -1,6 +1,6 @@
 ---
 name: ui-ux-designer
-description: Create interface designs, wireframes, and design systems. Masters user research, prototyping, and accessibility standards. MUST be use proactively for design systems, user flows, or interface optimization.
+description: Create interface designs, wireframes, and design systems. Masters user research, prototyping, and accessibility standards. MUST BE USED proactively for design systems, user flows, or interface optimization.
 model: sonnet
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: test-runner
-description: MUST be use proactively to execute tests during VeriFlowCC's testing stage, analyze results, and provide focused failure analysis for the V-Model testing gate.
+description: MUST BE USED proactively to execute tests during VeriFlowCC's testing stage, analyze results, and provide focused failure analysis for the V-Model testing gate.
 tools: Bash, Read, Grep, Glob, mcp__ide__executeCode
 color: yellow
 ---

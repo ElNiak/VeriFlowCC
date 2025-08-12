@@ -5,15 +5,16 @@ This guide explains how to effectively manage test data in VeriFlowCC using the 
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Test Isolation Architecture](#test-isolation-architecture)
-3. [Using Test Fixtures](#using-test-fixtures)
-4. [Test Data Patterns](#test-data-patterns)
-5. [Best Practices](#best-practices)
-6. [Troubleshooting](#troubleshooting)
+1. [Test Isolation Architecture](#test-isolation-architecture)
+1. [Using Test Fixtures](#using-test-fixtures)
+1. [Test Data Patterns](#test-data-patterns)
+1. [Best Practices](#best-practices)
+1. [Troubleshooting](#troubleshooting)
 
 ## Overview
 
 VeriFlowCC's test isolation framework ensures that tests:
+
 - Never interfere with production data
 - Don't affect each other when run in parallel
 - Can be debugged easily with preserved test artifacts
@@ -40,10 +41,11 @@ Tests create isolated directory structures that mirror production:
 ### Environment Isolation
 
 Each test automatically:
+
 1. Creates a unique base directory
-2. Sets `AGILEVV_BASE_DIR` environment variable
-3. Configures PathConfig to use the test directory
-4. Cleans up after completion (unless debugging)
+1. Sets `AGILEVV_BASE_DIR` environment variable
+1. Configures PathConfig to use the test directory
+1. Cleans up after completion (unless debugging)
 
 ## Using Test Fixtures
 
@@ -99,16 +101,10 @@ def test_with_factory(agilevv_factory):
     """Use factory for complex test setups."""
 
     # Create with pre-populated backlog
-    config = agilevv_factory.create_with_backlog(
-        name="test1",
-        stories=["Story 1", "Story 2"]
-    )
+    config = agilevv_factory.create_with_backlog(name="test1", stories=["Story 1", "Story 2"])
 
     # Create with sprint structure
-    config = agilevv_factory.create_with_sprint(
-        name="test2",
-        sprint_num=1
-    )
+    config = agilevv_factory.create_with_sprint(name="test2", sprint_num=1)
 
     # Create complete V-Model structure
     config = agilevv_factory.create_full_structure(name="test3")
@@ -123,17 +119,13 @@ Use helper functions to create consistent test data:
 ```python
 from tests.conftest import build_sample_user_story, build_sample_sprint_data
 
+
 def test_with_builders():
     story = build_sample_user_story(
-        story_id="US-001",
-        title="Test Isolation",
-        description="As a developer..."
+        story_id="US-001", title="Test Isolation", description="As a developer..."
     )
 
-    sprint = build_sample_sprint_data(
-        sprint_num=1,
-        stories=["US-001", "US-002"]
-    )
+    sprint = build_sample_sprint_data(sprint_num=1, stories=["US-001", "US-002"])
 ```
 
 ### Parametrized Tests
@@ -141,16 +133,15 @@ def test_with_builders():
 Test multiple scenarios with consistent isolation:
 
 ```python
-@pytest.mark.parametrize("sprint_num,expected_velocity", [
-    (1, 13),
-    (2, 21),
-    (3, 34),
-])
-def test_sprint_velocity(
-    isolated_agilevv_dir: PathConfig,
-    sprint_num: int,
-    expected_velocity: int
-):
+@pytest.mark.parametrize(
+    "sprint_num,expected_velocity",
+    [
+        (1, 13),
+        (2, 21),
+        (3, 34),
+    ],
+)
+def test_sprint_velocity(isolated_agilevv_dir: PathConfig, sprint_num: int, expected_velocity: int):
     """Each parameter combination gets its own directory."""
     # Test logic here
 ```
@@ -168,8 +159,7 @@ def test_sprint_velocity(
 ```python
 # Good: Descriptive test data
 config = agilevv_factory.create_with_backlog(
-    name="authentication-test",
-    stories=["Login feature", "Password reset"]
+    name="authentication-test", stories=["Login feature", "Password reset"]
 )
 
 # Bad: Generic names
@@ -242,6 +232,7 @@ def test_security(isolated_agilevv_dir: PathConfig):
 def test_one(shared_agilevv_dir: PathConfig): ...
 def test_two(shared_agilevv_dir: PathConfig): ...
 
+
 # To:
 def test_one(isolated_agilevv_dir: PathConfig): ...
 def test_two(isolated_agilevv_dir: PathConfig): ...
@@ -309,9 +300,7 @@ def test_with_selective_cleanup(agilevv_factory):
     config = agilevv_factory.create_full_structure()
 
     # Keep only logs for debugging
-    agilevv_factory.cleanup_selective(
-        patterns=["*.md", "*.yaml", "*.json"]
-    )
+    agilevv_factory.cleanup_selective(patterns=["*.md", "*.yaml", "*.json"])
     # Logs directory remains for inspection
 ```
 
@@ -339,10 +328,12 @@ def shared_test_results():
     """Share results between tests."""
     return {}
 
+
 def test_producer(shared_test_results, isolated_agilevv_dir):
     # Produce data
     result = perform_expensive_operation()
     shared_test_results["expensive_result"] = result
+
 
 def test_consumer(shared_test_results, isolated_agilevv_dir):
     # Consume data from producer

@@ -16,6 +16,8 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.prompt import Confirm, IntPrompt
 from rich.table import Table
 
+from verifflowcc.core.path_config import PathConfig
+
 # Initialize Typer app and Rich console
 app = typer.Typer(
     name="verifflowcc",
@@ -41,8 +43,22 @@ def handle_keyboard_interrupt(signum: int, frame: Any) -> None:
 signal.signal(signal.SIGINT, handle_keyboard_interrupt)
 
 
-@app.callback()
+def get_path_config(base_dir: str | None = None) -> PathConfig:
+    """Get PathConfig instance, respecting environment variables.
+
+    Args:
+        base_dir: Optional custom base directory. If None, uses
+                 AGILEVV_BASE_DIR env var or defaults to .agilevv
+
+    Returns:
+        PathConfig instance configured for the project
+    """
+    return PathConfig(base_dir=base_dir)
+
+
+@app.callback(invoke_without_command=True)
 def main(
+    ctx: typer.Context,
     version: bool = typer.Option(
         False,
         "--version",
@@ -60,6 +76,11 @@ def main(
         console.print("[bold green]VeriFlowCC[/bold green] version 0.1.0")
         raise typer.Exit(0)
 
+    # If no command is provided, show help
+    if ctx.invoked_subcommand is None:
+        console.print(ctx.get_help())
+        raise typer.Exit(0)
+
 
 @app.command()
 def init(
@@ -69,13 +90,13 @@ def init(
         "-f",
         help="Force reinitialize even if project already exists",
     ),
-    agilevv_dir_name: str = typer.Option(
-        ".agilevv",
+    base_dir: str | None = typer.Option(
+        None,
         "--dir",
         "-d",
         help=(
-            "Directory name for Agile V-Model project structure "
-            "(Note: this will be created in the current working directory)"
+            "Base directory for Agile V-Model project structure. "
+            "If not specified, uses AGILEVV_BASE_DIR env var or .agilevv"
         ),
     ),
 ) -> None:
@@ -85,25 +106,24 @@ def init(
     Creates the .agilevv directory structure with configuration files,
     initial state, and template documents for backlog and architecture.
     """
-    project_dir = Path.cwd()
-    agilevv_dir = project_dir / agilevv_dir_name
+    # Get PathConfig with optional custom base directory
+    path_config = get_path_config(base_dir)
 
     # Check if already initialized
-    if agilevv_dir.exists() and not force:
+    if path_config.base_dir.exists() and not force:
         console.print("[red]Project already initialized.[/red] Use --force to reinitialize.")
         raise typer.Exit(1)
 
-    # Create directory structure
+    # Create directory structure using PathConfig
     with console.status("Initializing VeriFlowCC project..."):
-        agilevv_dir.mkdir(exist_ok=True)
-        (agilevv_dir / "logs").mkdir(exist_ok=True)
-        (agilevv_dir / "checkpoints").mkdir(exist_ok=True)
+        path_config.ensure_structure(create_defaults=True)
+        path_config.checkpoints_dir.mkdir(exist_ok=True, parents=True)
 
         # Create config.yaml with V-Model defaults
         # TODO: Extract to the configurations to a separate file
         config = {
             "version": "1.0",
-            "project_name": project_dir.name,
+            "project_name": Path.cwd().name,
             "v_model": {
                 "gating": "hard",
                 "stages": [
@@ -150,7 +170,7 @@ def init(
             },
         }
 
-        with (agilevv_dir / "config.yaml").open("w") as f:
+        with path_config.config_path.open("w") as f:
             yaml.dump(config, f, default_flow_style=False)
 
         # Create state.json
@@ -162,7 +182,7 @@ def init(
             "checkpoint_history": [],
         }
 
-        with (agilevv_dir / "state.json").open("w") as f:
+        with path_config.state_path.open("w") as f:
             json.dump(state, f, indent=2)
 
         # Create backlog.md template
@@ -181,7 +201,7 @@ def init(
 - [ ] Future Feature 2
 """
 
-        with (agilevv_dir / "backlog.md").open("w") as f:
+        with path_config.backlog_path.open("w") as f:
             f.write(backlog_template)
 
         # Create architecture.md template
@@ -210,13 +230,13 @@ System architecture documentation for the project.
 - Data protection measures
 """
 
-        with (agilevv_dir / "architecture.md").open("w") as f:
+        with path_config.architecture_path.open("w") as f:
             f.write(architecture_template)
 
     console.print(
         Panel(
             "[green]✓[/green] Project initialized successfully!\n\n"
-            "Created .agilevv/ directory with:\n"
+            f"Created {path_config.base_dir.name}/ directory with:\n"
             "  • config.yaml - V-Model configuration\n"
             "  • state.json - Project state tracking\n"
             "  • backlog.md - Product backlog template\n"
@@ -236,6 +256,12 @@ def plan(
         "--story-id",
         help="Select a specific story by ID (non-interactive)",
     ),
+    base_dir: str | None = typer.Option(
+        None,
+        "--dir",
+        "-d",
+        help="Base directory for Agile V-Model project structure",
+    ),
 ) -> None:
     """
     Plan a new sprint with story selection and refinement.
@@ -243,14 +269,14 @@ def plan(
     Reads the backlog, allows interactive story selection, and triggers
     Claude-Code subagents for requirements analysis and elaboration.
     """
-    agilevv_dir = Path.cwd() / ".agilevv"
+    path_config = get_path_config(base_dir)
 
-    if not agilevv_dir.exists():
+    if not path_config.base_dir.exists():
         console.print("[red]Project not initialized.[/red] Run 'verifflowcc init' first.")
         raise typer.Exit(1)
 
     # Load backlog
-    backlog_file = agilevv_dir / "backlog.md"
+    backlog_file = path_config.backlog_path
     if not backlog_file.exists():
         console.print("[red]Backlog not found.[/red]")
         raise typer.Exit(1)
@@ -289,7 +315,7 @@ def plan(
         selected_story = stories[story_id - 1]
 
     # Update state
-    state_file = agilevv_dir / "state.json"
+    state_file = path_config.state_path
     with state_file.open() as f:
         state = json.load(f)
 
@@ -344,6 +370,12 @@ def sprint(
         "-s",
         help="User story or requirement to implement",
     ),
+    base_dir: str | None = typer.Option(
+        None,
+        "--dir",
+        "-d",
+        help="Base directory for Agile V-Model project structure",
+    ),
 ) -> None:
     """
     Execute a sprint with the Agile V-Model workflow.
@@ -352,14 +384,14 @@ def sprint(
     Claude-Code subagents for each stage (Requirements → Design →
     Code → Test → Validate).
     """
-    agilevv_dir = Path.cwd() / ".agilevv"
+    path_config = get_path_config(base_dir)
 
-    if not agilevv_dir.exists():
+    if not path_config.base_dir.exists():
         console.print("[red]Project not initialized.[/red] Run 'verifflowcc init' first.")
         raise typer.Exit(1)
 
     # Update state
-    state_file = agilevv_dir / "state.json"
+    state_file = path_config.state_path
     with state_file.open() as f:
         state = json.load(f)
 
@@ -490,6 +522,12 @@ def status(
         "--json",
         help="Output status in JSON format",
     ),
+    base_dir: str | None = typer.Option(
+        None,
+        "--dir",
+        "-d",
+        help="Base directory for Agile V-Model project structure",
+    ),
 ) -> None:
     """
     Show project status and current V-Model stage.
@@ -497,14 +535,14 @@ def status(
     Displays the current sprint, active story, V-Model stage,
     and progress through the development pipeline.
     """
-    agilevv_dir = Path.cwd() / ".agilevv"
+    path_config = get_path_config(base_dir)
 
-    if not agilevv_dir.exists():
+    if not path_config.base_dir.exists():
         console.print("[red]Project not initialized.[/red] Run 'verifflowcc init' first.")
         raise typer.Exit(1)
 
     # Load state
-    state_file = agilevv_dir / "state.json"
+    state_file = path_config.state_path
     with state_file.open() as f:
         state = json.load(f)
 
@@ -537,6 +575,12 @@ def validate(
         "-v",
         help="Show detailed validation output",
     ),
+    base_dir: str | None = typer.Option(
+        None,
+        "--dir",
+        "-d",
+        help="Base directory for Agile V-Model project structure",
+    ),
 ) -> None:
     """
     Validate the current sprint against acceptance criteria.
@@ -544,9 +588,9 @@ def validate(
     Runs comprehensive validation checks including unit tests,
     integration tests, and acceptance criteria verification.
     """
-    agilevv_dir = Path.cwd() / ".agilevv"
+    path_config = get_path_config(base_dir)
 
-    if not agilevv_dir.exists():
+    if not path_config.base_dir.exists():
         console.print("[red]Project not initialized.[/red] Run 'verifflowcc init' first.")
         raise typer.Exit(1)
 
@@ -596,6 +640,12 @@ def checkpoint(
         "-m",
         help="Checkpoint message",
     ),
+    base_dir: str | None = typer.Option(
+        None,
+        "--dir",
+        "-d",
+        help="Base directory for Agile V-Model project structure",
+    ),
 ) -> None:
     """
     Create or manage checkpoints for state recovery.
@@ -606,9 +656,9 @@ def checkpoint(
     if ctx.invoked_subcommand is not None:
         return  # Let subcommand handle it
 
-    agilevv_dir = Path.cwd() / ".agilevv"
+    path_config = get_path_config(base_dir)
 
-    if not agilevv_dir.exists():
+    if not path_config.base_dir.exists():
         console.print("[red]Project not initialized.[/red] Run 'verifflowcc init' first.")
         raise typer.Exit(1)
 
@@ -619,11 +669,11 @@ def checkpoint(
 
     # Create checkpoint
     checkpoint_name = (
-        name or f"checkpoint_{len(list((agilevv_dir / 'checkpoints').glob('*.json'))) + 1}"
+        name or f"checkpoint_{len(list(path_config.checkpoints_dir.glob('*.json'))) + 1}"
     )
 
     # Load current state
-    with (agilevv_dir / "state.json").open() as f:
+    with path_config.state_path.open() as f:
         state = json.load(f)
 
     # Create checkpoint data
@@ -637,7 +687,7 @@ def checkpoint(
     }
 
     # Save checkpoint file
-    checkpoint_file = agilevv_dir / "checkpoints" / f"{checkpoint_name}.json"
+    checkpoint_file = path_config.checkpoints_dir / f"{checkpoint_name}.json"
     with checkpoint_file.open("w") as f:
         json.dump(checkpoint_data, f, indent=2)
 
@@ -661,7 +711,7 @@ def checkpoint(
 
     # Update state history
     state["checkpoint_history"].append(checkpoint_name)
-    with (agilevv_dir / "state.json").open("w") as f:
+    with path_config.state_path.open("w") as f:
         json.dump(state, f, indent=2)
 
     console.print(
@@ -671,15 +721,22 @@ def checkpoint(
 
 
 @checkpoint_app.command("list")
-def checkpoint_list() -> None:
+def checkpoint_list(
+    base_dir: str | None = typer.Option(
+        None,
+        "--dir",
+        "-d",
+        help="Base directory for Agile V-Model project structure",
+    ),
+) -> None:
     """List available checkpoints."""
-    agilevv_dir = Path.cwd() / ".agilevv"
+    path_config = get_path_config(base_dir)
 
-    if not agilevv_dir.exists():
+    if not path_config.base_dir.exists():
         console.print("[red]Project not initialized.[/red]")
         raise typer.Exit(1)
 
-    checkpoints_dir = agilevv_dir / "checkpoints"
+    checkpoints_dir = path_config.checkpoints_dir
     checkpoints = list(checkpoints_dir.glob("*.json"))
 
     # Import git integration
@@ -721,11 +778,17 @@ def checkpoint_restore(
     force: bool = typer.Option(
         False, "--force", "-f", help="Force restore even with uncommitted changes"
     ),
+    base_dir: str | None = typer.Option(
+        None,
+        "--dir",
+        "-d",
+        help="Base directory for Agile V-Model project structure",
+    ),
 ) -> None:
     """Restore to a checkpoint."""
-    agilevv_dir = Path.cwd() / ".agilevv"
+    path_config = get_path_config(base_dir)
 
-    if not agilevv_dir.exists():
+    if not path_config.base_dir.exists():
         console.print("[red]Project not initialized.[/red]")
         raise typer.Exit(1)
 
@@ -734,7 +797,7 @@ def checkpoint_restore(
 
     git = GitIntegration()
 
-    checkpoint_file = agilevv_dir / "checkpoints" / f"{name}.json"
+    checkpoint_file = path_config.checkpoints_dir / f"{name}.json"
 
     if not checkpoint_file.exists():
         console.print(f"[red]Checkpoint '{name}' not found.[/red]")
@@ -757,7 +820,7 @@ def checkpoint_restore(
     with checkpoint_file.open() as f:
         checkpoint_data = json.load(f)
 
-    with (agilevv_dir / "state.json").open("w") as f:
+    with path_config.state_path.open("w") as f:
         json.dump(checkpoint_data["state"], f, indent=2)
 
     console.print(f"[green]Restored to checkpoint:[/green] {name}")

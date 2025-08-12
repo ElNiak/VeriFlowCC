@@ -4,19 +4,27 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from verifflowcc.core.path_config import PathConfig
+
 from .base import BaseAgent
 
 
 class RequirementsAnalystAgent(BaseAgent):
     """Agent responsible for requirements analysis and elaboration."""
 
-    def __init__(self, config_path: Path | None = None):
-        """Initialize the Requirements Analyst agent."""
+    def __init__(self, config_path: Path | None = None, path_config: PathConfig | None = None):
+        """Initialize the Requirements Analyst agent.
+
+        Args:
+            config_path: Path to configuration file (deprecated, use path_config)
+            path_config: PathConfig instance for managing project paths
+        """
         super().__init__(
             name="requirements_analyst",
             model="claude-3-sonnet",
             max_tokens=4000,
             config_path=config_path,
+            path_config=path_config,
         )
 
     async def process(self, input_data: dict[str, Any]) -> dict[str, Any]:
@@ -29,7 +37,7 @@ class RequirementsAnalystAgent(BaseAgent):
             Elaborated requirements with acceptance criteria
         """
         story = input_data.get("story", {})
-        backlog_path = input_data.get("backlog_path", ".agilevv/backlog.md")
+        backlog_path = input_data.get("backlog_path", str(self.path_config.backlog_path))
 
         # Simulate Claude-Code API call for requirements analysis
         # In production, this would make actual API calls to Claude

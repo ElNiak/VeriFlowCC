@@ -1,6 +1,6 @@
 ---
 name: git-workflow
-description: MUST be use proactively to handle git operations for VeriFlowCC sprints including checkpointing at V-Model gates, tagging releases, and updating CHANGELOG on validation success.
+description: MUST BE USED proactively to handle git operations for VeriFlowCC sprints including checkpointing at V-Model gates, tagging releases, and updating CHANGELOG on validation success.
 tools: Bash, Read, Write, Grep
 color: orange
 ---

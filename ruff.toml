@@ -1,10 +1,10 @@
 # Ruff configuration
-# Moved from pyproject.toml to avoid validate-pyproject schema issues
-# See: https://github.com/astral-sh/ruff/issues/11880
+# See: https://docs.astral.sh/ruff/configuration/
 
 target-version = "py310"
 line-length = 100
 src = ["verifflowcc", "tests"]
+exclude = [".claude"]
 
 [lint]
 select = [
@@ -22,7 +22,12 @@ select = [
     "TCH", # flake8-type-checking
     "RUF", # Ruff-specific rules
 ]
-ignore = ["S101"]  # Allow assert in tests
+ignore = [
+    "E501",  # line too long, handled by black
+    "B008",  # do not perform function calls in argument defaults
+    "W191",  # indentation contains tabs
+    "B904",  # Allow raising exceptions without from e, for cleaner exception handling
+]
 
 [format]
 quote-style = "double"
@@ -30,7 +35,6 @@ indent-style = "space"
 line-ending = "auto"
 
 [lint.per-file-ignores]
-"tests/*" = ["S101"]  # Allow assert in tests
-"verifflowcc/cli.py" = ["B008"]  # Allow function calls in defaults (Typer pattern)
-"verifflowcc/prompts/__init__.py" = ["S701"]  # Not rendering HTML, autoescape not needed
-"verifflowcc/core/git_integration.py" = ["S603", "S607"]  # Allow subprocess calls for git operations
+"tests/*" = ["S101", "S603", "S607", "S108"]  # Allow assertions, subprocess usage in tests
+"tests/integration/*" = ["S603", "S607"]  # Allow subprocess in integration tests
+"verifflowcc/core/git_integration.py" = ["S603", "S607"]  # Git commands are safe in this module

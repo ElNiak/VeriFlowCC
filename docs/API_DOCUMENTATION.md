@@ -5,9 +5,9 @@ Complete API reference for the VeriFlowCC PathConfig system and test isolation f
 ## Table of Contents
 
 1. [PathConfig Class](#pathconfig-class)
-2. [Test Fixtures](#test-fixtures)
-3. [AgileVVDirFactory](#agilevvdirfactory)
-4. [Helper Functions](#helper-functions)
+1. [Test Fixtures](#test-fixtures)
+1. [AgileVVDirFactory](#agilevvdirfactory)
+1. [Helper Functions](#helper-functions)
 
 ## PathConfig Class
 
@@ -22,9 +22,11 @@ PathConfig(base_dir: Optional[Union[str, Path]] = None)
 Creates a new PathConfig instance.
 
 **Parameters:**
-- `base_dir` (Optional[Union[str, Path]]): Base directory for the .agilevv structure. If None, uses `AGILEVV_BASE_DIR` environment variable or defaults to `.agilevv`
+
+- `base_dir` (Optional\[Union[str, Path]\]): Base directory for the .agilevv structure. If None, uses `AGILEVV_BASE_DIR` environment variable or defaults to `.agilevv`
 
 **Example:**
+
 ```python
 # Use default
 config = PathConfig()
@@ -39,71 +41,90 @@ config = PathConfig(base_dir=Path.home() / ".agilevv-test")
 ### Properties
 
 #### base_dir
+
 ```python
 @property
 def base_dir(self) -> Path
 ```
+
 Returns the base directory path.
 
 #### config_path
+
 ```python
 @property
 def config_path(self) -> Path
 ```
+
 Returns path to config.yaml file.
 
 #### state_path
+
 ```python
 @property
 def state_path(self) -> Path
 ```
+
 Returns path to state.json file.
 
 #### backlog_path
+
 ```python
 @property
 def backlog_path(self) -> Path
 ```
+
 Returns path to backlog.md file.
 
 #### architecture_path
+
 ```python
 @property
 def architecture_path(self) -> Path
 ```
+
 Returns path to architecture.md file.
 
 #### requirements_dir
+
 ```python
 @property
 def requirements_dir(self) -> Path
 ```
+
 Returns path to requirements directory.
 
 #### c4_diagrams_dir
+
 ```python
 @property
 def c4_diagrams_dir(self) -> Path
 ```
+
 Returns path to C4 diagrams directory.
 
 #### checkpoints_dir
+
 ```python
 @property
 def checkpoints_dir(self) -> Path
 ```
+
 Returns path to checkpoints directory.
 
 #### logs_dir
+
 ```python
 @property
 def logs_dir(self) -> Path
 ```
+
 Returns path to logs directory.
 
 ### Methods
 
 #### get_artifact_path
+
 ```python
 def get_artifact_path(self, relative_path: str) -> Path
 ```
@@ -111,15 +132,19 @@ def get_artifact_path(self, relative_path: str) -> Path
 Get a safe artifact path within the base directory.
 
 **Parameters:**
+
 - `relative_path` (str): Relative path to the artifact
 
 **Returns:**
+
 - Path: Resolved artifact path
 
 **Raises:**
+
 - ValueError: If path is absolute or tries to escape base directory
 
 **Example:**
+
 ```python
 config = PathConfig()
 artifact = config.get_artifact_path("outputs/report.md")
@@ -131,6 +156,7 @@ config.get_artifact_path("../../../etc/passwd")  # Path traversal
 ```
 
 #### ensure_base_exists
+
 ```python
 def ensure_base_exists(self) -> None
 ```
@@ -138,6 +164,7 @@ def ensure_base_exists(self) -> None
 Create the base directory if it doesn't exist.
 
 **Example:**
+
 ```python
 config = PathConfig(base_dir="/tmp/.agilevv-test")
 config.ensure_base_exists()
@@ -145,6 +172,7 @@ config.ensure_base_exists()
 ```
 
 #### ensure_structure
+
 ```python
 def ensure_structure(self, create_defaults: bool = False) -> None
 ```
@@ -152,9 +180,11 @@ def ensure_structure(self, create_defaults: bool = False) -> None
 Create the complete .agilevv directory structure.
 
 **Parameters:**
+
 - `create_defaults` (bool): If True, create default config files
 
 **Example:**
+
 ```python
 config = PathConfig()
 config.ensure_structure(create_defaults=True)
@@ -162,6 +192,7 @@ config.ensure_structure(create_defaults=True)
 ```
 
 #### validate_path
+
 ```python
 def validate_path(self, path: Path, must_exist: bool = True) -> bool
 ```
@@ -169,17 +200,21 @@ def validate_path(self, path: Path, must_exist: bool = True) -> bool
 Validate that a path is within base directory and optionally exists.
 
 **Parameters:**
+
 - `path` (Path): Path to validate
 - `must_exist` (bool): If True, check that path exists
 
 **Returns:**
+
 - bool: True if valid
 
 **Raises:**
+
 - ValueError: If path is outside base directory
 - FileNotFoundError: If must_exist=True and path doesn't exist
 
 **Example:**
+
 ```python
 config = PathConfig()
 config.validate_path(config.backlog_path, must_exist=False)  # True
@@ -187,6 +222,7 @@ config.validate_path(Path("/etc/passwd"))  # Raises ValueError
 ```
 
 #### is_test_environment
+
 ```python
 def is_test_environment(self) -> bool
 ```
@@ -194,9 +230,11 @@ def is_test_environment(self) -> bool
 Check if this is a test environment.
 
 **Returns:**
+
 - bool: True if base directory indicates test environment
 
 **Example:**
+
 ```python
 config = PathConfig(base_dir=".agilevv-test")
 config.is_test_environment()  # Returns True
@@ -206,6 +244,7 @@ config.is_test_environment()  # Returns False
 ```
 
 #### cleanup
+
 ```python
 def cleanup(self) -> None
 ```
@@ -213,15 +252,18 @@ def cleanup(self) -> None
 Clean up the directory structure (only in test environments).
 
 **Raises:**
+
 - PermissionError: If attempting to cleanup non-test directory
 
 **Example:**
+
 ```python
 config = PathConfig(base_dir="/tmp/.agilevv-test")
 config.cleanup()  # Removes entire directory tree
 ```
 
 #### create_test_instance
+
 ```python
 @classmethod
 def create_test_instance(cls, test_name: str = "test") -> "PathConfig"
@@ -230,18 +272,22 @@ def create_test_instance(cls, test_name: str = "test") -> "PathConfig"
 Create a PathConfig instance for testing.
 
 **Parameters:**
+
 - `test_name` (str): Name suffix for test directory
 
 **Returns:**
+
 - PathConfig: Configured instance for testing
 
 **Example:**
+
 ```python
 config = PathConfig.create_test_instance("my_test")
 # Creates PathConfig with base_dir like /tmp/.agilevv-test-my_test-{timestamp}
 ```
 
 #### test_isolation
+
 ```python
 @contextmanager
 def test_isolation(cls, test_name: str = "test")
@@ -250,12 +296,15 @@ def test_isolation(cls, test_name: str = "test")
 Context manager for test isolation.
 
 **Parameters:**
+
 - `test_name` (str): Name suffix for test directory
 
 **Yields:**
+
 - PathConfig: Configured instance that's cleaned up on exit
 
 **Example:**
+
 ```python
 with PathConfig.test_isolation("my_test") as config:
     config.backlog_path.write_text("Test data")
@@ -286,6 +335,7 @@ Function-scoped fixture providing isolated test directory.
 **Cleanup:** Automatic unless `--keep-test-dirs` flag is used
 
 **Example:**
+
 ```python
 def test_example(isolated_agilevv_dir: PathConfig):
     isolated_agilevv_dir.backlog_path.write_text("Test")
@@ -311,6 +361,7 @@ Module-scoped fixture providing shared test directory.
 **Cleanup:** After all module tests complete
 
 **Example:**
+
 ```python
 class TestSuite:
     def test_setup(self, shared_agilevv_dir: PathConfig):
@@ -339,6 +390,7 @@ Session-scoped fixture providing persistent test directory.
 **Cleanup:** After all tests complete
 
 **Example:**
+
 ```python
 def test_expensive_setup(session_agilevv_dir: PathConfig):
     # Setup happens once for entire session
@@ -362,6 +414,7 @@ Factory fixture for creating complex test structures.
 **Cleanup:** Automatic for all created directories
 
 **Example:**
+
 ```python
 def test_with_factory(agilevv_factory):
     config = agilevv_factory.create_with_backlog(stories=["Story 1"])
@@ -379,6 +432,7 @@ AgileVVDirFactory(base_path: Path)
 ```
 
 **Parameters:**
+
 - `base_path` (Path): Base path for creating test directories
 
 ### Methods
@@ -392,12 +446,15 @@ def create_basic(self, name: str = "test") -> PathConfig
 Create a basic test directory structure.
 
 **Parameters:**
+
 - `name` (str): Name suffix for test directory
 
 **Returns:**
+
 - PathConfig: Configured instance
 
 **Example:**
+
 ```python
 factory = AgileVVDirFactory(tmp_path)
 config = factory.create_basic("my-test")
@@ -416,17 +473,19 @@ def create_with_backlog(
 Create test directory with pre-populated backlog.
 
 **Parameters:**
+
 - `name` (str): Name suffix for test directory
-- `stories` (Optional[List[str]]): User stories for backlog
+- `stories` (Optional\[List[str]\]): User stories for backlog
 
 **Returns:**
+
 - PathConfig: Configured instance with backlog
 
 **Example:**
+
 ```python
 config = factory.create_with_backlog(
-    name="backlog-test",
-    stories=["As a user, I want...", "As a developer, I need..."]
+    name="backlog-test", stories=["As a user, I want...", "As a developer, I need..."]
 )
 ```
 
@@ -443,13 +502,16 @@ def create_with_sprint(
 Create test directory with sprint structure.
 
 **Parameters:**
+
 - `name` (str): Name suffix for test directory
 - `sprint_num` (int): Sprint number to create
 
 **Returns:**
+
 - PathConfig: Configured instance with sprint
 
 **Example:**
+
 ```python
 config = factory.create_with_sprint(name="sprint-test", sprint_num=1)
 # Creates sprint-01 directory with requirements.md, tasks.md, etc.
@@ -468,20 +530,20 @@ def create_with_memory(
 Create test directory with memory files.
 
 **Parameters:**
+
 - `name` (str): Name suffix for test directory
-- `memories` (Optional[Dict[str, str]]): Memory file names and contents
+- `memories` (Optional\[Dict[str, str]\]): Memory file names and contents
 
 **Returns:**
+
 - PathConfig: Configured instance with memories
 
 **Example:**
+
 ```python
 config = factory.create_with_memory(
     name="memory-test",
-    memories={
-        "context.md": "# Project Context",
-        "decisions.md": "# Technical Decisions"
-    }
+    memories={"context.md": "# Project Context", "decisions.md": "# Technical Decisions"},
 )
 ```
 
@@ -494,12 +556,15 @@ def create_full_structure(self, name: str = "test") -> PathConfig
 Create complete test directory structure.
 
 **Parameters:**
+
 - `name` (str): Name suffix for test directory
 
 **Returns:**
+
 - PathConfig: Configured instance with full structure
 
 **Example:**
+
 ```python
 config = factory.create_full_structure("integration-test")
 # Creates complete .agilevv structure with all components
@@ -514,9 +579,11 @@ def cleanup_all(self, keep_dirs: bool = False) -> None
 Clean up all created test directories.
 
 **Parameters:**
+
 - `keep_dirs` (bool): If True, keep directories for debugging
 
 **Example:**
+
 ```python
 factory.cleanup_all()  # Remove all test directories
 factory.cleanup_all(keep_dirs=True)  # Keep for debugging
@@ -531,9 +598,11 @@ def cleanup_selective(self, patterns: List[str]) -> None
 Clean up only files matching specific patterns.
 
 **Parameters:**
+
 - `patterns` (List[str]): Glob patterns to match for cleanup
 
 **Example:**
+
 ```python
 factory.cleanup_selective(["*.log", "*.tmp", "**/__pycache__"])
 # Removes only log files, temp files, and Python cache
@@ -556,19 +625,22 @@ def build_sample_user_story(
 Build a sample user story for testing.
 
 **Parameters:**
+
 - `story_id` (str): Unique story identifier
 - `title` (str): Story title
 - `description` (str): Story description
 
 **Returns:**
-- Dict[str, str]: Story data with acceptance criteria
+
+- Dict\[str, str\]: Story data with acceptance criteria
 
 **Example:**
+
 ```python
 story = build_sample_user_story(
     story_id="US-001",
     title="User Authentication",
-    description="As a user, I want to log in securely"
+    description="As a user, I want to log in securely",
 )
 ```
 
@@ -584,18 +656,18 @@ def build_sample_sprint_data(
 Build sample sprint data for testing.
 
 **Parameters:**
+
 - `sprint_num` (int): Sprint number
 - `stories` (List[str]): Story IDs for the sprint
 
 **Returns:**
-- Dict[str, Any]: Sprint data with dates and velocity
+
+- Dict\[str, Any\]: Sprint data with dates and velocity
 
 **Example:**
+
 ```python
-sprint = build_sample_sprint_data(
-    sprint_num=1,
-    stories=["US-001", "US-002", "US-003"]
-)
+sprint = build_sample_sprint_data(sprint_num=1, stories=["US-001", "US-002", "US-003"])
 ```
 
 ## Usage Examples

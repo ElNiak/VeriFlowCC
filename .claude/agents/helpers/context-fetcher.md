@@ -1,6 +1,6 @@
 ---
 name: context-fetcher
-description: MUST be use proactively to retrieve and extract relevant code context from the VeriFlowCC codebase. Efficiently gathers implementation details, interfaces, and dependencies for V-Model stages.
+description: MUST BE USED proactively to retrieve and extract relevant code context from the VeriFlowCC codebase. Efficiently gathers implementation details, interfaces, and dependencies for V-Model stages.
 tools: Read, Grep, Glob, mcp__serena__find_file, mcp__serena__search_for_pattern, mcp__serena__get_symbols_overview
 color: blue
 ---

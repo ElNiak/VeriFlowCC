@@ -13,6 +13,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
 from verifflowcc.agents import RequirementsAnalystAgent
+from verifflowcc.core.path_config import PathConfig
 
 
 class VModelStage(Enum):
@@ -39,14 +40,26 @@ class GatingMode(Enum):
 class Orchestrator:
     """Orchestrates V-Model workflow execution with stage transitions and gating."""
 
-    def __init__(self, config_path: Path | None = None):
+    def __init__(self, config_path: Path | None = None, path_config: PathConfig | None = None):
         """Initialize the Orchestrator.
 
         Args:
-            config_path: Path to configuration file
+            config_path: Path to configuration file (deprecated, use path_config)
+            path_config: PathConfig instance for managing project paths
         """
-        self.config_path = config_path or Path(".agilevv/config.yaml")
-        self.state_path = Path(".agilevv/state.json")
+        # Use provided PathConfig or create default
+        self.path_config = path_config or PathConfig()
+
+        # Support legacy config_path parameter for backward compatibility
+        if config_path and not path_config:
+            # If only config_path is provided, derive base_dir from it
+            base_dir = config_path.parent if config_path.parent.name == ".agilevv" else None
+            self.path_config = PathConfig(base_dir=base_dir)
+            self.config_path = config_path
+        else:
+            self.config_path = self.path_config.config_path
+
+        self.state_path = self.path_config.state_path
         self.console = Console()
         self.current_stage = VModelStage.PLANNING
         self.state = self._load_state()
@@ -73,7 +86,7 @@ class Orchestrator:
         """Save project state to state.json."""
         self.state["updated_at"] = datetime.now().isoformat()
         self.state["current_stage"] = self.current_stage.value
-        self.state_path.parent.mkdir(parents=True, exist_ok=True)
+        self.path_config.ensure_base_exists()
         self.state_path.write_text(json.dumps(self.state, indent=2))
 
     def _load_config(self) -> dict[str, Any]:
@@ -352,7 +365,7 @@ class Orchestrator:
         }
 
         # Save checkpoint
-        checkpoint_dir = Path(".agilevv/checkpoints")
+        checkpoint_dir = self.path_config.checkpoints_dir
         checkpoint_dir.mkdir(parents=True, exist_ok=True)
         checkpoint_path = checkpoint_dir / f"{name}.json"
         checkpoint_path.write_text(json.dumps(checkpoint, indent=2))
@@ -374,7 +387,7 @@ class Orchestrator:
         Returns:
             True if successful
         """
-        checkpoint_path = Path(f".agilevv/checkpoints/{name}.json")
+        checkpoint_path = self.path_config.checkpoints_dir / f"{name}.json"
         if not checkpoint_path.exists():
             return False
 

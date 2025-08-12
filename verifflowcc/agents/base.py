@@ -5,6 +5,8 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
 
+from verifflowcc.core.path_config import PathConfig
+
 
 class BaseAgent(ABC):
     """Base class for all VeriFlowCC subagents."""
@@ -15,6 +17,7 @@ class BaseAgent(ABC):
         model: str = "claude-3-sonnet",
         max_tokens: int = 4000,
         config_path: Path | None = None,
+        path_config: PathConfig | None = None,
     ):
         """Initialize the base agent.
 
@@ -22,12 +25,14 @@ class BaseAgent(ABC):
             name: Agent name identifier
             model: Claude model to use
             max_tokens: Maximum tokens for responses
-            config_path: Path to configuration file
+            config_path: Path to configuration file (deprecated, use path_config)
+            path_config: PathConfig instance for managing project paths
         """
         self.name = name
         self.model = model
         self.max_tokens = max_tokens
-        self.config_path = config_path or Path(".agilevv/config.yaml")
+        self.path_config = path_config or PathConfig()
+        self.config_path = config_path or self.path_config.config_path
         self.context: dict[str, Any] = {}
 
     @abstractmethod
@@ -63,7 +68,7 @@ class BaseAgent(ABC):
             artifact_name: Name of the artifact
             content: Content to save
         """
-        artifact_path = Path(".agilevv") / artifact_name
+        artifact_path = self.path_config.base_dir / artifact_name
         artifact_path.parent.mkdir(parents=True, exist_ok=True)
 
         if isinstance(content, dict):
@@ -80,7 +85,7 @@ class BaseAgent(ABC):
         Returns:
             Artifact content
         """
-        artifact_path = Path(".agilevv") / artifact_name
+        artifact_path = self.path_config.base_dir / artifact_name
         if artifact_path.exists():
             content = artifact_path.read_text()
             if artifact_name.endswith(".json"):

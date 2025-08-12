@@ -65,6 +65,58 @@ def isolated_agilevv_dir(
 
 
 @pytest.fixture(scope="module")
+def isolated_agilevv_module_dir(
+    request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory
+) -> Generator[PathConfig, None, None]:
+    """Provide an isolated .agilevv directory for all tests in a module.
+
+    Similar to isolated_agilevv_dir but with module scope.
+    """
+    test_dir = tmp_path_factory.mktemp(".agilevv-module") / ".agilevv-module"
+    test_dir.mkdir(parents=True, exist_ok=True)
+
+    original_env = os.environ.get("AGILEVV_BASE_DIR")
+    os.environ["AGILEVV_BASE_DIR"] = str(test_dir)
+
+    config = PathConfig(base_dir=test_dir)
+    config.ensure_structure()
+
+    try:
+        yield config
+    finally:
+        if original_env is not None:
+            os.environ["AGILEVV_BASE_DIR"] = original_env
+        elif "AGILEVV_BASE_DIR" in os.environ:
+            del os.environ["AGILEVV_BASE_DIR"]
+
+
+@pytest.fixture(scope="session")
+def isolated_agilevv_session_dir(
+    request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory
+) -> Generator[PathConfig, None, None]:
+    """Provide an isolated .agilevv directory for all tests in a session.
+
+    Similar to isolated_agilevv_dir but with session scope.
+    """
+    test_dir = tmp_path_factory.mktemp(".agilevv-session") / ".agilevv-session"
+    test_dir.mkdir(parents=True, exist_ok=True)
+
+    original_env = os.environ.get("AGILEVV_BASE_DIR")
+    os.environ["AGILEVV_BASE_DIR"] = str(test_dir)
+
+    config = PathConfig(base_dir=test_dir)
+    config.ensure_structure()
+
+    try:
+        yield config
+    finally:
+        if original_env is not None:
+            os.environ["AGILEVV_BASE_DIR"] = original_env
+        elif "AGILEVV_BASE_DIR" in os.environ:
+            del os.environ["AGILEVV_BASE_DIR"]
+
+
+@pytest.fixture(scope="module")
 def shared_agilevv_dir(
     request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory
 ) -> Generator[PathConfig, None, None]:

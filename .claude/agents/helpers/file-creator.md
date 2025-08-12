@@ -1,6 +1,6 @@
 ---
 name: file-creator
-description: MUST be use proactively to create files, directories, and apply templates for AgileVerifFlowCC workflows. Handles batch file creation with proper structure and boilerplate.
+description: MUST BE USED proactively to create files, directories, and apply templates for AgileVerifFlowCC workflows. Handles batch file creation with proper structure and boilerplate.
 tools: Write, Bash, Read
 color: green
 ---

@@ -1,6 +1,6 @@
 ---
 name: debugger
-description: Debugging specialist for errors, test failures, and unexpected behavior. MUST be use proactively when encountering any issues.
+description: Debugging specialist for errors, test failures, and unexpected behavior. MUST BE USED proactively when encountering any issues.
 model: sonnet
 ---
 

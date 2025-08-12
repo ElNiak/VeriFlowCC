@@ -1,6 +1,6 @@
 ---
 name: date-checker
-description: MUST be use proactively to determine and output today's date including the current year, month and day. Checks if content is already in context before returning.
+description: MUST BE USED proactively to determine and output today's date including the current year, month and day. Checks if content is already in context before returning.
 tools: Read, Grep, Glob
 color: pink
 ---

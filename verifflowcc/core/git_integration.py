@@ -4,17 +4,21 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
+from verifflowcc.core.path_config import PathConfig
+
 
 class GitIntegration:
     """Handles git operations for checkpointing and state management."""
 
-    def __init__(self, repo_path: Path | None = None):
+    def __init__(self, repo_path: Path | None = None, path_config: PathConfig | None = None):
         """Initialize git integration.
 
         Args:
             repo_path: Path to git repository
+            path_config: PathConfig instance for managing project paths
         """
         self.repo_path = repo_path or Path.cwd()
+        self.path_config = path_config or PathConfig()
 
     def is_git_repo(self) -> bool:
         """Check if current directory is a git repository.
@@ -77,7 +81,10 @@ class GitIntegration:
         try:
             # Stage .agilevv directory
             subprocess.run(
-                ["git", "add", ".agilevv/"], cwd=self.repo_path, check=True, capture_output=True
+                ["git", "add", str(self.path_config.base_dir) + "/"],
+                cwd=self.repo_path,
+                check=True,
+                capture_output=True,
             )
 
             # Create commit
@@ -203,7 +210,7 @@ class GitIntegration:
 
             # Checkout the tag
             subprocess.run(
-                ["git", "checkout", tag_name, "--", ".agilevv/"],
+                ["git", "checkout", tag_name, "--", str(self.path_config.base_dir) + "/"],
                 cwd=self.repo_path,
                 check=True,
                 capture_output=True,
@@ -230,7 +237,7 @@ class GitIntegration:
 
         try:
             result = subprocess.run(
-                ["git", "diff", tag_name, "HEAD", "--", ".agilevv/"],
+                ["git", "diff", tag_name, "HEAD", "--", str(self.path_config.base_dir) + "/"],
                 cwd=self.repo_path,
                 capture_output=True,
                 text=True,

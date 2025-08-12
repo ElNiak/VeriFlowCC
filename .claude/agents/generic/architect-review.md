@@ -1,6 +1,6 @@
 ---
 name: architect-reviewer
-description: Reviews code changes for architectural consistency and patterns. MUST be use proactively after any structural changes, new services, or API modifications. Ensures SOLID principles, proper layering, and maintainability.
+description: Reviews code changes for architectural consistency and patterns. MUST BE USED proactively after any structural changes, new services, or API modifications. Ensures SOLID principles, proper layering, and maintainability.
 model: opus
 ---
 

@@ -5,16 +5,17 @@ This guide helps diagnose and fix common issues with the VeriFlowCC test isolati
 ## Table of Contents
 
 1. [Common Issues](#common-issues)
-2. [Debugging Techniques](#debugging-techniques)
-3. [Error Messages](#error-messages)
-4. [Performance Issues](#performance-issues)
-5. [CI/CD Issues](#cicd-issues)
+1. [Debugging Techniques](#debugging-techniques)
+1. [Error Messages](#error-messages)
+1. [Performance Issues](#performance-issues)
+1. [CI/CD Issues](#cicd-issues)
 
 ## Common Issues
 
 ### Tests Pass Individually but Fail When Run Together
 
 **Symptoms:**
+
 - `pytest tests/test_module.py::test_one` passes
 - `pytest tests/test_module.py` fails
 - Random test failures in CI but not locally
@@ -24,10 +25,12 @@ This guide helps diagnose and fix common issues with the VeriFlowCC test isolati
 **Solutions:**
 
 1. **Use isolated fixtures instead of shared ones:**
+
 ```python
 # Problem: Shared state
 def test_one(shared_agilevv_dir): ...
 def test_two(shared_agilevv_dir): ...  # May see test_one's data
+
 
 # Solution: Isolated directories
 def test_one(isolated_agilevv_dir): ...
@@ -35,12 +38,15 @@ def test_two(isolated_agilevv_dir): ...  # Fresh directory
 ```
 
 2. **Check for module-level variables:**
+
 ```python
 # Problem: Module-level state
 _cache = {}
 
+
 def test_one():
     _cache["key"] = "value"  # Affects other tests
+
 
 # Solution: Use fixtures for state
 def test_one(isolated_agilevv_dir):
@@ -49,6 +55,7 @@ def test_one(isolated_agilevv_dir):
 ```
 
 3. **Verify cleanup in fixtures:**
+
 ```python
 # Ensure proper cleanup
 @pytest.fixture
@@ -63,6 +70,7 @@ def my_fixture(isolated_agilevv_dir):
 ### Test Directories Not Being Cleaned Up
 
 **Symptoms:**
+
 - `/tmp` filling up with `.agilevv-test-*` directories
 - Old test data persisting between runs
 - Disk space issues
@@ -72,6 +80,7 @@ def my_fixture(isolated_agilevv_dir):
 **Solutions:**
 
 1. **Check for the keep flag:**
+
 ```bash
 # Check your pytest command
 pytest --keep-test-dirs  # This prevents cleanup!
@@ -81,6 +90,7 @@ pytest  # Cleanup happens automatically
 ```
 
 2. **Manual cleanup of old directories:**
+
 ```bash
 # Find old test directories
 find /tmp -name ".agilevv-test-*" -type d -mtime +1
@@ -90,6 +100,7 @@ find /tmp -name ".agilevv-test-*" -type d -mtime +1 -exec rm -rf {} +
 ```
 
 3. **Add cleanup to test teardown:**
+
 ```python
 def test_with_explicit_cleanup(isolated_agilevv_dir):
     try:
@@ -104,6 +115,7 @@ def test_with_explicit_cleanup(isolated_agilevv_dir):
 ### FileNotFoundError: Cannot Find Test Files
 
 **Symptoms:**
+
 - `FileNotFoundError: [Errno 2] No such file or directory`
 - Tests fail with "path does not exist"
 - Inconsistent file access errors
@@ -113,6 +125,7 @@ def test_with_explicit_cleanup(isolated_agilevv_dir):
 **Solutions:**
 
 1. **Ensure directories exist before use:**
+
 ```python
 def test_create_structure(isolated_agilevv_dir):
     # Problem: Directory might not exist
@@ -124,6 +137,7 @@ def test_create_structure(isolated_agilevv_dir):
 ```
 
 2. **Use ensure_structure for complete setup:**
+
 ```python
 def test_with_structure(isolated_agilevv_dir):
     # Create all standard directories
@@ -135,6 +149,7 @@ def test_with_structure(isolated_agilevv_dir):
 ```
 
 3. **Check path resolution:**
+
 ```python
 def test_path_resolution(isolated_agilevv_dir):
     # Debug path issues
@@ -146,6 +161,7 @@ def test_path_resolution(isolated_agilevv_dir):
 ### PermissionError: Cannot Write to Directory
 
 **Symptoms:**
+
 - `PermissionError: [Errno 13] Permission denied`
 - Cannot create files in test directory
 - Cleanup fails with permission errors
@@ -155,6 +171,7 @@ def test_path_resolution(isolated_agilevv_dir):
 **Solutions:**
 
 1. **Verify test environment:**
+
 ```python
 def test_check_environment(isolated_agilevv_dir):
     # Ensure we're in test environment
@@ -166,6 +183,7 @@ def test_check_environment(isolated_agilevv_dir):
 ```
 
 2. **Fix directory permissions:**
+
 ```bash
 # Check permissions
 ls -la /tmp/.agilevv-test-*
@@ -175,6 +193,7 @@ chmod -R u+rwx /tmp/.agilevv-test-*
 ```
 
 3. **Use temp directories correctly:**
+
 ```python
 def test_temp_dir_usage(tmp_path):
     # tmp_path is guaranteed writable
@@ -186,6 +205,7 @@ def test_temp_dir_usage(tmp_path):
 ### ValueError: Path Outside Base Directory
 
 **Symptoms:**
+
 - `ValueError: Path /etc/passwd is outside base directory`
 - `ValueError: Path contains parent directory references`
 - Security validation errors
@@ -195,6 +215,7 @@ def test_temp_dir_usage(tmp_path):
 **Solutions:**
 
 1. **Use relative paths only:**
+
 ```python
 def test_relative_paths(isolated_agilevv_dir):
     # Problem: Absolute path
@@ -205,6 +226,7 @@ def test_relative_paths(isolated_agilevv_dir):
 ```
 
 2. **Avoid path traversal:**
+
 ```python
 def test_no_traversal(isolated_agilevv_dir):
     # Problem: Path traversal
@@ -252,7 +274,9 @@ ls -la /tmp/.agilevv-test-*/
 ```python
 def test_with_debugger(isolated_agilevv_dir):
     """Drop into debugger for inspection."""
-    import pdb; pdb.set_trace()
+    import pdb
+
+    pdb.set_trace()
 
     # Inspect in debugger:
     # p isolated_agilevv_dir.base_dir
@@ -265,6 +289,7 @@ def test_with_debugger(isolated_agilevv_dir):
 def test_check_environment():
     """Debug environment variables."""
     import os
+
     print(f"AGILEVV_BASE_DIR: {os.environ.get('AGILEVV_BASE_DIR', 'Not set')}")
     print(f"TMPDIR: {os.environ.get('TMPDIR', 'Not set')}")
     print(f"PWD: {os.getcwd()}")
@@ -277,6 +302,7 @@ def test_check_environment():
 **Meaning:** Trying to access a property that doesn't exist.
 
 **Common mistakes:**
+
 ```python
 # Wrong property names
 config.backlog_dir  # Wrong - no such property
@@ -294,6 +320,7 @@ config.requirements_dir  # Correct
 **Meaning:** Trying to cleanup a production directory.
 
 **Fix:**
+
 ```python
 # Only test directories can be cleaned up
 config = PathConfig(base_dir=".agilevv-test")  # OK
@@ -308,6 +335,7 @@ config = PathConfig(base_dir=".agilevv")  # Production
 **Meaning:** Absolute paths are not allowed for security.
 
 **Fix:**
+
 ```python
 # Use relative paths
 config.get_artifact_path("relative/path.txt")  # OK
@@ -319,6 +347,7 @@ config.get_artifact_path("relative/path.txt")  # OK
 ### Slow Test Startup
 
 **Symptoms:**
+
 - Tests take long to start
 - Directory creation is slow
 - Fixture setup timeout
@@ -326,6 +355,7 @@ config.get_artifact_path("relative/path.txt")  # OK
 **Solutions:**
 
 1. **Use appropriate fixture scope:**
+
 ```python
 # Expensive setup? Use session scope
 @pytest.fixture(scope="session")
@@ -336,6 +366,7 @@ def expensive_setup(session_agilevv_dir):
 ```
 
 2. **Parallelize test execution:**
+
 ```bash
 # Run tests in parallel
 pytest -n auto  # Uses all CPU cores
@@ -343,6 +374,7 @@ pytest -n 4     # Uses 4 workers
 ```
 
 3. **Cache expensive operations:**
+
 ```python
 @pytest.fixture(scope="session")
 def cached_data(session_agilevv_dir):
@@ -358,6 +390,7 @@ def cached_data(session_agilevv_dir):
 ### High Memory Usage
 
 **Symptoms:**
+
 - Tests consume excessive memory
 - OOM errors in CI
 - Memory not released between tests
@@ -365,6 +398,7 @@ def cached_data(session_agilevv_dir):
 **Solutions:**
 
 1. **Explicitly clean up large objects:**
+
 ```python
 def test_large_data(isolated_agilevv_dir):
     large_data = create_large_dataset()
@@ -374,10 +408,12 @@ def test_large_data(isolated_agilevv_dir):
     finally:
         del large_data  # Explicit cleanup
         import gc
+
         gc.collect()  # Force garbage collection
 ```
 
 2. **Use generators for large datasets:**
+
 ```python
 def test_with_generator(isolated_agilevv_dir):
     # Don't load all data at once
@@ -390,14 +426,16 @@ def test_with_generator(isolated_agilevv_dir):
 ### Tests Pass Locally but Fail in CI
 
 **Common causes:**
+
 1. Different Python versions
-2. Missing dependencies
-3. Different filesystem (case sensitivity)
-4. Environment variables
+1. Missing dependencies
+1. Different filesystem (case sensitivity)
+1. Environment variables
 
 **Debug steps:**
 
 1. **Match CI environment locally:**
+
 ```bash
 # Use same Python version
 python --version  # Check local
@@ -411,6 +449,7 @@ pytest
 ```
 
 2. **Check CI logs for environment:**
+
 ```yaml
 # In GitHub Actions, add debugging
 - name: Debug environment
@@ -423,8 +462,10 @@ pytest
 ```
 
 3. **Handle platform differences:**
+
 ```python
 import platform
+
 
 def test_platform_specific(isolated_agilevv_dir):
     if platform.system() == "Windows":
@@ -438,6 +479,7 @@ def test_platform_specific(isolated_agilevv_dir):
 ### Cleanup Fails in CI
 
 **Symptoms:**
+
 - "Permission denied" errors
 - "Directory not empty" errors
 - Hanging cleanup processes
@@ -445,9 +487,11 @@ def test_platform_specific(isolated_agilevv_dir):
 **Solutions:**
 
 1. **Add retry logic:**
+
 ```python
 import time
 import shutil
+
 
 def robust_cleanup(path, retries=3):
     for i in range(retries):
@@ -461,6 +505,7 @@ def robust_cleanup(path, retries=3):
 ```
 
 2. **Handle Windows file locking:**
+
 ```python
 def test_windows_compatible(isolated_agilevv_dir):
     file_path = isolated_agilevv_dir.base_dir / "test.txt"
@@ -478,14 +523,17 @@ def test_windows_compatible(isolated_agilevv_dir):
 If you encounter issues not covered here:
 
 1. **Check test output carefully:**
+
 ```bash
 pytest -vvs --tb=long tests/problematic_test.py
 ```
 
 2. **Search existing issues:**
+
 - GitHub Issues: [VeriFlowCC Issues](https://github.com/yourusername/VeriFlowCC/issues)
 
 3. **Create minimal reproduction:**
+
 ```python
 # minimal_test.py
 def test_minimal_reproduction(isolated_agilevv_dir):
@@ -494,6 +542,7 @@ def test_minimal_reproduction(isolated_agilevv_dir):
 ```
 
 4. **Provide environment details:**
+
 ```bash
 python --version
 pip list | grep -E "pytest|verifflowcc"
