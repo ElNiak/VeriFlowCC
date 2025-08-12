@@ -81,6 +81,7 @@ line-ending = "auto"
 "tests/*" = ["S101"]  # Allow assert in tests
 "verifflowcc/cli.py" = ["B008"]  # Allow function calls in defaults (Typer pattern)
 "verifflowcc/prompts/__init__.py" = ["S701"]  # Not rendering HTML, autoescape not needed
+"verifflowcc/core/git_integration.py" = ["S603", "S607"]  # Allow subprocess calls for git operations
 
 [tool.mypy]
 python_version = "3.10"

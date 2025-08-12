@@ -4,6 +4,7 @@ import asyncio
 import json
 import signal
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -298,6 +299,33 @@ def plan(
     with state_file.open("w") as f:
         json.dump(state, f, indent=2)
 
+    # Integrate Claude-Code subagent for requirements analysis
+    try:
+        from verifflowcc.agents import RequirementsAnalystAgent
+
+        console.print("\n[cyan]Analyzing requirements with Claude-Code subagent...[/cyan]")
+
+        agent = RequirementsAnalystAgent()
+        story_data = {
+            "id": f"STORY-{story_id:03d}",
+            "title": selected_story,
+            "description": selected_story,
+        }
+
+        # Run requirements analysis
+        result = asyncio.run(agent.process({"story": story_data}))
+
+        if result.get("acceptance_criteria"):
+            console.print("\n[green]Requirements elaborated successfully![/green]")
+            console.print(
+                f"Generated {len(result.get('acceptance_criteria', []))} acceptance criteria"
+            )
+
+    except ImportError:
+        console.print("[yellow]Requirements analyst agent not fully configured[/yellow]")
+    except Exception as e:
+        console.print(f"[yellow]Requirements analysis skipped: {e!s}[/yellow]")
+
     console.print(
         Panel(
             f"[green]Story selected:[/green] {selected_story}\n\n"
@@ -369,16 +397,56 @@ def sprint(
     stages = ["Requirements", "Design", "Coding", "Testing", "Integration", "Validation"]
 
     try:
-        # Import Orchestrator if available, otherwise use placeholder
-        # TODO: Replace with actual Orchestrator import when implemented
-        # -> Once the Orchestrator class is implemented, remove this placeholder
-        try:
-            from verifflowcc.core.orchestrator import Orchestrator as RealOrchestrator
+        # Use the real Orchestrator with Claude-Code integration
+        from verifflowcc.core.orchestrator import Orchestrator as RealOrchestrator
 
-            _ = RealOrchestrator()
-        except ImportError:
-            # Use the placeholder Orchestrator class defined at module level
-            _ = Orchestrator()
+        orchestrator = RealOrchestrator()
+
+        # Prepare story context
+        story_data = {
+            "id": f"STORY-{current_sprint_num + 1:03d}",
+            "title": story,
+            "description": story,
+            "priority": "Medium",
+        }
+
+        # Run the sprint through orchestrator
+        sprint_result = asyncio.run(orchestrator.run_sprint(story_data))
+
+        # Display results
+        if all(
+            stage.get("status") != "failed" for stage in sprint_result.get("stages", {}).values()
+        ):
+            console.print(
+                Panel(
+                    "[green]✓[/green] Sprint completed successfully!\n"
+                    "All V-Model stages executed and validated.",
+                    title="Sprint Complete",
+                    border_style="green",
+                )
+            )
+        else:
+            failed_stages = [
+                stage
+                for stage, result in sprint_result.get("stages", {}).items()
+                if result.get("status") == "failed"
+            ]
+            console.print(
+                Panel(
+                    f"[yellow]⚠[/yellow] Sprint completed with issues.\n"
+                    f"Failed stages: {', '.join(failed_stages)}",
+                    title="Sprint Complete with Warnings",
+                    border_style="yellow",
+                )
+            )
+
+    except ImportError:
+        # Fallback to simulation if orchestrator not available
+        console.print(
+            "[yellow]Warning: Orchestrator not fully implemented, using simulation[/yellow]"
+        )
+
+        stages = ["Requirements", "Design", "Coding", "Testing", "Integration", "Validation"]
 
         with Progress(
             SpinnerColumn(),
@@ -400,18 +468,19 @@ def sprint(
                 state["completed_stages"].append(stage.lower())
                 with state_file.open("w") as f:
                     json.dump(state, f, indent=2)
+
+        console.print(
+            Panel(
+                "[green]✓[/green] Sprint simulation completed!\n"
+                "Use actual orchestrator for production.",
+                title="Sprint Complete",
+                border_style="green",
+            )
+        )
+
     except KeyboardInterrupt:
         console.print("\n[yellow]Sprint execution interrupted by user[/yellow]")
         sys.exit(130)
-
-    console.print(
-        Panel(
-            "[green]✓[/green] Sprint completed successfully!\n"
-            "All V-Model stages executed and validated.",
-            title="Sprint Complete",
-            border_style="green",
-        )
-    )
 
 
 @app.command()
@@ -543,6 +612,11 @@ def checkpoint(
         console.print("[red]Project not initialized.[/red] Run 'verifflowcc init' first.")
         raise typer.Exit(1)
 
+    # Import git integration
+    from verifflowcc.core.git_integration import GitIntegration
+
+    git = GitIntegration()
+
     # Create checkpoint
     checkpoint_name = (
         name or f"checkpoint_{len(list((agilevv_dir / 'checkpoints').glob('*.json'))) + 1}"
@@ -552,17 +626,38 @@ def checkpoint(
     with (agilevv_dir / "state.json").open() as f:
         state = json.load(f)
 
-    # Create checkpoint
+    # Create checkpoint data
     checkpoint_data = {
         "name": checkpoint_name,
         "message": message or "Manual checkpoint",
         "state": state,
-        "timestamp": str(Path.cwd()),  # Simplified for now
+        "timestamp": datetime.now().isoformat(),
+        "git_commit": None,
+        "git_tag": None,
     }
 
+    # Save checkpoint file
     checkpoint_file = agilevv_dir / "checkpoints" / f"{checkpoint_name}.json"
     with checkpoint_file.open("w") as f:
         json.dump(checkpoint_data, f, indent=2)
+
+    # Git integration
+    if git.is_git_repo():
+        # Create git commit
+        success, commit_result = git.create_checkpoint_commit(
+            checkpoint_name, message or "Manual checkpoint"
+        )
+        if success:
+            checkpoint_data["git_commit"] = commit_result
+            # Create git tag
+            tag_success, tag_result = git.create_checkpoint_tag(checkpoint_name)
+            if tag_success:
+                checkpoint_data["git_tag"] = tag_result
+                console.print(f"[green]Git tag created:[/green] {tag_result}")
+
+        # Update checkpoint file with git info
+        with checkpoint_file.open("w") as f:
+            json.dump(checkpoint_data, f, indent=2)
 
     # Update state history
     state["checkpoint_history"].append(checkpoint_name)
@@ -587,18 +682,35 @@ def checkpoint_list() -> None:
     checkpoints_dir = agilevv_dir / "checkpoints"
     checkpoints = list(checkpoints_dir.glob("*.json"))
 
-    if not checkpoints:
+    # Import git integration
+    from verifflowcc.core.git_integration import GitIntegration
+
+    git = GitIntegration()
+
+    # Get git tags if available
+    git_checkpoints = []
+    if git.is_git_repo():
+        git_checkpoints = git.list_checkpoint_tags()
+
+    if not checkpoints and not git_checkpoints:
         console.print("[yellow]No checkpoints found.[/yellow]")
         return
 
     table = Table(title="Available Checkpoints")
     table.add_column("Name", style="cyan")
     table.add_column("Message", style="white")
+    table.add_column("Timestamp", style="green")
+    table.add_column("Git Tag", style="blue")
 
     for checkpoint_file in checkpoints:
         with checkpoint_file.open() as f:
             data = json.load(f)
-        table.add_row(data["name"], data.get("message", ""))
+        git_tag = data.get("git_tag", "")
+        if git_tag:
+            git_tag = git_tag.replace("checkpoint/", "")
+        table.add_row(
+            data["name"], data.get("message", ""), data.get("timestamp", "N/A"), git_tag or "N/A"
+        )
 
     console.print(table)
 
@@ -606,6 +718,9 @@ def checkpoint_list() -> None:
 @checkpoint_app.command("restore")
 def checkpoint_restore(
     name: str = typer.Argument(..., help="Checkpoint name to restore"),
+    force: bool = typer.Option(
+        False, "--force", "-f", help="Force restore even with uncommitted changes"
+    ),
 ) -> None:
     """Restore to a checkpoint."""
     agilevv_dir = Path.cwd() / ".agilevv"
@@ -613,6 +728,11 @@ def checkpoint_restore(
     if not agilevv_dir.exists():
         console.print("[red]Project not initialized.[/red]")
         raise typer.Exit(1)
+
+    # Import git integration
+    from verifflowcc.core.git_integration import GitIntegration
+
+    git = GitIntegration()
 
     checkpoint_file = agilevv_dir / "checkpoints" / f"{name}.json"
 
@@ -624,7 +744,16 @@ def checkpoint_restore(
         console.print("[yellow]Restore cancelled.[/yellow]")
         raise typer.Exit(0)
 
-    # Restore state
+    # Try git restore first if available
+    if git.is_git_repo():
+        success, message = git.restore_checkpoint(name, force)
+        if success:
+            console.print(f"[green]Git restore successful:[/green] {message}")
+        else:
+            console.print(f"[yellow]Git restore failed:[/yellow] {message}")
+            console.print("[yellow]Falling back to file-based restore...[/yellow]")
+
+    # File-based restore
     with checkpoint_file.open() as f:
         checkpoint_data = json.load(f)
 
@@ -654,11 +783,7 @@ async def simulate_stage_execution(stage: str) -> None:
     await asyncio.sleep(0.5)  # Simulate work
 
 
-# Placeholder imports that will be implemented later
-class Orchestrator:
-    """Placeholder for the orchestrator class."""
-
-    pass
+# Placeholder for the orchestrator class (removed - now using real implementation)
 
 
 if __name__ == "__main__":

@@ -28,10 +28,10 @@
   - [x] 3.1 Write tests for plan command with story selection
   - [x] 3.2 Implement backlog reading from `.agilevv/backlog.md`
   - [x] 3.3 Create interactive story selection interface
-  - [ ] 3.4 Add Claude-Code subagent integration for requirements analysis
+  - [x] 3.4 Add Claude-Code subagent integration for requirements analysis
   - [x] 3.5 Write tests for sprint command orchestration
   - [x] 3.6 Implement sprint command with --story parameter
-  - [ ] 3.7 Integrate orchestrator for V-Model stage execution
+  - [x] 3.7 Integrate orchestrator for V-Model stage execution
   - [x] 3.8 Add progress bars and real-time output streaming
   - [x] 3.9 Verify all tests pass
 
@@ -42,7 +42,7 @@
   - [x] 4.3 Write tests for validate command
   - [x] 4.4 Implement validation with pytest integration
   - [x] 4.5 Write tests for checkpoint command
-  - [ ] 4.6 Implement git integration for checkpointing
+  - [x] 4.6 Implement git integration for checkpointing
   - [x] 4.7 Add checkpoint list and restore subcommands
   - [x] 4.8 Verify all tests pass
 
@@ -53,6 +53,6 @@
   - [x] 5.3 Verify state persistence across commands
   - [x] 5.4 Test error recovery and graceful degradation
   - [x] 5.5 Optimize performance and token usage
-  - [ ] 5.6 Update documentation and examples
+  - [x] 5.6 Update documentation and examples
   - [x] 5.7 Run final test suite and ensure 80% coverage
   - [x] 5.8 Verify all tests pass
