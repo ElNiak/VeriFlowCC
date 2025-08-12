@@ -47,6 +47,10 @@ Stage: coding -> testing
 Gate: code_complete (PASS)
 ```
 
+### Best Practices
+
+@.claude/standards/git-best-practices.md
+
 ## V-Model Gate Operations
 
 ### Planning Gate Pass

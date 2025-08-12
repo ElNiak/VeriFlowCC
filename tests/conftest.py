@@ -4,6 +4,7 @@ import os
 import shutil
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 
 import pytest
 from verifflowcc.core.path_config import PathConfig
@@ -336,7 +337,7 @@ def agilevv_factory(tmp_path: Path) -> Generator[AgileVVDirFactory, None, None]:
 
 
 # Test data builders
-def build_sample_user_story(story_id: str, title: str, description: str) -> dict[str, str]:
+def build_sample_user_story(story_id: str, title: str, description: str) -> dict[str, Any]:
     """Build a sample user story for testing.
 
     Args:
@@ -360,7 +361,7 @@ def build_sample_user_story(story_id: str, title: str, description: str) -> dict
     }
 
 
-def build_sample_sprint_data(sprint_num: int, stories: list[str]) -> dict[str, any]:
+def build_sample_sprint_data(sprint_num: int, stories: list[str]) -> dict[str, Any]:
     """Build sample sprint data for testing.
 
     Args:

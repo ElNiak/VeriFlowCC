@@ -53,6 +53,7 @@ dev-dependencies = [
 target-version = "py310"
 line-length = 100
 src = ["verifflowcc", "tests"]
+exclude = [".claude"]
 
 [tool.ruff.lint]
 select = [
@@ -93,6 +94,7 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 warn_no_return = true
 check_untyped_defs = true
+exclude = [".claude"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"

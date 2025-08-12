@@ -5,7 +5,10 @@
 default_language_version:
   python: python3.10
 
-fast_fail: true
+fail_fast: true
+
+# Exclude .claude directory from all hooks
+exclude: '^\.claude/'
 
 # TODO: add check Check for placeholders + no mock
 
