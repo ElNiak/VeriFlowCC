@@ -36,7 +36,7 @@ uv run pytest -m integration  # integration tests only
 uv run pytest -m e2e  # end-to-end tests only
 
 # Run tests with coverage report
-uv run pytest --cov=verifflowcc --cov-report=term-missing
+uv run pytest --log-cli-level=DEBUG --cov=verifflowcc --cov-report=term-missing
 
 # Run tests in parallel (faster)
 uv run pytest -n auto
@@ -170,16 +170,19 @@ VeriFlowCC provides a comprehensive test isolation framework to ensure tests don
 Three fixture scopes for different testing needs:
 
 1. **`isolated_agilevv_dir`** (function scope)
+
    - Each test gets a unique directory
    - Complete isolation between tests
    - Automatic cleanup after each test
 
-2. **`shared_agilevv_dir`** (module scope)
+1. **`shared_agilevv_dir`** (module scope)
+
    - Shared directory for all tests in a module
    - Useful for integration tests with shared state
    - Cleaned up after module completes
 
-3. **`session_agilevv_dir`** (session scope)
+1. **`session_agilevv_dir`** (session scope)
+
    - Single directory for entire test session
    - For expensive setup that should only happen once
    - Cleaned up after all tests complete

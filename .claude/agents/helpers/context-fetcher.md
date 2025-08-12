@@ -68,12 +68,12 @@ Token Budget: [used]/[allocated]
 [relevant code snippet]
 ````
 
-### Dependencies Identified
+### Dependencies Identified:
 
 - External: package1, package2
 - Internal: module.submodule
 
-## Summary
+## Summary:
 
 [Brief description of what was found and its relevance]
 

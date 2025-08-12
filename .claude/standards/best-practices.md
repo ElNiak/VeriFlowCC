@@ -16,6 +16,7 @@ ELSE:
 ### Keep It Simple
 
 - Implement code in the fewest lines possible
+- Prefer small files and functions
 - Avoid over-engineering solutions
 - Choose straightforward approaches over clever ones
 
