@@ -7,6 +7,8 @@ default_language_version:
 
 fast_fail: true
 
+# TODO: add check Check for placeholders + no mock
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0

@@ -61,3 +61,81 @@ When adding third-party dependencies:
   - Number of stars/downloads
   - Clear documentation
     </conditional-block>
+
+### Code Quality Restrictions
+
+- **Never commit placeholder code:**
+
+  - No `TODO` without a ticket number: Use `TODO(JIRA-123): description`
+  - No `FIXME` without immediate resolution plan
+  - No dummy data in production code
+  - No hardcoded test values (use configuration/environment variables)
+
+- **Never commit mock implementations:**
+
+  - No mock services without `mock` in filename (e.g., `service.mock.ts`)
+  - No stub functions returning static data in production code
+  - No commented-out real implementations replaced with mocks
+  - Mock code must be in test directories only
+
+- **Never commit oversimplified solutions:**
+
+  - No bypassing error handling with empty catch blocks
+  - No ignoring edge cases with comments like "will handle later"
+  - No removing validation "temporarily"
+  - No shortcuts that compromise security or data integrity
+
+- **Never commit incomplete features:**
+
+  - No partially implemented functions
+  - No features with "coming soon" messages
+  - No UI elements without backend implementation
+  - No endpoints returning hardcoded responses
+
+### Pre-commit Validation
+
+Before ANY commit, verify:
+
+```bash
+# Check for forbidden patterns
+grep -r "TODO[^(]" --include="*.{js,ts,py,java}" .  # TODOs without ticket
+grep -r "FIXME" --include="*.{js,ts,py,java}" .
+grep -r "console.log\|print\|System.out" --include="*.{js,ts,py,java}" .
+grep -r "any\s*=" --include="*.{ts}" .  # TypeScript 'any' types
+grep -r "//\s*return\|#\s*return" --include="*.{js,ts,py}" .  # Commented returns
+grep -r "catch\s*{\s*}" --include="*.{js,ts,java}" .  # Empty catch blocks
+```
+
+### Implementation Standards
+
+When implementing features:
+
+1. **Complete or Don't Commit:**
+
+   - Feature works end-to-end or isn't merged
+   - All error cases handled
+   - All inputs validated
+   - All outputs verified
+
+1. **Real Data Only:**
+
+   - Use actual database connections
+   - Implement real API calls
+   - Use proper authentication/authorization
+   - Handle real-world scenarios
+
+1. **No Simplification Debt:**
+
+   - Don't simplify to "make it work"
+   - Implement proper patterns from start
+   - Include all necessary checks
+   - Consider performance implications
+
+1. **Feature Flags Instead of Mocks:**
+
+   - Use feature flags for gradual rollout
+   - Hide incomplete features behind flags
+   - Never use mocks as temporary solutions
+   - Document flag removal timeline
+
+</conditional-block>
