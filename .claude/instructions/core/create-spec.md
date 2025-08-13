@@ -495,7 +495,8 @@ Use the file-creator subagent to await user approval from step 11 and then creat
   - [ ] 1.1 Write tests for [COMPONENT]
   - [ ] 1.2 [IMPLEMENTATION_STEP]
   - [ ] 1.3 [IMPLEMENTATION_STEP]
-  - [ ] 1.4 Verify all tests pass
+  - [ ] 1.4 Format code, run linters and fix issues
+  - [ ] 1.5 Verify all tests pass
 
 - [ ] 2. [MAJOR_TASK_DESCRIPTION]
 
@@ -509,6 +510,7 @@ Use the file-creator subagent to await user approval from step 11 and then creat
 - Follow TDD approach
 - Group related functionality
 - Build incrementally
+- Ensure frequent formatting and linting
   \</ordering_principles>
 
 </step>

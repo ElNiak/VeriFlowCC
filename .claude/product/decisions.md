@@ -209,6 +209,51 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
+### ADR-009: Claude Code SDK Integration
+
+**Date**: 2025-08-13
+**Status**: Accepted
+
+**Context**: Need to transition from mock agent implementations to real AI integration for production-ready V-Model workflow.
+
+**Decision**: Use Claude Code SDK (`claude-code-sdk`) instead of traditional Anthropic API for all agent implementations.
+
+**Rationale**:
+
+- Claude Code SDK provides enhanced code generation capabilities
+- Built-in streaming support for real-time feedback
+- Session management and context persistence
+- Optimized for development workflows
+- Better integration with development tools
+
+**Implementation Details**:
+
+- SDK configuration centralized in `SDKConfig` class
+- Agent factory pattern ensures consistent SDK integration
+- Jinja2 templates for specialized V-Model prompts
+- Mock mode fallback for testing and development
+- Session state persistence across V-Model stages
+
+**Consequences**:
+
+- ✅ Real AI-powered V-Model execution
+- ✅ Enhanced code generation capabilities
+- ✅ Streaming responses for better UX
+- ✅ Session persistence across stages
+- ✅ Professional development-focused interface
+- ⚠️ Dependency on Claude Code SDK stability
+- ⚠️ Requires API key management
+- ❌ Additional complexity over simple HTTP calls
+
+**Alternatives Considered**:
+
+- Traditional Anthropic API (limited development features)
+- OpenAI API (less specialized for code workflows)
+- Local LLM hosting (resource intensive, less capable)
+- Continue with mock implementations (no real functionality)
+
+______________________________________________________________________
+
 ## Design Principles
 
 ### 1. Simplicity First

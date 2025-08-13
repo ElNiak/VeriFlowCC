@@ -1,182 +1,379 @@
 """Requirements Analyst Agent for VeriFlowCC."""
 
+import json
+import logging
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 from verifflowcc.core.path_config import PathConfig
+from verifflowcc.core.sdk_config import SDKConfig
 
 from .base import BaseAgent
 
+logger = logging.getLogger(__name__)
+
 
 class RequirementsAnalystAgent(BaseAgent):
-    """Agent responsible for requirements analysis and elaboration."""
+    """Agent responsible for requirements analysis and elaboration using Claude Code SDK."""
 
-    def __init__(self, config_path: Path | None = None, path_config: PathConfig | None = None):
+    def __init__(
+        self,
+        name: str = "requirements_analyst",
+        agent_type: str = "requirements",
+        path_config: PathConfig | None = None,
+        sdk_config: SDKConfig | None = None,
+        mock_mode: bool = False,
+    ):
         """Initialize the Requirements Analyst agent.
 
         Args:
-            config_path: Path to configuration file (deprecated, use path_config)
+            name: Agent name identifier
+            agent_type: Agent type (requirements)
             path_config: PathConfig instance for managing project paths
+            sdk_config: SDK configuration instance
+            mock_mode: Whether to use mock responses
         """
         super().__init__(
-            name="requirements_analyst",
-            model="claude-3-sonnet",
-            max_tokens=4000,
-            config_path=config_path,
+            name=name,
+            agent_type=agent_type,
             path_config=path_config,
+            sdk_config=sdk_config,
+            mock_mode=mock_mode,
         )
 
     async def process(self, input_data: dict[str, Any]) -> dict[str, Any]:
-        """Process requirements and elaborate them.
+        """Process requirements and elaborate them using Claude Code SDK.
 
         Args:
-            input_data: Contains 'story' and optional 'backlog_path'
+            input_data: Contains 'story' and optional context data
 
         Returns:
             Elaborated requirements with acceptance criteria
         """
-        story = input_data.get("story", {})
-        backlog_path = input_data.get("backlog_path", str(self.path_config.backlog_path))
+        try:
+            logger.info("Processing requirements analysis request")
 
-        # Simulate Claude-Code API call for requirements analysis
-        # In production, this would make actual API calls to Claude
-        elaborated_requirements = await self._analyze_requirements(story)
+            # Extract input data
+            story = input_data.get("story", {})
+            task_description = input_data.get("task_description", "")
+            project_context = input_data.get("context", {})
 
-        # Save the elaborated requirements
-        self.save_artifact(
-            f"requirements/{story.get('id', 'unknown')}.json", elaborated_requirements
-        )
+            # Build prompt context
+            prompt_context = {
+                "task_description": task_description or story.get("description", ""),
+                "project_name": project_context.get("project_name", "VeriFlowCC"),
+                "sprint_number": project_context.get("sprint_number", "Current Sprint"),
+                "user_story": story.get("title", ""),
+                "context": json.dumps(project_context, indent=2) if project_context else "",
+            }
 
-        # Update the backlog with elaborated requirements
-        await self._update_backlog(backlog_path, elaborated_requirements)
+            # Load template and create prompt
+            prompt = self.load_prompt_template("requirements", **prompt_context)
 
-        return elaborated_requirements
+            # Call Claude Code SDK
+            response = await self._call_claude_sdk(prompt, input_data)
 
-    async def _analyze_requirements(self, story: dict[str, Any]) -> dict[str, Any]:
-        """Analyze and elaborate requirements using Claude.
+            # Parse the response
+            elaborated_requirements = await self._parse_requirements_response(response, story)
+
+            # Save artifacts
+            story_id = story.get("id", f"REQ-{datetime.now().strftime('%Y%m%d-%H%M%S')}")
+            self.save_artifact(f"requirements/{story_id}.json", elaborated_requirements)
+
+            # Update backlog if requested
+            if input_data.get("update_backlog", True):
+                await self._update_backlog(elaborated_requirements)
+
+            logger.info(f"Successfully processed requirements for story {story_id}")
+            return elaborated_requirements
+
+        except Exception as e:
+            logger.error(f"Error processing requirements: {e}")
+            raise
+
+    async def _parse_requirements_response(
+        self, response: str, story: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Parse Claude's response into structured requirements.
 
         Args:
-            story: User story to analyze
+            response: Raw response from Claude
+            story: Original user story data
 
         Returns:
-            Elaborated requirements
+            Structured requirements data
         """
-        # This is a placeholder for Claude-Code integration
-        # In production, this would:
-        # 1. Format the prompt using Jinja2 template
-        # 2. Call Claude API with the story context
-        # 3. Parse and structure the response
+        try:
+            # Try to parse as JSON first
+            if response.strip().startswith("{"):
+                parsed_response = json.loads(response)
 
-        elaborated = {
-            "id": story.get("id", "STORY-001"),
-            "title": story.get("title", ""),
-            "description": story.get("description", ""),
-            "elaborated_at": datetime.now().isoformat(),
-            "functional_requirements": [],
-            "non_functional_requirements": [],
-            "acceptance_criteria": [],
-            "test_scenarios": [],
-            "dependencies": [],
-            "risks": [],
-            "effort_estimate": "TBD",
-            "priority": story.get("priority", "Medium"),
-        }
+                # Add metadata
+                parsed_response.update(
+                    {
+                        "id": story.get("id", f"REQ-{datetime.now().strftime('%Y%m%d-%H%M%S')}"),
+                        "original_story": story,
+                        "elaborated_at": datetime.now().isoformat(),
+                        "agent": self.name,
+                        "agent_type": self.agent_type,
+                    }
+                )
 
-        # Simulate requirements elaboration
-        if "authentication" in story.get("title", "").lower():
-            elaborated["functional_requirements"] = [
-                "System SHALL provide user login functionality",
-                "System SHALL validate user credentials",
-                "System SHALL maintain user sessions",
-                "System SHALL provide logout functionality",
-            ]
-            elaborated["non_functional_requirements"] = [
-                "Authentication SHALL complete within 2 seconds",
-                "System SHALL support concurrent user sessions",
-                "Passwords SHALL be encrypted using bcrypt",
-            ]
-            elaborated["acceptance_criteria"] = [
-                "GIVEN valid credentials WHEN user logs in THEN access is granted",
-                "GIVEN invalid credentials WHEN user logs in THEN access is denied",
-                "GIVEN active session WHEN user logs out THEN session is terminated",
-            ]
+                return parsed_response
 
-        return elaborated
+            # If not JSON, structure the text response
+            return {
+                "id": story.get("id", f"REQ-{datetime.now().strftime('%Y%m%d-%H%M%S')}"),
+                "original_story": story,
+                "elaborated_at": datetime.now().isoformat(),
+                "agent": self.name,
+                "agent_type": self.agent_type,
+                "response_text": response,
+                "functional_requirements": [],
+                "non_functional_requirements": [],
+                "acceptance_criteria": [],
+                "dependencies": [],
+                "constraints": [],
+                "traceability": {
+                    "source_document": "User Story",
+                    "business_objective": story.get("business_value", ""),
+                    "risk_level": "medium",
+                },
+            }
 
-    async def _update_backlog(self, backlog_path: str, requirements: dict[str, Any]) -> None:
+        except json.JSONDecodeError as e:
+            logger.warning(f"Could not parse Claude response as JSON: {e}")
+            # Return structured fallback
+            return {
+                "id": story.get("id", f"REQ-{datetime.now().strftime('%Y%m%d-%H%M%S')}"),
+                "original_story": story,
+                "elaborated_at": datetime.now().isoformat(),
+                "agent": self.name,
+                "agent_type": self.agent_type,
+                "response_text": response,
+                "parse_error": str(e),
+                "functional_requirements": [],
+                "non_functional_requirements": [],
+                "acceptance_criteria": [],
+            }
+
+    async def _update_backlog(self, requirements: dict[str, Any]) -> None:
         """Update the backlog with elaborated requirements.
 
         Args:
-            backlog_path: Path to backlog file
             requirements: Elaborated requirements
         """
-        backlog = Path(backlog_path)
-        if not backlog.exists():
-            backlog.parent.mkdir(parents=True, exist_ok=True)
-            backlog.write_text("# Product Backlog\n\n")
+        try:
+            backlog_path = self.path_config.backlog_path
 
-        # Append elaborated requirements to backlog
-        content = backlog.read_text()
+            if not backlog_path.exists():
+                backlog_path.parent.mkdir(parents=True, exist_ok=True)
+                backlog_path.write_text("# Product Backlog\n\n")
 
-        # Add a section for this story if not exists
-        story_section = f"\n## {requirements['id']}: {requirements['title']}\n\n"
+            # Read current content
+            content = backlog_path.read_text()
 
-        if requirements["id"] not in content:
-            content += story_section
-            content += f"**Priority:** {requirements['priority']}\n"
-            content += f"**Elaborated:** {requirements['elaborated_at']}\n\n"
+            # Build new section
+            req_id = requirements.get("id", "UNKNOWN")
+            story = requirements.get("original_story", {})
 
-            if requirements["functional_requirements"]:
-                content += "### Functional Requirements\n"
-                for req in requirements["functional_requirements"]:
-                    content += f"- {req}\n"
-                content += "\n"
+            story_section = f"\n## {req_id}: {story.get('title', 'Untitled')}\n\n"
 
-            if requirements["acceptance_criteria"]:
-                content += "### Acceptance Criteria\n"
-                for criteria in requirements["acceptance_criteria"]:
-                    content += f"- {criteria}\n"
-                content += "\n"
+            # Only add if not already present
+            if req_id not in content:
+                story_section += f"**Priority:** {story.get('priority', 'Medium')}\n"
+                story_section += f"**Elaborated:** {requirements.get('elaborated_at', 'Unknown')}\n"
+                story_section += (
+                    f"**Description:** {story.get('description', 'No description')}\n\n"
+                )
 
-            backlog.write_text(content)
+                # Add functional requirements
+                functional_reqs = requirements.get("functional_requirements", [])
+                if functional_reqs:
+                    story_section += "### Functional Requirements\n"
+                    for req in functional_reqs:
+                        if isinstance(req, dict):
+                            story_section += f"- **{req.get('id', 'REQ-XXX')}**: {req.get('description', 'No description')}\n"
+                        else:
+                            story_section += f"- {req}\n"
+                    story_section += "\n"
+
+                # Add non-functional requirements
+                nf_reqs = requirements.get("non_functional_requirements", [])
+                if nf_reqs:
+                    story_section += "### Non-Functional Requirements\n"
+                    for req in nf_reqs:
+                        if isinstance(req, dict):
+                            story_section += f"- **{req.get('id', 'NFR-XXX')}**: {req.get('description', 'No description')}\n"
+                        else:
+                            story_section += f"- {req}\n"
+                    story_section += "\n"
+
+                # Add acceptance criteria
+                acceptance_criteria = requirements.get("acceptance_criteria", [])
+                if acceptance_criteria:
+                    story_section += "### Acceptance Criteria\n"
+                    for criteria in acceptance_criteria:
+                        if isinstance(criteria, dict):
+                            story_section += f"- **{criteria.get('id', 'AC-XXX')}**: {criteria.get('scenario', 'No scenario')}\n"
+                        else:
+                            story_section += f"- {criteria}\n"
+                    story_section += "\n"
+
+                # Add dependencies
+                dependencies = requirements.get("dependencies", [])
+                if dependencies:
+                    story_section += "### Dependencies\n"
+                    for dep in dependencies:
+                        if isinstance(dep, dict):
+                            story_section += f"- **{dep.get('type', 'unknown')}**: {dep.get('description', 'No description')}\n"
+                        else:
+                            story_section += f"- {dep}\n"
+                    story_section += "\n"
+
+                # Write updated content
+                content += story_section
+                backlog_path.write_text(content)
+                logger.info(f"Updated backlog with requirements for {req_id}")
+
+        except Exception as e:
+            logger.error(f"Error updating backlog: {e}")
 
     async def validate_requirements(self, requirements: dict[str, Any]) -> dict[str, Any]:
-        """Validate requirements against INVEST criteria.
+        """Validate requirements against INVEST and SMART criteria.
 
         Args:
             requirements: Requirements to validate
 
         Returns:
-            Validation results
+            Validation results with detailed criteria assessment
         """
-        validation: dict[str, Any] = {
-            "is_valid": True,
-            "criteria": {
-                "independent": True,
-                "negotiable": True,
-                "valuable": True,
-                "estimable": True,
-                "small": True,
-                "testable": True,
-            },
-            "issues": [],
-        }
+        try:
+            validation = {
+                "is_valid": True,
+                "invest_criteria": {
+                    "independent": {"score": 1.0, "issues": []},
+                    "negotiable": {"score": 1.0, "issues": []},
+                    "valuable": {"score": 1.0, "issues": []},
+                    "estimable": {"score": 1.0, "issues": []},
+                    "small": {"score": 1.0, "issues": []},
+                    "testable": {"score": 1.0, "issues": []},
+                },
+                "smart_criteria": {
+                    "specific": {"score": 1.0, "issues": []},
+                    "measurable": {"score": 1.0, "issues": []},
+                    "achievable": {"score": 1.0, "issues": []},
+                    "relevant": {"score": 1.0, "issues": []},
+                    "time_bound": {"score": 1.0, "issues": []},
+                },
+                "overall_score": 1.0,
+                "recommendations": [],
+            }
 
-        # Check for acceptance criteria (testable)
-        if not requirements.get("acceptance_criteria"):
-            validation["criteria"]["testable"] = False
-            validation["issues"].append("Missing acceptance criteria")
-            validation["is_valid"] = False
+            # Check INVEST criteria
 
-        # Check for effort estimate (estimable)
-        if requirements.get("effort_estimate") == "TBD":
-            validation["criteria"]["estimable"] = False
-            validation["issues"].append("Missing effort estimate")
+            # Independent: Check for excessive dependencies
+            dependencies = requirements.get("dependencies", [])
+            if len(dependencies) > 3:
+                validation["invest_criteria"]["independent"]["score"] = 0.5
+                validation["invest_criteria"]["independent"]["issues"].append(
+                    "Too many dependencies may indicate coupling"
+                )
+                validation["recommendations"].append(
+                    "Consider breaking down into smaller, more independent stories"
+                )
 
-        # Check for dependencies (independent)
-        if len(requirements.get("dependencies", [])) > 2:
-            validation["criteria"]["independent"] = False
-            validation["issues"].append("Too many dependencies")
+            # Valuable: Check for business value indication
+            story = requirements.get("original_story", {})
+            if not story.get("business_value") and not story.get("description"):
+                validation["invest_criteria"]["valuable"]["score"] = 0.7
+                validation["invest_criteria"]["valuable"]["issues"].append(
+                    "Business value not clearly articulated"
+                )
+                validation["recommendations"].append(
+                    "Add clear business value or user benefit statement"
+                )
 
-        return validation
+            # Estimable: Check for sufficient detail
+            functional_reqs = requirements.get("functional_requirements", [])
+            if len(functional_reqs) < 2:
+                validation["invest_criteria"]["estimable"]["score"] = 0.6
+                validation["invest_criteria"]["estimable"]["issues"].append(
+                    "Insufficient functional requirements for estimation"
+                )
+
+            # Small: Check complexity indicators
+            total_reqs = len(functional_reqs) + len(
+                requirements.get("non_functional_requirements", [])
+            )
+            if total_reqs > 10:
+                validation["invest_criteria"]["small"]["score"] = 0.4
+                validation["invest_criteria"]["small"]["issues"].append(
+                    "Story may be too large with many requirements"
+                )
+                validation["recommendations"].append("Consider splitting into multiple stories")
+
+            # Testable: Check for acceptance criteria
+            acceptance_criteria = requirements.get("acceptance_criteria", [])
+            if not acceptance_criteria:
+                validation["invest_criteria"]["testable"]["score"] = 0.0
+                validation["invest_criteria"]["testable"]["issues"].append(
+                    "Missing acceptance criteria"
+                )
+                validation["recommendations"].append("Add specific, testable acceptance criteria")
+                validation["is_valid"] = False
+            elif len(acceptance_criteria) < 2:
+                validation["invest_criteria"]["testable"]["score"] = 0.5
+                validation["invest_criteria"]["testable"]["issues"].append(
+                    "Limited acceptance criteria coverage"
+                )
+
+            # Check SMART criteria
+
+            # Specific: Check for detailed requirements
+            if (
+                not functional_reqs
+                or len(str(requirements.get("functional_requirements", ""))) < 100
+            ):
+                validation["smart_criteria"]["specific"]["score"] = 0.6
+                validation["smart_criteria"]["specific"]["issues"].append(
+                    "Requirements lack sufficient detail"
+                )
+
+            # Measurable: Check for quantifiable criteria
+            nf_reqs = requirements.get("non_functional_requirements", [])
+            measurable_found = any(
+                "%" in str(req) or "seconds" in str(req) or "users" in str(req) for req in nf_reqs
+            )
+            if not measurable_found and nf_reqs:
+                validation["smart_criteria"]["measurable"]["score"] = 0.7
+                validation["smart_criteria"]["measurable"]["issues"].append(
+                    "Non-functional requirements could be more quantifiable"
+                )
+
+            # Calculate overall score
+            invest_scores = [
+                criteria["score"] for criteria in validation["invest_criteria"].values()
+            ]
+            smart_scores = [criteria["score"] for criteria in validation["smart_criteria"].values()]
+            validation["overall_score"] = (sum(invest_scores) + sum(smart_scores)) / (
+                len(invest_scores) + len(smart_scores)
+            )
+
+            # Final validation
+            if validation["overall_score"] < 0.7:
+                validation["is_valid"] = False
+                validation["recommendations"].append(
+                    "Requirements need significant improvement before implementation"
+                )
+
+            return validation
+
+        except Exception as e:
+            logger.error(f"Error validating requirements: {e}")
+            return {
+                "is_valid": False,
+                "error": str(e),
+                "overall_score": 0.0,
+                "recommendations": ["Requirements validation failed - please review and resubmit"],
+            }

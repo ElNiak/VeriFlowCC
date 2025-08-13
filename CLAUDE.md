@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**VeriFlowCC** (Verification Flow Command Center) is an AI-driven development pipeline that integrates Anthropic's Claude-Code with the Agile V-Model methodology. It enforces rigorous verification and validation (V&V) at each stage of feature development through a structured, agent-driven approach.
+**VeriFlowCC** (Verification Flow Command Center) is an AI-driven development pipeline that integrates Claude Code SDK with the Agile V-Model methodology. It enforces rigorous verification and validation (V&V) at each stage of feature development through a structured, agent-driven approach powered by real Claude AI agents.
 
 ## Development Commands
 
@@ -81,6 +81,73 @@ uv run verifflowcc
 uv pip install -e .
 ```
 
+## Claude Code SDK Setup
+
+VeriFlowCC uses the Claude Code SDK for real AI-powered V-Model execution. All agents are now integrated with the SDK for production-ready functionality.
+
+### API Key Configuration
+
+Set your Anthropic API key for SDK access:
+
+```bash
+# Option 1: Environment variable (recommended)
+export ANTHROPIC_API_KEY="your-api-key-here"
+
+# Option 2: Claude CLI configuration (if using Claude CLI)
+claude auth login
+```
+
+### SDK Configuration
+
+The SDK is configured through the `SDKConfig` class in `verifflowcc/core/sdk_config.py`:
+
+```python
+class SDKConfig:
+    api_key: Optional[str] = None          # Auto-detected from environment
+    base_url: Optional[str] = None         # Uses Claude Code SDK default
+    timeout: int = 30                      # Request timeout in seconds
+    max_retries: int = 3                   # Retry attempts on failure
+```
+
+### Agent Configuration
+
+Each V-Model agent has SDK-specific settings:
+
+```yaml
+agents:
+  requirements_analyst:
+    timeout: 60                    # Longer timeout for requirements analysis
+  architect:
+    timeout: 90                    # Extended time for design work
+  developer:
+    timeout: 120                   # Most time for implementation
+  qa_tester:
+    timeout: 90                    # Testing and validation
+  integration:
+    timeout: 150                   # Comprehensive integration assessment
+```
+
+### Mock Mode for Development
+
+For testing without API costs:
+
+```bash
+# Run in mock mode (no real SDK calls)
+uv run verifflowcc --mock-mode
+
+# Or set environment variable
+export VERIFFLOWCC_MOCK_MODE=true
+uv run verifflowcc
+```
+
+### SDK Features Used
+
+- **Streaming Responses**: Real-time feedback during agent execution
+- **Session Management**: Context preservation across V-Model stages
+- **Specialized Prompts**: Jinja2 templates optimized for each agent type
+- **Quality Validation**: Structured output parsing with Pydantic
+- **Error Handling**: Robust retry mechanisms and fallback strategies
+
 ## Architecture
 
 ### V-Model Implementation
@@ -94,22 +161,42 @@ The project implements the Agile V-Model through a structured pipeline:
 ### Directory Structure
 
 ```
-verifflowcc/          # Main package (currently empty - to be implemented)
-├── agents/           # Agent implementations for each V-Model phase
+verifflowcc/          # Main package - Claude Code SDK integrated
+├── agents/           # SDK-powered V-Model agents (complete implementation)
+│   ├── base.py       # BaseAgent with Claude Code SDK integration
+│   ├── factory.py    # AgentFactory for centralized agent creation
+│   ├── requirements_analyst.py  # INVEST/SMART requirements validation
+│   ├── architect.py  # System design and PlantUML generation
+│   ├── developer.py  # Source code generation and quality metrics
+│   ├── qa_tester.py  # Comprehensive testing strategies
+│   └── integration.py # GO/NO-GO release decision making
 ├── core/             # Orchestrator and core business logic
+│   ├── orchestrator.py # V-Model workflow with SDK coordination
+│   ├── sdk_config.py   # Claude Code SDK configuration management
+│   ├── path_config.py  # Project path management
+│   └── vmodel.py       # V-Model stage definitions
 ├── prompts/          # Jinja2 templates for agent prompts
+│   ├── requirements.j2 # Requirements analysis template
+│   ├── architect.j2    # Architecture design template
+│   ├── developer.j2    # Development implementation template
+│   ├── qa.j2          # Quality assurance template
+│   └── integration.j2  # Integration validation template
 ├── schemas/          # Pydantic models for structured data
 └── cli.py            # CLI entry point
 
 .agilevv/             # Project artifacts (auto-generated)
+├── artifacts/        # Stage outputs and reports
+├── checkpoints/      # Git-based state management
 ├── backlog.md        # User stories and requirements
 ├── architecture.md   # System design documentation
-└── config.yaml       # V-Model gating configuration
+├── config.yaml       # V-Model gating configuration
+└── state.json        # Orchestrator state with session data
 
-tests/                # Test suite
+tests/                # Test suite with isolation framework
 ├── agents/           # Agent-specific tests
 ├── integration/      # Integration tests
-└── e2e/              # End-to-end workflow tests
+├── e2e/              # End-to-end workflow tests
+└── fixtures/         # Test isolation and factory patterns
 ```
 
 ### Key Components
@@ -121,13 +208,19 @@ tests/                # Test suite
 - Coordinates subagent invocations
 - Handles checkpointing and rollback
 
-#### Subagents (AI Personas)
+#### SDK-Powered Agents (AI Personas)
 
-- **Requirements Analyst**: Elaborates user stories, defines acceptance criteria
-- **Architect/Designer**: Creates system design, updates architecture
-- **Developer**: Implements features following design specs
-- **QA/Tester**: Writes and executes tests, validates acceptance criteria
-- **Integration Engineer**: Handles system integration and deployment
+- **Requirements Analyst**: Real AI validation of INVEST/SMART criteria with quality scoring
+- **Architect/Designer**: AI-powered system design with PlantUML diagram generation
+- **Developer**: Actual source code generation with quality metrics and file creation
+- **QA/Tester**: Comprehensive test strategy development and execution coordination
+- **Integration Agent**: End-to-end validation with GO/NO-GO release decision making
+
+All agents now use the Claude Code SDK for real AI-powered execution with:
+- Specialized Jinja2 prompt templates for each V-Model stage
+- Session state persistence across the workflow
+- Streaming responses for real-time feedback
+- Quality validation and metrics collection
 
 #### Memory Management
 
@@ -252,7 +345,11 @@ config = agilevv_factory.create_full_structure()
 
 ## Important Notes
 
-- The `verifflowcc/` package directory is currently empty - implementation pending
+- **SDK Integration Complete**: Full Claude Code SDK implementation with real AI agents
+- **Production Ready**: All V-Model stages now have functional AI-powered agents
+- **Quality Gates**: Comprehensive validation with configurable thresholds
+- **Session Persistence**: Context maintained across all V-Model stages
+- **Mock Mode**: Available for testing and development without API costs
 - Project follows "plan-then-act" workflow pattern
 - All artifacts are version-controlled for traceability
 - Context engineering minimizes token usage

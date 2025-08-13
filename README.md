@@ -184,7 +184,7 @@ AgileVerifFlowCC/                   # Project root (could be a pip package)
 
 **Toolchain and Technologies:**
 
-- **Claude Code SDK:** VerifFlowCC will use Anthropic’s Claude Code SDK or API client to interface with the Claude models. This SDK provides methods to send prompts, perhaps specialized functions for agentic operations (like starting a Claude Code session on a directory). It also might handle streaming responses and tool usage under the hood. Using the SDK simplifies authentication and ensures compatibility with Claude’s latest features (like the code execution tool and prompt caching). The SDK is likely Python-based (given Claude Code’s CLI is Python) and would be listed as a dependency.
+- **Claude Code SDK:** VerifFlowCC now uses Anthropic's `claude-code-sdk` Python package to interface with the Claude models. This SDK provides methods to send prompts, handle streaming responses, and manage tool usage. All V-Model agents (Requirements Analyst, Architect, Developer, QA Tester, Integration) are fully integrated with the Claude Code SDK, supporting both live AI interaction and mock mode for testing. The SDK enables session persistence, context management, and quality validation across all development stages. Using the SDK ensures compatibility with Claude's latest features and simplifies authentication.
 
 - **Jinja2:** All prompt templates are defined with Jinja2 for clarity and reuse. For example, `planner_prompt.jinja` might look like:
 
