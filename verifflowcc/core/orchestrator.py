@@ -3,7 +3,6 @@
 import json
 from collections.abc import Callable
 from datetime import datetime
-from enum import Enum
 from pathlib import Path
 from typing import Any, cast
 
@@ -13,28 +12,12 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
 from verifflowcc.agents import RequirementsAnalystAgent
+from verifflowcc.agents.architect import ArchitectAgent
+from verifflowcc.agents.developer import DeveloperAgent
+from verifflowcc.agents.integration import IntegrationAgent
+from verifflowcc.agents.qa_tester import QATesterAgent
 from verifflowcc.core.path_config import PathConfig
-
-
-class VModelStage(Enum):
-    """V-Model stages enumeration."""
-
-    PLANNING = "planning"
-    REQUIREMENTS = "requirements"
-    DESIGN = "design"
-    CODING = "coding"
-    UNIT_TESTING = "unit_testing"
-    INTEGRATION_TESTING = "integration_testing"
-    SYSTEM_TESTING = "system_testing"
-    VALIDATION = "validation"
-
-
-class GatingMode(Enum):
-    """Gating control modes."""
-
-    HARD = "hard"  # Must pass to proceed
-    SOFT = "soft"  # Warning but can proceed
-    OFF = "off"  # No gating
+from verifflowcc.core.vmodel import VModelStage
 
 
 class Orchestrator:
@@ -70,7 +53,7 @@ class Orchestrator:
     def _load_state(self) -> dict[str, Any]:
         """Load project state from state.json."""
         if self.state_path.exists():
-            return cast(dict[str, Any], json.loads(self.state_path.read_text()))
+            return cast("dict[str, Any]", json.loads(self.state_path.read_text()))
         return {
             "current_stage": VModelStage.PLANNING.value,
             "sprint_number": 0,
@@ -94,7 +77,7 @@ class Orchestrator:
         if self.config_path.exists():
             import yaml
 
-            return cast(dict[str, Any], yaml.safe_load(self.config_path.read_text()))
+            return cast("dict[str, Any]", yaml.safe_load(self.config_path.read_text()))
         return {
             "v_model": {
                 "gating_mode": "soft",
@@ -114,18 +97,59 @@ class Orchestrator:
                 "architect": {"model": "claude-3-sonnet", "max_tokens": 4000},
                 "developer": {"model": "claude-3-sonnet", "max_tokens": 8000},
                 "qa_tester": {"model": "claude-3-sonnet", "max_tokens": 4000},
+                "integration": {"model": "claude-3-sonnet", "max_tokens": 4000},
             },
         }
 
     def _initialize_agents(self) -> dict[str, Any]:
         """Initialize all subagents."""
-        return {
-            "requirements_analyst": RequirementsAnalystAgent(self.config_path),
-            # Additional agents would be initialized here
-            # "architect": ArchitectAgent(self.config_path),
-            # "developer": DeveloperAgent(self.config_path),
-            # "qa_tester": QATesterAgent(self.config_path)
-        }
+        # Get agent configurations from config
+        agent_configs = self.config.get("agents", {})
+
+        agents = {}
+
+        # Initialize RequirementsAnalyst (keeping backward compatibility)
+        agents["requirements_analyst"] = RequirementsAnalystAgent(
+            config_path=self.config_path, path_config=self.path_config
+        )
+
+        # Initialize ArchitectAgent
+        architect_config = agent_configs.get("architect", {})
+        agents["architect"] = ArchitectAgent(
+            name="architect",
+            model=architect_config.get("model", "claude-3-sonnet"),
+            max_tokens=architect_config.get("max_tokens", 4000),
+            path_config=self.path_config,
+        )
+
+        # Initialize DeveloperAgent
+        developer_config = agent_configs.get("developer", {})
+        agents["developer"] = DeveloperAgent(
+            name="developer",
+            model=developer_config.get("model", "claude-3-sonnet"),
+            max_tokens=developer_config.get("max_tokens", 8000),
+            path_config=self.path_config,
+        )
+
+        # Initialize QATesterAgent
+        qa_config = agent_configs.get("qa_tester", {})
+        agents["qa_tester"] = QATesterAgent(
+            name="qa_tester",
+            model=qa_config.get("model", "claude-3-sonnet"),
+            max_tokens=qa_config.get("max_tokens", 4000),
+            path_config=self.path_config,
+        )
+
+        # Initialize IntegrationAgent
+        integration_config = agent_configs.get("integration", {})
+        agents["integration"] = IntegrationAgent(
+            name="integration",
+            model=integration_config.get("model", "claude-3-sonnet"),
+            max_tokens=integration_config.get("max_tokens", 4000),
+            path_config=self.path_config,
+        )
+
+        return agents
 
     def register_callback(self, stage: VModelStage, callback: Callable) -> None:
         """Register a callback for a specific stage.
@@ -197,14 +221,117 @@ class Orchestrator:
         Returns:
             Stage execution results
         """
-        if stage == VModelStage.REQUIREMENTS:
-            agent = self.agents.get("requirements_analyst")
-            if agent:
-                result = await agent.execute(**context)
-                return cast(dict[str, Any], result)
+        # Map V-Model stages to appropriate agents
+        stage_agent_mapping = {
+            VModelStage.REQUIREMENTS: "requirements_analyst",
+            VModelStage.DESIGN: "architect",
+            VModelStage.CODING: "developer",
+            VModelStage.UNIT_TESTING: "qa_tester",
+            VModelStage.INTEGRATION_TESTING: "qa_tester",
+            VModelStage.SYSTEM_TESTING: "qa_tester",
+        }
 
-        # Placeholder for other stages
+        agent_name = stage_agent_mapping.get(stage)
+
+        if agent_name:
+            agent = self.agents.get(agent_name)
+            if agent:
+                # For backwards compatibility with RequirementsAnalyst
+                if agent_name == "requirements_analyst":
+                    result = await agent.execute(**context)
+                else:
+                    # For new agents, use the process method with proper input structure
+                    input_data = self._prepare_agent_input(stage, context)
+                    result = await agent.process(input_data)
+                return cast("dict[str, Any]", result)
+
+        # Handle Integration stage separately (uses IntegrationAgent)
+        if stage == VModelStage.VALIDATION:
+            integration_agent = self.agents.get("integration")
+            if integration_agent:
+                input_data = self._prepare_integration_input(context)
+                result = await integration_agent.process(input_data)
+                return cast("dict[str, Any]", result)
+
+        # Default success for unimplemented stages
         return {"status": "success", "stage": stage.value, "artifacts": {}, "metrics": {}}
+
+    def _prepare_agent_input(self, stage: VModelStage, context: dict[str, Any]) -> dict[str, Any]:
+        """Prepare input data for agent based on stage and context.
+
+        Args:
+            stage: Current V-Model stage
+            context: Execution context
+
+        Returns:
+            Formatted input data for the agent
+        """
+        # Get story ID from context or state
+        story_id = context.get("story_id") or self.state.get("active_story", "default")
+
+        # Base input structure
+        input_data = {"story_id": story_id, "stage": stage, "context": context}
+
+        # Add stage-specific input fields
+        if stage == VModelStage.DESIGN:
+            # ArchitectAgent needs requirements artifacts
+            input_data["requirements_artifacts"] = context.get("requirements_artifacts", {})
+
+        elif stage == VModelStage.CODING:
+            # DeveloperAgent needs design artifacts and architecture context
+            input_data["design_artifacts"] = context.get("design_artifacts", {})
+            input_data["architecture_context"] = context.get("architecture_context", {})
+
+        elif stage in [
+            VModelStage.UNIT_TESTING,
+            VModelStage.INTEGRATION_TESTING,
+            VModelStage.SYSTEM_TESTING,
+        ]:
+            # QATesterAgent needs test scope and acceptance criteria
+            input_data["test_scope"] = context.get("test_scope", ["unit"])
+            input_data["acceptance_criteria"] = context.get("acceptance_criteria", [])
+
+        return input_data
+
+    def _prepare_integration_input(self, context: dict[str, Any]) -> dict[str, Any]:
+        """Prepare input data for IntegrationAgent.
+
+        Args:
+            context: Execution context
+
+        Returns:
+            Formatted input data for IntegrationAgent
+        """
+        story_id = context.get("story_id") or self.state.get("active_story", "default")
+
+        return {
+            "story_id": story_id,
+            "stage": VModelStage.VALIDATION,
+            "context": context,
+            "system_artifacts": self.state.get("stage_artifacts", {}),
+            "integration_scope": context.get("integration_scope", ["system"]),
+        }
+
+    def _get_stage_agent(self, stage: VModelStage) -> str | None:
+        """Get the agent name for a given stage.
+
+        Args:
+            stage: V-Model stage
+
+        Returns:
+            Agent name or None if no agent is mapped
+        """
+        stage_agent_mapping = {
+            VModelStage.REQUIREMENTS: "requirements_analyst",
+            VModelStage.DESIGN: "architect",
+            VModelStage.CODING: "developer",
+            VModelStage.UNIT_TESTING: "qa_tester",
+            VModelStage.INTEGRATION_TESTING: "qa_tester",
+            VModelStage.SYSTEM_TESTING: "qa_tester",
+            VModelStage.VALIDATION: "integration",
+        }
+
+        return stage_agent_mapping.get(stage)
 
     async def _apply_gating(self, stage: VModelStage, result: dict[str, Any]) -> dict[str, Any]:
         """Apply gating controls to stage results.

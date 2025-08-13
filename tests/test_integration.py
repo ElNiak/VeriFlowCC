@@ -39,8 +39,7 @@ def initialized_project(temp_project_dir: Path, runner: CliRunner) -> Path:
         logger.debug("Invoking 'init' command")
         result = runner.invoke(app, ["init"])
         logger.debug(
-            f"Init command result: exit_code={result.exit_code}, "
-            f"stdout={result.stdout[:100]}..."
+            f"Init command result: exit_code={result.exit_code}, stdout={result.stdout[:100]}..."
         )
         assert result.exit_code == 0
     logger.info("Project initialized successfully")
@@ -118,8 +117,7 @@ class TestEndToEndWorkflow:
             logger.info("Creating initial checkpoint")
             result = runner.invoke(app, ["checkpoint", "--name", "initial"])
             logger.debug(
-                f"Checkpoint create result: exit_code={result.exit_code}, "
-                f"stdout={result.stdout}"
+                f"Checkpoint create result: exit_code={result.exit_code}, stdout={result.stdout}"
             )
             assert result.exit_code == 0
             assert "Checkpoint created" in result.stdout
@@ -141,7 +139,7 @@ class TestEndToEndWorkflow:
             logger.info("Listing checkpoints")
             result = runner.invoke(app, ["checkpoint", "list"])
             logger.debug(
-                f"Checkpoint list result: exit_code={result.exit_code}, " f"stdout={result.stdout}"
+                f"Checkpoint list result: exit_code={result.exit_code}, stdout={result.stdout}"
             )
             assert result.exit_code == 0
             assert "initial" in result.stdout
@@ -150,8 +148,7 @@ class TestEndToEndWorkflow:
             logger.info("Restoring checkpoint")
             result = runner.invoke(app, ["checkpoint", "restore", "initial"], input="y\n")
             logger.debug(
-                f"Checkpoint restore result: exit_code={result.exit_code}, "
-                f"stdout={result.stdout}"
+                f"Checkpoint restore result: exit_code={result.exit_code}, stdout={result.stdout}"
             )
             assert result.exit_code == 0
             assert "Restored to checkpoint" in result.stdout
@@ -268,8 +265,7 @@ class TestErrorRecovery:
             logger.info("Attempting to init existing project without --force")
             result = runner.invoke(app, ["init"])
             logger.debug(
-                f"Init without force result: exit_code={result.exit_code}, "
-                f"stdout={result.stdout}"
+                f"Init without force result: exit_code={result.exit_code}, stdout={result.stdout}"
             )
             assert result.exit_code == 1
             assert "already initialized" in result.stdout.lower()
@@ -278,7 +274,7 @@ class TestErrorRecovery:
             logger.info("Attempting to init existing project with --force")
             result = runner.invoke(app, ["init", "--force"])
             logger.debug(
-                f"Init with force result: exit_code={result.exit_code}, " f"stdout={result.stdout}"
+                f"Init with force result: exit_code={result.exit_code}, stdout={result.stdout}"
             )
             assert result.exit_code == 0
             assert "Project initialized successfully" in result.stdout
@@ -434,7 +430,7 @@ class TestPerformance:
         with backlog_file.open("w") as f:
             f.write("# Product Backlog\n\n")
             for i in range(100):
-                f.write(f"- [ ] Story {i+1}: Test story number {i+1}\n")
+                f.write(f"- [ ] Story {i + 1}: Test story number {i + 1}\n")
         logger.debug(f"Large backlog created at: {backlog_file}")
 
         with patch("verifflowcc.cli.Path.cwd", return_value=initialized_project):
@@ -442,7 +438,7 @@ class TestPerformance:
             logger.info("Testing plan command with story ID 50 from large backlog")
             result = runner.invoke(app, ["plan", "--story-id", "50"])
             logger.debug(
-                f"Plan result: exit_code={result.exit_code}, " f"stdout={result.stdout[:200]}..."
+                f"Plan result: exit_code={result.exit_code}, stdout={result.stdout[:200]}..."
             )
             assert result.exit_code == 0
             assert "Story selected" in result.stdout or "story number 50" in result.stdout.lower()
@@ -457,7 +453,7 @@ class TestPerformance:
             # Perform multiple operations
             logger.info("Performing 10 sprint operations")
             for i in range(10):
-                logger.debug(f"Running sprint {i+1}/10")
+                logger.debug(f"Running sprint {i + 1}/10")
                 with patch("verifflowcc.cli.asyncio.run"):
                     result = runner.invoke(app, ["sprint", "--story", f"Story {i}"])
                     assert result.exit_code == 0
