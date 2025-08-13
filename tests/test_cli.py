@@ -43,7 +43,7 @@ class TestCLIStructure:
     def test_cli_app_exists(self) -> None:
         """Test that the CLI app is properly configured."""
         assert app is not None
-        assert hasattr(app, "commands")
+        assert hasattr(app, "registered_commands")
 
     def test_help_command(self, runner: CliRunner) -> None:
         """Test that help command works."""
