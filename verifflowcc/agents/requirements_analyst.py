@@ -119,7 +119,7 @@ class RequirementsAnalystAgent(BaseAgent):
                     }
                 )
 
-                return parsed_response
+                return parsed_response  # type: ignore[no-any-return]
 
             # If not JSON, structure the text response
             return {
@@ -249,24 +249,24 @@ class RequirementsAnalystAgent(BaseAgent):
             Validation results with detailed criteria assessment
         """
         try:
-            validation = {
+            validation: dict[str, Any] = {
                 "is_valid": True,
                 "invest_criteria": {
-                    "independent": {"score": 1.0, "issues": []},
-                    "negotiable": {"score": 1.0, "issues": []},
-                    "valuable": {"score": 1.0, "issues": []},
-                    "estimable": {"score": 1.0, "issues": []},
-                    "small": {"score": 1.0, "issues": []},
-                    "testable": {"score": 1.0, "issues": []},
+                    "independent": {"score": 0.9, "issues": []},
+                    "negotiable": {"score": 0.85, "issues": []},
+                    "valuable": {"score": 0.9, "issues": []},
+                    "estimable": {"score": 0.9, "issues": []},
+                    "small": {"score": 0.9, "issues": []},
+                    "testable": {"score": 0.9, "issues": []},
                 },
                 "smart_criteria": {
-                    "specific": {"score": 1.0, "issues": []},
-                    "measurable": {"score": 1.0, "issues": []},
-                    "achievable": {"score": 1.0, "issues": []},
-                    "relevant": {"score": 1.0, "issues": []},
-                    "time_bound": {"score": 1.0, "issues": []},
+                    "specific": {"score": 0.9, "issues": []},
+                    "measurable": {"score": 0.85, "issues": []},
+                    "achievable": {"score": 0.85, "issues": []},
+                    "relevant": {"score": 0.85, "issues": []},
+                    "time_bound": {"score": 0.85, "issues": []},
                 },
-                "overall_score": 1.0,
+                "overall_score": 0.9,
                 "recommendations": [],
             }
 
@@ -285,8 +285,17 @@ class RequirementsAnalystAgent(BaseAgent):
 
             # Valuable: Check for business value indication
             story = requirements.get("original_story", {})
-            if not story.get("business_value") and not story.get("description"):
-                validation["invest_criteria"]["valuable"]["score"] = 0.7
+            description = story.get("description", "")
+            if not story.get("business_value") and len(description) < 20:
+                validation["invest_criteria"]["valuable"]["score"] = 0.3
+                validation["invest_criteria"]["valuable"]["issues"].append(
+                    "Business value and description both missing or inadequate"
+                )
+                validation["recommendations"].append(
+                    "Add clear business value and detailed user story description"
+                )
+            elif not story.get("business_value"):
+                validation["invest_criteria"]["valuable"]["score"] = 0.5
                 validation["invest_criteria"]["valuable"]["issues"].append(
                     "Business value not clearly articulated"
                 )
@@ -296,8 +305,14 @@ class RequirementsAnalystAgent(BaseAgent):
 
             # Estimable: Check for sufficient detail
             functional_reqs = requirements.get("functional_requirements", [])
-            if len(functional_reqs) < 2:
-                validation["invest_criteria"]["estimable"]["score"] = 0.6
+            if len(functional_reqs) == 0:
+                validation["invest_criteria"]["estimable"]["score"] = 0.2
+                validation["invest_criteria"]["estimable"]["issues"].append(
+                    "No functional requirements provided"
+                )
+                validation["recommendations"].append("Add at least 2-3 functional requirements")
+            elif len(functional_reqs) < 2:
+                validation["invest_criteria"]["estimable"]["score"] = 0.4
                 validation["invest_criteria"]["estimable"]["issues"].append(
                     "Insufficient functional requirements for estimation"
                 )
@@ -331,11 +346,13 @@ class RequirementsAnalystAgent(BaseAgent):
             # Check SMART criteria
 
             # Specific: Check for detailed requirements
-            if (
-                not functional_reqs
-                or len(str(requirements.get("functional_requirements", ""))) < 100
-            ):
-                validation["smart_criteria"]["specific"]["score"] = 0.6
+            if not functional_reqs:
+                validation["smart_criteria"]["specific"]["score"] = 0.2
+                validation["smart_criteria"]["specific"]["issues"].append(
+                    "No functional requirements provided - cannot be specific"
+                )
+            elif len(str(requirements.get("functional_requirements", ""))) < 100:
+                validation["smart_criteria"]["specific"]["score"] = 0.4
                 validation["smart_criteria"]["specific"]["issues"].append(
                     "Requirements lack sufficient detail"
                 )
@@ -351,14 +368,31 @@ class RequirementsAnalystAgent(BaseAgent):
                     "Non-functional requirements could be more quantifiable"
                 )
 
+            # Apply compound penalty for multiple critical issues
+            critical_issues = 0
+            if validation["invest_criteria"]["testable"]["score"] <= 0.1:  # No acceptance criteria
+                critical_issues += 1
+            if (
+                validation["invest_criteria"]["estimable"]["score"] <= 0.3
+            ):  # No/few functional requirements
+                critical_issues += 1
+            if validation["smart_criteria"]["specific"]["score"] <= 0.3:  # Not specific enough
+                critical_issues += 1
+            if validation["invest_criteria"]["valuable"]["score"] <= 0.4:  # Poor business value
+                critical_issues += 1
+
             # Calculate overall score
             invest_scores = [
                 criteria["score"] for criteria in validation["invest_criteria"].values()
             ]
             smart_scores = [criteria["score"] for criteria in validation["smart_criteria"].values()]
-            validation["overall_score"] = (sum(invest_scores) + sum(smart_scores)) / (
+            base_score = (sum(invest_scores) + sum(smart_scores)) / (
                 len(invest_scores) + len(smart_scores)
             )
+
+            # Apply compound penalty: 10% reduction per critical issue beyond the first
+            compound_penalty = max(0, (critical_issues - 1) * 0.1)
+            validation["overall_score"] = max(0.0, base_score - compound_penalty)
 
             # Final validation
             if validation["overall_score"] < 0.7:
