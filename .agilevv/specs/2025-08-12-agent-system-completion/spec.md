@@ -16,7 +16,7 @@ As a developer using VeriFlowCC, I want to run complete V-Model sprints with all
 
 The system should seamlessly transition from requirements analysis through design, coding, and testing stages, with each agent producing structured artifacts that feed into the next stage. All agents must integrate with the existing Orchestrator and follow established patterns for consistency and reliability.
 
-### Agent-Driven Stage Execution  
+### Agent-Driven Stage Execution
 
 As a VeriFlowCC user, I want each V-Model stage to be handled by a specialized agent, so that I get expert-level assistance optimized for each phase of development.
 
@@ -31,15 +31,15 @@ All agents must integrate with PathConfig for test isolation, support async oper
 ## Spec Scope
 
 1. **ArchitectAgent Implementation** - Creates system designs, updates architecture.md, and produces design specifications for the coding phase
-2. **DeveloperAgent Implementation** - Implements features following design specifications, writes production code, and generates implementation reports  
-3. **QATesterAgent Implementation** - Writes comprehensive tests, executes test suites, validates acceptance criteria, and ensures quality gates are met
-4. **IntegrationAgent Implementation** - Handles system integration validation, deployment verification, and end-to-end testing coordination
-5. **Orchestrator Integration** - Updates the V-Model Orchestrator to properly initialize and coordinate all agents through the complete workflow
+1. **DeveloperAgent Implementation** - Implements features following design specifications, writes production code, and generates implementation reports
+1. **QATesterAgent Implementation** - Writes comprehensive tests, executes test suites, validates acceptance criteria, and ensures quality gates are met
+1. **IntegrationAgent Implementation** - Handles system integration validation, deployment verification, and end-to-end testing coordination
+1. **Orchestrator Integration** - Updates the V-Model Orchestrator to properly initialize and coordinate all agents through the complete workflow
 
 ## Out of Scope
 
 - Modifications to existing RequirementsAnalyst agent (already implemented)
-- Changes to the CLI interface or user-facing commands  
+- Changes to the CLI interface or user-facing commands
 - Updates to the PathConfig or test isolation framework
 - Performance optimizations or caching mechanisms
 - Integration with external CI/CD systems beyond basic validation
@@ -47,10 +47,10 @@ All agents must integrate with PathConfig for test isolation, support async oper
 ## Expected Deliverable
 
 1. Complete V-Model workflow execution with all agents functional and properly integrated
-2. Full test coverage (90%+) for all new agent implementations with comprehensive test suites
-3. Seamless integration with existing Orchestrator that maintains backward compatibility and follows established patterns
+1. Full test coverage (90%+) for all new agent implementations with comprehensive test suites
+1. Seamless integration with existing Orchestrator that maintains backward compatibility and follows established patterns
 
 ## Spec Documentation
 
-- Tasks: @.claude/specs/2025-08-12-agent-system-completion/tasks.md
-- Technical Specification: @.claude/specs/2025-08-12-agent-system-completion/sub-specs/technical-spec.md
+- Tasks: @.agilevv/specs/2025-08-12-agent-system-completion/tasks.md
+- Technical Specification: @.agilevv/specs/2025-08-12-agent-system-completion/sub-specs/technical-spec.md

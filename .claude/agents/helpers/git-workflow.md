@@ -49,7 +49,7 @@ Gate: code_complete (PASS)
 
 ### Best Practices
 
-@.claude/standards/git-best-practices.md
+@.agilevv/standards/git-best-practices.md
 
 ## V-Model Gate Operations
 

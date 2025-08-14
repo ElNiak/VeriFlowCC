@@ -1,6 +1,6 @@
 # Technical Specification
 
-This is the technical specification for the spec detailed in @.claude/specs/2025-08-10-cli-interface/spec.md
+This is the technical specification for the spec detailed in @.agilevv/specs/2025-08-10-cli-interface/spec.md
 
 ## Technical Requirements
 

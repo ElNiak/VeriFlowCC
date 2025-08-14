@@ -71,7 +71,7 @@ FIND sections in technical-spec.md related to:
 
 ### Step 3: Best Practices Review
 
-Use the context-fetcher subagent to retrieve relevant sections from @.claude/standards/best-practices.md that apply to the current task's technology stack and feature type.
+Use the context-fetcher subagent to retrieve relevant sections from @.agilevv/standards/best-practices.md that apply to the current task's technology stack and feature type.
 
 \<selective_reading>
 \<search_best_practices>
@@ -100,7 +100,7 @@ FIND sections relevant to:
 
 ### Step 4: Code Style Review
 
-Use the context-fetcher subagent to retrieve relevant code style rules from @.claude/standards/code-style.md for the languages and file types being used in this task.
+Use the context-fetcher subagent to retrieve relevant code style rules from @.agilevv/standards/code-style.md for the languages and file types being used in this task.
 
 \<selective_reading>
 \<search_code_style>

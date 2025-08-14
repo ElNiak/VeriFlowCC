@@ -50,8 +50,8 @@ You are a specialized file creation agent for AgileVerifFlowCC projects. Your ro
 
 ## Spec Documentation
 
-- Tasks: @.claude/specs/[FOLDER]/tasks.md
-- Technical Specification: @.claude/specs/[FOLDER]/sub-specs/technical-spec.md
+- Tasks: @.agilevv/specs/[FOLDER]/tasks.md
+- Technical Specification: @.agilevv/specs/[FOLDER]/sub-specs/technical-spec.md
 [ADDITIONAL_DOCS]
 ```
 
@@ -73,7 +73,7 @@ You are a specialized file creation agent for AgileVerifFlowCC projects. Your ro
 ```markdown
 # Technical Specification
 
-This is the technical specification for the spec detailed in @.claude/specs/[FOLDER]/spec.md
+This is the technical specification for the spec detailed in @.agilevv/specs/[FOLDER]/spec.md
 
 > Created: [CURRENT_DATE]
 > Version: 1.0.0
@@ -96,7 +96,7 @@ This is the technical specification for the spec detailed in @.claude/specs/[FOL
 ```markdown
 # Database Schema
 
-This is the database schema implementation for the spec detailed in @.claude/specs/[FOLDER]/spec.md
+This is the database schema implementation for the spec detailed in @.agilevv/specs/[FOLDER]/spec.md
 
 > Created: [CURRENT_DATE]
 > Version: 1.0.0
@@ -115,7 +115,7 @@ This is the database schema implementation for the spec detailed in @.claude/spe
 ```markdown
 # API Specification
 
-This is the API specification for the spec detailed in @.claude/specs/[FOLDER]/spec.md
+This is the API specification for the spec detailed in @.agilevv/specs/[FOLDER]/spec.md
 
 > Created: [CURRENT_DATE]
 > Version: 1.0.0
@@ -134,7 +134,7 @@ This is the API specification for the spec detailed in @.claude/specs/[FOLDER]/s
 ```markdown
 # Tests Specification
 
-This is the tests coverage details for the spec detailed in @.claude/specs/[FOLDER]/spec.md
+This is the tests coverage details for the spec detailed in @.agilevv/specs/[FOLDER]/spec.md
 
 > Created: [CURRENT_DATE]
 > Version: 1.0.0
@@ -153,7 +153,7 @@ This is the tests coverage details for the spec detailed in @.claude/specs/[FOLD
 ```markdown
 # Spec Tasks
 
-These are the tasks to be completed for the spec detailed in @.claude/specs/[FOLDER]/spec.md
+These are the tasks to be completed for the spec detailed in @.agilevv/specs/[FOLDER]/spec.md
 
 > Created: [CURRENT_DATE]
 > Status: Ready for Implementation
@@ -289,7 +289,7 @@ These are the tasks to be completed for the spec detailed in @.claude/specs/[FOL
 ### Single File Request
 
 ```
-Create file: .claude/specs/2025-01-29-auth/spec.md
+Create file: .agilevv/specs/2025-01-29-auth/spec.md
 Content: [provided content]
 Template: spec
 ```
@@ -298,7 +298,7 @@ Template: spec
 
 ```
 Create spec structure:
-Directory: .claude/specs/2025-01-29-user-auth/
+Directory: .agilevv/specs/2025-01-29-user-auth/
 Files:
 - spec.md (content: [provided])
 - spec-lite.md (content: [provided])
@@ -311,7 +311,7 @@ Files:
 
 ```
 Create product documentation:
-Directory: .claude/product/
+Directory: .agilevv/product/
 Files:
 - mission.md (content: [provided])
 - mission-lite.md (content: [provided])
@@ -349,7 +349,7 @@ Files:
 ### Success
 
 ```
-✓ Created directory: .claude/specs/2025-01-29-user-auth/
+✓ Created directory: .agilevv/specs/2025-01-29-user-auth/
 ✓ Created file: spec.md
 ✓ Created file: spec-lite.md
 ✓ Created directory: sub-specs/

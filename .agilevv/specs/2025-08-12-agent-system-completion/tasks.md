@@ -1,6 +1,6 @@
 # Spec Tasks
 
-These are the tasks to be completed for the spec detailed in @.claude/specs/2025-08-12-agent-system-completion/spec.md
+These are the tasks to be completed for the spec detailed in @.agilevv/specs/2025-08-12-agent-system-completion/spec.md
 
 > Created: 2025-08-12
 > Status: Ready for Implementation

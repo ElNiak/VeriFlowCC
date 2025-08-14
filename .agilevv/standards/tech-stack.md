@@ -2,7 +2,7 @@
 
 ## Context
 
-Global tech stack defaults for AgileVerifFlowCC projects, overridable in project-specific `.claude/product/tech-stack.md`.
+Global tech stack defaults for AgileVerifFlowCC projects, overridable in project-specific `.agilevv/product/tech-stack.md`.
 
 - App Framework: Ruby on Rails 8.0+
 - Language: Ruby 3.2+

@@ -1,6 +1,6 @@
 # Technical Specification
 
-This is the technical specification for the spec detailed in @.claude/specs/2025-08-12-agent-system-completion/spec.md
+This is the technical specification for the spec detailed in @.agilevv/specs/2025-08-12-agent-system-completion/spec.md
 
 > Created: 2025-08-12
 > Version: 1.0.0
@@ -19,13 +19,15 @@ This is the technical specification for the spec detailed in @.claude/specs/2025
 ### Specific Agent Requirements
 
 #### ArchitectAgent (Design Stage)
+
 - **Input**: Requirements artifacts from RequirementsAnalyst
-- **Output**: Design documents, architecture.md updates, interface specifications  
+- **Output**: Design documents, architecture.md updates, interface specifications
 - **Responsibilities**: System design creation, component architecture, interface contracts
 - **Artifacts**: `design/{story_id}.json`, architecture.md updates, interface specifications
 - **V-Model Stage**: DESIGN
 
 #### DeveloperAgent (Coding Stage)
+
 - **Input**: Design specifications from ArchitectAgent
 - **Output**: Source code, implementation reports, code metrics
 - **Responsibilities**: Feature implementation, code generation, quality validation
@@ -33,6 +35,7 @@ This is the technical specification for the spec detailed in @.claude/specs/2025
 - **V-Model Stage**: CODING
 
 #### QATesterAgent (Testing Stages)
+
 - **Input**: Requirements, design, and implementation artifacts
 - **Output**: Test suites, test reports, coverage analysis, quality validation
 - **Responsibilities**: Test generation, test execution, acceptance criteria validation
@@ -40,6 +43,7 @@ This is the technical specification for the spec detailed in @.claude/specs/2025
 - **V-Model Stages**: UNIT_TESTING, INTEGRATION_TESTING, SYSTEM_TESTING
 
 #### IntegrationAgent (Integration Stage)
+
 - **Input**: All previous stage artifacts
 - **Output**: Integration reports, deployment validation, system health checks
 - **Responsibilities**: System integration validation, deployment verification, end-to-end testing
@@ -49,12 +53,14 @@ This is the technical specification for the spec detailed in @.claude/specs/2025
 ### Data Schema Requirements
 
 #### Base Schemas
+
 ```python
 class AgentInput(BaseModel):
     story_id: str
     stage: VModelStage
     context: dict[str, Any]
     previous_artifacts: dict[str, Any] = {}
+
 
 class AgentOutput(BaseModel):
     status: str  # "success" | "error" | "partial"
@@ -65,6 +71,7 @@ class AgentOutput(BaseModel):
 ```
 
 #### Agent-Specific Schemas
+
 - **DesignInput/DesignOutput**: For ArchitectAgent with requirements and design artifacts
 - **ImplementationInput/ImplementationOutput**: For DeveloperAgent with design specs and code
 - **TestingInput/TestingOutput**: For QATesterAgent with multi-stage test requirements
@@ -72,7 +79,8 @@ class AgentOutput(BaseModel):
 
 ### Orchestrator Integration Requirements
 
-#### _initialize_agents() Method Updates
+#### \_initialize_agents() Method Updates
+
 ```python
 def _initialize_agents(self) -> dict[str, Any]:
     return {
@@ -84,9 +92,10 @@ def _initialize_agents(self) -> dict[str, Any]:
     }
 ```
 
-#### _execute_stage_logic() Method Updates
+#### \_execute_stage_logic() Method Updates
+
 - **DESIGN Stage**: Execute ArchitectAgent with requirements context
-- **CODING Stage**: Execute DeveloperAgent with design context  
+- **CODING Stage**: Execute DeveloperAgent with design context
 - **UNIT_TESTING/INTEGRATION_TESTING/SYSTEM_TESTING**: Execute QATesterAgent with appropriate context
 - **INTEGRATION_TESTING**: Execute IntegrationAgent for system validation
 
@@ -104,7 +113,7 @@ def _initialize_agents(self) -> dict[str, Any]:
 verifflowcc/
 ├── agents/
 │   ├── architect.py          # ArchitectAgent implementation
-│   ├── developer.py          # DeveloperAgent implementation  
+│   ├── developer.py          # DeveloperAgent implementation
 │   ├── qa_tester.py          # QATesterAgent implementation
 │   └── integration.py        # IntegrationAgent implementation
 ├── schemas/

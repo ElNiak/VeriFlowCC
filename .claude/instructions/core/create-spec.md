@@ -29,7 +29,7 @@ Use the context-fetcher subagent to identify spec initiation method by either fi
 \- "what's next?"
 \</trigger_phrases>
 <actions>
-1\. CHECK @.claude/product/roadmap.md
+1\. CHECK @.agilevv/product/roadmap.md
 2\. FIND next uncompleted item
 3\. SUGGEST item to user
 4\. WAIT for approval
@@ -48,7 +48,7 @@ Use the context-fetcher subagent to identify spec initiation method by either fi
 
 ### Step 2: Context Gathering (Conditional)
 
-Use the context-fetcher subagent to read @.claude/product/mission-lite.md and @.claude/product/tech-stack.md only if not already in context to ensure minimal context for spec alignment.
+Use the context-fetcher subagent to read @.agilevv/product/mission-lite.md and @.agilevv/product/tech-stack.md only if not already in context to ensure minimal context for spec alignment.
 
 \<conditional_logic>
 IF both mission-lite.md AND tech-stack.md already read in current context:
@@ -112,7 +112,7 @@ The date-checker subagent will provide the current date in YYYY-MM-DD format at 
 
 ### Step 5: Spec Folder Creation
 
-Use the file-creator subagent to create directory: .claude/specs/YYYY-MM-DD-spec-name/ using the date from step 4.
+Use the file-creator subagent to create directory: .agilevv/specs/YYYY-MM-DD-spec-name/ using the date from step 4.
 
 Use kebab-case for spec name. Maximum 5 words in name.
 
@@ -139,7 +139,7 @@ Use kebab-case for spec name. Maximum 5 words in name.
 
 ### Step 6: Create spec.md
 
-Use the file-creator subagent to create the file: .claude/specs/YYYY-MM-DD-spec-name/spec.md using this template:
+Use the file-creator subagent to create the file: .agilevv/specs/YYYY-MM-DD-spec-name/spec.md using this template:
 
 \<file_template>
 
@@ -251,7 +251,7 @@ As a [USER_TYPE], I want to [ACTION], so that [BENEFIT].
 
 ### Step 7: Create spec-lite.md
 
-Use the file-creator subagent to create the file: .claude/specs/YYYY-MM-DD-spec-name/spec-lite.md for the purpose of establishing a condensed spec for efficient AI context usage.
+Use the file-creator subagent to create the file: .agilevv/specs/YYYY-MM-DD-spec-name/spec-lite.md for the purpose of establishing a condensed spec for efficient AI context usage.
 
 \<file_template>
 
@@ -290,7 +290,7 @@ Use the file-creator subagent to create the file: sub-specs/technical-spec.md us
     # Technical Specification
 
 ```
-This is the technical specification for the spec detailed in @.claude/specs/YYYY-MM-DD-spec-name/spec.md
+This is the technical specification for the spec detailed in @.agilevv/specs/YYYY-MM-DD-spec-name/spec.md
 ```
 
 </header>
@@ -354,7 +354,7 @@ SKIP this_step
     # Database Schema
 
 ```
-This is the database schema implementation for the spec detailed in @.claude/specs/YYYY-MM-DD-spec-name/spec.md
+This is the database schema implementation for the spec detailed in @.agilevv/specs/YYYY-MM-DD-spec-name/spec.md
 ```
 
 </header>
@@ -400,7 +400,7 @@ SKIP this_step
     # API Specification
 
 ```
-This is the API specification for the spec detailed in @.claude/specs/YYYY-MM-DD-spec-name/spec.md
+This is the API specification for the spec detailed in @.agilevv/specs/YYYY-MM-DD-spec-name/spec.md
 ```
 
 </header>
@@ -447,11 +447,11 @@ Request user review of spec.md and all sub-specs files, waiting for approval or 
 \<review_request>
 I've created the spec documentation:
 
-- Spec Requirements: @.claude/specs/YYYY-MM-DD-spec-name/spec.md
+- Spec Requirements: @.agilevv/specs/YYYY-MM-DD-spec-name/spec.md
 
-- Spec Summary: @.claude/specs/YYYY-MM-DD-spec-name/spec-lite.md
+- Spec Summary: @.agilevv/specs/YYYY-MM-DD-spec-name/spec-lite.md
 
-- Technical Spec: @.claude/specs/YYYY-MM-DD-spec-name/sub-specs/technical-spec.md
+- Technical Spec: @.agilevv/specs/YYYY-MM-DD-spec-name/sub-specs/technical-spec.md
   [LIST_OTHER_CREATED_SPECS]
 
   Please review and let me know if any changes are needed before I create the task breakdown.
@@ -531,11 +531,11 @@ REQUEST: "Get current development phase from roadmap.md"
 
 \<manual_reads>
 \<mission_lite>
-\- IF NOT already in context: READ @.claude/product/mission-lite.md
+\- IF NOT already in context: READ @.agilevv/product/mission-lite.md
 \- IF already in context: SKIP reading
 \</mission_lite>
 <roadmap>
-\- IF NOT already in context: READ @.claude/product/roadmap.md
+\- IF NOT already in context: READ @.agilevv/product/roadmap.md
 \- IF already in context: SKIP reading
 </roadmap>
 <decisions>
@@ -546,8 +546,8 @@ REQUEST: "Get current development phase from roadmap.md"
 
 \<decision_analysis>
 \<review_against>
-\- @.claude/product/mission-lite.md (conditional)
-\- @.claude/product/roadmap.md (conditional)
+\- @.agilevv/product/mission-lite.md (conditional)
+\- @.agilevv/product/roadmap.md (conditional)
 \</review_against>
 <criteria>
 \- significantly deviates from mission in mission-lite.md
@@ -578,7 +578,7 @@ PROCEED to step 13
 **ID:** DEC-[NEXT_NUMBER]
 **Status:** Accepted
 **Category:** [technical/product/business/process]
-**Related Spec:** @.claude/specs/YYYY-MM-DD-spec-name/
+**Related Spec:** @.agilevv/specs/YYYY-MM-DD-spec-name/
 
 ### Decision
 
@@ -638,9 +638,9 @@ WAIT: For user clarification or modifications
 
 <standards>
   <follow>
-    - @.claude/product/code-style.md
-    - @.claude/product/dev-best-practices.md
-    - @.claude/product/tech-stack.md
+    - @.agilevv/product/code-style.md
+    - @.agilevv/product/dev-best-practices.md
+    - @.agilevv/product/tech-stack.md
   </follow>
   <maintain>
     - Consistency with product mission

@@ -41,7 +41,7 @@ Identify which tasks to execute from the spec (using spec_srd_reference file pat
 
 ### Step 2: Context Analysis
 
-Use the context-fetcher subagent to gather minimal context for task understanding by always loading spec tasks.md, and conditionally loading @.claude/product/mission-lite.md, spec-lite.md, and sub-specs/technical-spec.md if not already in context.
+Use the context-fetcher subagent to gather minimal context for task understanding by always loading spec tasks.md, and conditionally loading @.agilevv/product/mission-lite.md, spec-lite.md, and sub-specs/technical-spec.md if not already in context.
 
 <instructions>
   ACTION: Use context-fetcher subagent to:
@@ -237,7 +237,7 @@ Use the git-workflow subagent to create git commit, push to GitHub, and create p
 
 ### Step 8: Roadmap Progress Check (Conditional)
 
-Check @.claude/product/roadmap.md (if not in context) and update roadmap progress only if the executed tasks may have completed a roadmap item and the spec completes that item.
+Check @.agilevv/product/roadmap.md (if not in context) and update roadmap progress only if the executed tasks may have completed a roadmap item and the spec completes that item.
 
 \<conditional_execution>
 \<preliminary_check>
@@ -252,7 +252,7 @@ CONTINUE with roadmap check
 
 \<conditional_loading>
 IF roadmap.md NOT already in context:
-LOAD @.claude/product/roadmap.md
+LOAD @.agilevv/product/roadmap.md
 ELSE:
 SKIP loading (use existing context)
 \</conditional_loading>

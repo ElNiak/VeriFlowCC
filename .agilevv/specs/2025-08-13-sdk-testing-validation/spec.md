@@ -19,7 +19,7 @@ Establish comprehensive testing and validation framework for the Claude Code SDK
 ## Spec Scope
 
 - SDK Configuration validation and error handling
-- Agent Factory instantiation and configuration management  
+- Agent Factory instantiation and configuration management
 - RequirementsAnalyst SDK integration testing with real/mock responses
 - Streaming response handling and real-time feedback validation
 - Session management and context preservation across agents
@@ -32,7 +32,7 @@ Establish comprehensive testing and validation framework for the Claude Code SDK
 ## Out of Scope
 
 - External API rate limiting or quota management
-- Third-party tool integrations (GitHub, PlantUML) beyond SDK scope  
+- Third-party tool integrations (GitHub, PlantUML) beyond SDK scope
 - UI/UX testing for CLI interface
 - Load testing with concurrent SDK sessions
 - Security penetration testing of API communications
@@ -51,5 +51,5 @@ Establish comprehensive testing and validation framework for the Claude Code SDK
 
 ## Spec Documentation
 
-- Tasks: @.claude/specs/2025-08-13-sdk-testing-validation/tasks.md
-- Technical Specification: @.claude/specs/2025-08-13-sdk-testing-validation/sub-specs/technical-spec.md
+- Tasks: @.agilevv/specs/2025-08-13-sdk-testing-validation/tasks.md
+- Technical Specification: @.agilevv/specs/2025-08-13-sdk-testing-validation/sub-specs/technical-spec.md
