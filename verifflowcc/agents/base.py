@@ -8,11 +8,21 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from claude_code_sdk import ClaudeCodeOptions, ClaudeSDKClient
+    from claude_code_sdk import ClaudeCodeOptions as SDKClaudeCodeOptions
+    from claude_code_sdk import ClaudeSDKClient
+
+    SDK_AVAILABLE = True
 except ImportError:
     # Fallback for testing or when SDK not available
-    ClaudeSDKClient = None
-    ClaudeCodeOptions = None
+    class MockSDKClient:
+        pass
+
+    class MockSDKOptions:
+        pass
+
+    SDKClaudeCodeOptions = MockSDKOptions  # type: ignore[misc,assignment]
+    ClaudeSDKClient = MockSDKClient  # type: ignore[misc,assignment]
+    SDK_AVAILABLE = False
 
 from jinja2 import Template
 
@@ -46,7 +56,7 @@ class BaseAgent(ABC):
         self.agent_type = agent_type
         self.path_config = path_config or PathConfig()
         self.sdk_config = sdk_config or get_sdk_config()
-        self.mock_mode = mock_mode or ClaudeSDKClient is None
+        self.mock_mode = mock_mode or not SDK_AVAILABLE
         self.context: dict[str, Any] = {}
         self.session_history: list[dict[str, str]] = []
 
@@ -82,19 +92,29 @@ class BaseAgent(ABC):
         if self.mock_mode:
             return self._get_mock_response(prompt, context)
 
-        if ClaudeSDKClient is None:
+        if not SDK_AVAILABLE:
             raise RuntimeError(
                 "Claude Code SDK not available. Install with: pip install claude-code-sdk"
             )
 
         try:
-            async with ClaudeSDKClient(options=self.client_options) as client:
+            # Create SDK-compatible options
+            sdk_options: Any = None
+            if SDK_AVAILABLE:
+                sdk_options = SDKClaudeCodeOptions(**self.client_options.__dict__)
+
+            async with ClaudeSDKClient(options=sdk_options) as client:
                 await client.query(prompt)
 
-                response_parts = []
+                response_parts: list[str] = []
                 async for message in client.receive_response():
-                    if message.get("type") == "text":
-                        response_parts.append(message.get("content", ""))
+                    # Handle different message types properly
+                    if hasattr(message, "type") and message.type == "text":
+                        content = getattr(message, "content", "")
+                        response_parts.append(content)
+                    elif isinstance(message, dict):
+                        if message.get("type") == "text":
+                            response_parts.append(message.get("content", ""))
 
                 response = "".join(response_parts)
 
@@ -108,9 +128,12 @@ class BaseAgent(ABC):
             logger.error(f"Error calling Claude SDK for agent {self.name}: {e}")
             raise
 
+        # This should never be reached, but satisfies mypy
+        return ""
+
     def _get_mock_response(self, prompt: str, context: dict[str, Any] | None = None) -> str:
         """Get a mock response for testing purposes.
-
+        TODO: Create separate MockAgent class for better separation of concerns.
         Args:
             prompt: The prompt that was sent
             context: Additional context data
@@ -118,7 +141,7 @@ class BaseAgent(ABC):
         Returns:
             Mock JSON response appropriate for the agent type
         """
-        mock_responses = {
+        mock_responses = {  # TODO: Create separate file for mock responses
             "requirements": {
                 "functional_requirements": [
                     "REQ-001: System shall provide user authentication",
@@ -358,20 +381,31 @@ Please provide your response in structured JSON format appropriate for a {self.a
                 return
 
             # Real streaming with Claude Code SDK
-            if ClaudeSDKClient is None:
+            if not SDK_AVAILABLE:
                 raise RuntimeError("Claude Code SDK not available")
 
             prompt = self.load_prompt_template(self.agent_type, **input_data)
 
-            async with ClaudeSDKClient(options=self.client_options) as client:
+            # Create SDK-compatible options
+            sdk_options: Any = None
+            if SDK_AVAILABLE:
+                sdk_options = SDKClaudeCodeOptions(**self.client_options.__dict__)
+
+            async with ClaudeSDKClient(options=sdk_options) as client:
                 await client.query(prompt)
 
-                response_parts = []
+                response_parts: list[str] = []
                 async for message in client.receive_response():
-                    if message.get("type") == "text":
-                        content = message.get("content", "")
+                    # Handle different message types properly
+                    if hasattr(message, "type") and message.type == "text":
+                        content = getattr(message, "content", "")
                         response_parts.append(content)
                         yield {"status": "streaming", "content": content}
+                    elif isinstance(message, dict):
+                        if message.get("type") == "text":
+                            content = message.get("content", "")
+                            response_parts.append(content)
+                            yield {"status": "streaming", "content": content}
 
                 # Process complete response
                 full_response = "".join(response_parts)
@@ -399,10 +433,11 @@ Please provide your response in structured JSON format appropriate for a {self.a
         try:
             # Try to parse as JSON first
             if response.strip().startswith("{") and response.strip().endswith("}"):
-                return json.loads(response)
+                parsed_result: dict[str, Any] = json.loads(response)
+                return parsed_result
 
             # If not JSON, return as structured text response
-            return {
+            structured_response: dict[str, Any] = {
                 "response_text": response,
                 "agent_type": self.agent_type,
                 "processed_at": self.context.get("timestamp", "unknown"),
@@ -410,11 +445,13 @@ Please provide your response in structured JSON format appropriate for a {self.a
                 if len(str(input_data)) > 200
                 else str(input_data),
             }
+            return structured_response
 
         except json.JSONDecodeError:
             logger.warning(f"Could not parse response as JSON for agent {self.name}")
-            return {
+            error_response: dict[str, Any] = {
                 "response_text": response,
                 "agent_type": self.agent_type,
                 "parse_error": "Could not parse as JSON",
             }
+            return error_response

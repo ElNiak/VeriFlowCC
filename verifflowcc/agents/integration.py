@@ -162,7 +162,7 @@ class IntegrationAgent(BaseAgent):
         try:
             # Try to parse as JSON first
             if response.strip().startswith("{"):
-                parsed_response = json.loads(response)
+                parsed_response: dict[str, Any] = json.loads(response)
 
                 # Add metadata
                 parsed_response.update(
@@ -610,11 +610,11 @@ Generated: {datetime.now().isoformat()}
 
 ## Executive Summary
 
-**Release Decision: {release_decision.get('go_no_go_decision', 'UNKNOWN')}**
+**Release Decision: {release_decision.get("go_no_go_decision", "UNKNOWN")}**
 
-{release_decision.get('decision_rationale', 'No rationale provided')}
+{release_decision.get("decision_rationale", "No rationale provided")}
 
-**Overall Readiness Score: {release_decision.get('overall_readiness_score', 0):.1f}%**
+**Overall Readiness Score: {release_decision.get("overall_readiness_score", 0):.1f}%**
 
 ## V-Model Stage Summary
 

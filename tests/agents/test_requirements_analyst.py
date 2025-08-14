@@ -7,6 +7,7 @@ INVEST/SMART validation, story quality scoring, and SDK integration.
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -353,8 +354,8 @@ class TestRequirementsValidation:
         sdk_config = SDKConfig(api_key="test-key")
         agent = RequirementsAnalystAgent(path_config=isolated_agilevv_dir, sdk_config=sdk_config)
 
-        # Invalid requirements (missing required fields)
-        requirements = None
+        # Invalid requirements (empty dict)
+        requirements: dict[str, Any] = {}
 
         validation = await agent.validate_requirements(requirements)
 

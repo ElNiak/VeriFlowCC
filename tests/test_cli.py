@@ -185,7 +185,7 @@ class TestSprintCommand:
             isolated_agilevv_dir.config_path.write_text(yaml.dump(config_data))
 
             # Create state with required keys for the orchestrator
-            state_data = {
+            state_data: dict[str, Any] = {
                 "current_sprint": None,
                 "current_stage": None,
                 "completed_stages": [],

@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Thinking strategy
+
+- If the task concerns large code changes,large refactors, or new features, **always** ultrathink when working
+- else always think when working
+
 ## Project Overview
 
 **VeriFlowCC** (Verification Flow Command Center) is an AI-driven development pipeline that integrates Claude Code SDK with the Agile V-Model methodology. It enforces rigorous verification and validation (V&V) at each stage of feature development through a structured, agent-driven approach powered by real Claude AI agents.
@@ -103,10 +108,10 @@ The SDK is configured through the `SDKConfig` class in `verifflowcc/core/sdk_con
 
 ```python
 class SDKConfig:
-    api_key: Optional[str] = None          # Auto-detected from environment
-    base_url: Optional[str] = None         # Uses Claude Code SDK default
-    timeout: int = 30                      # Request timeout in seconds
-    max_retries: int = 3                   # Retry attempts on failure
+    api_key: Optional[str] = None  # Auto-detected from environment
+    base_url: Optional[str] = None  # Uses Claude Code SDK default
+    timeout: int = 30  # Request timeout in seconds
+    max_retries: int = 3  # Retry attempts on failure
 ```
 
 ### Agent Configuration
@@ -217,6 +222,7 @@ tests/                # Test suite with isolation framework
 - **Integration Agent**: End-to-end validation with GO/NO-GO release decision making
 
 All agents now use the Claude Code SDK for real AI-powered execution with:
+
 - Specialized Jinja2 prompt templates for each V-Model stage
 - Session state persistence across the workflow
 - Streaming responses for real-time feedback

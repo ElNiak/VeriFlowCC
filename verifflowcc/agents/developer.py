@@ -127,7 +127,7 @@ class DeveloperAgent(BaseAgent):
         try:
             # Try to parse as JSON first
             if response.strip().startswith("{"):
-                parsed_response = json.loads(response)
+                parsed_response: dict[str, Any] = json.loads(response)
 
                 # Add metadata
                 parsed_response.update(
@@ -229,7 +229,7 @@ class DeveloperAgent(BaseAgent):
             Quality metrics and validation results
         """
         try:
-            quality_metrics = {
+            quality_metrics: dict[str, Any] = {
                 "overall_score": 0.0,
                 "code_quality": {"score": 0.0, "issues": []},
                 "test_coverage": {"score": 0.0, "issues": []},
@@ -239,9 +239,9 @@ class DeveloperAgent(BaseAgent):
                 "maintainability": {"score": 0.0, "issues": []},
             }
 
-            implementation = implementation_data.get("implementation", {})
-            tests = implementation_data.get("tests", {})
-            documentation = implementation_data.get("documentation", {})
+            implementation: dict[str, Any] = implementation_data.get("implementation", {})
+            tests: dict[str, Any] = implementation_data.get("tests", {})
+            documentation: dict[str, Any] = implementation_data.get("documentation", {})
 
             # Code quality assessment
             files = implementation.get("files", [])

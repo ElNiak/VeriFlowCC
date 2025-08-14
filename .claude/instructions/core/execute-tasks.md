@@ -199,6 +199,8 @@ Use the test-runner subagent to run the entire test suite to ensure no regressio
 
 </step>
 
+<step number="7" subagent="file-creator" name="create_tasks_md">
+
 <step number="7" subagent="git-workflow" name="git_workflow">
 
 ### Step 7: Git Workflow
@@ -372,6 +374,7 @@ View PR: [GITHUB_PR_URL]
 \- [ ] Task implementation complete
 \- [ ] All tests passing
 \- [ ] tasks.md updated
+\- [ ] Code linted, typed checked and formatted
 \- [ ] Code committed and pushed
 \- [ ] Pull request created
 \- [ ] Roadmap checked/updated

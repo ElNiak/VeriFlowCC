@@ -27,7 +27,7 @@ class AgentInput(BaseModel):
 
     @field_validator("story_id")
     @classmethod
-    def story_id_not_empty(cls, v):
+    def story_id_not_empty(cls, v: str) -> str:
         """Validate that story_id is not empty."""
         if not v or not v.strip():
             raise ValueError("story_id cannot be empty")
@@ -57,7 +57,7 @@ class AgentOutput(BaseModel):
 
     @field_validator("errors")
     @classmethod
-    def validate_errors_are_strings(cls, v):
+    def validate_errors_are_strings(cls, v: list[str]) -> list[str]:
         """Validate that all error messages are strings."""
         for error in v:
             if not isinstance(error, str):
@@ -77,7 +77,7 @@ class DesignInput(AgentInput):
 
     @field_validator("requirements_artifacts")
     @classmethod
-    def requirements_not_empty(cls, v):
+    def requirements_not_empty(cls, v: dict[str, Any]) -> dict[str, Any]:
         """Validate that requirements artifacts are provided."""
         if not v:
             raise ValueError("requirements_artifacts cannot be empty")
@@ -99,7 +99,7 @@ class DesignOutput(AgentOutput):
 
     @field_validator("design_specifications")
     @classmethod
-    def design_specs_not_empty(cls, v):
+    def design_specs_not_empty(cls, v: dict[str, Any]) -> dict[str, Any]:
         """Validate that design specifications are provided."""
         if not v:
             raise ValueError("design_specifications cannot be empty")
@@ -121,7 +121,7 @@ class ImplementationInput(AgentInput):
 
     @field_validator("design_artifacts")
     @classmethod
-    def design_artifacts_not_empty(cls, v):
+    def design_artifacts_not_empty(cls, v: dict[str, Any]) -> dict[str, Any]:
         """Validate that design artifacts are provided."""
         if not v:
             raise ValueError("design_artifacts cannot be empty")
@@ -141,7 +141,7 @@ class ImplementationOutput(AgentOutput):
 
     @field_validator("source_files")
     @classmethod
-    def source_files_are_strings(cls, v):
+    def source_files_are_strings(cls, v: list[str]) -> list[str]:
         """Validate that all source files are string paths."""
         for file_path in v:
             if not isinstance(file_path, str):
@@ -162,7 +162,7 @@ class TestingInput(AgentInput):
 
     @field_validator("test_scope")
     @classmethod
-    def test_scope_not_empty(cls, v):
+    def test_scope_not_empty(cls, v: list[str]) -> list[str]:
         """Validate that test scope is provided."""
         if not v:
             raise ValueError("test_scope cannot be empty")
@@ -170,7 +170,7 @@ class TestingInput(AgentInput):
 
     @field_validator("acceptance_criteria")
     @classmethod
-    def acceptance_criteria_not_empty(cls, v):
+    def acceptance_criteria_not_empty(cls, v: list[str]) -> list[str]:
         """Validate that acceptance criteria are provided."""
         if not v:
             raise ValueError("acceptance_criteria cannot be empty")
@@ -189,7 +189,7 @@ class TestingOutput(AgentOutput):
 
     @field_validator("test_files")
     @classmethod
-    def test_files_are_strings(cls, v):
+    def test_files_are_strings(cls, v: list[str]) -> list[str]:
         """Validate that all test files are string paths."""
         for file_path in v:
             if not isinstance(file_path, str):
@@ -208,7 +208,7 @@ class IntegrationInput(AgentInput):
 
     @field_validator("system_artifacts")
     @classmethod
-    def system_artifacts_not_empty(cls, v):
+    def system_artifacts_not_empty(cls, v: dict[str, Any]) -> dict[str, Any]:
         """Validate that system artifacts are provided."""
         if not v:
             raise ValueError("system_artifacts cannot be empty")
@@ -216,7 +216,7 @@ class IntegrationInput(AgentInput):
 
     @field_validator("integration_scope")
     @classmethod
-    def integration_scope_not_empty(cls, v):
+    def integration_scope_not_empty(cls, v: list[str]) -> list[str]:
         """Validate that integration scope is provided."""
         if not v:
             raise ValueError("integration_scope cannot be empty")
@@ -238,7 +238,7 @@ class IntegrationOutput(AgentOutput):
 
     @field_validator("integration_results")
     @classmethod
-    def integration_results_not_empty(cls, v):
+    def integration_results_not_empty(cls, v: dict[str, Any]) -> dict[str, Any]:
         """Validate that integration results are provided."""
         if not v:
             raise ValueError("integration_results cannot be empty")

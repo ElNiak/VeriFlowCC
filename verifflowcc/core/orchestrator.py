@@ -57,7 +57,7 @@ class Orchestrator:
         self.current_stage = VModelStage.PLANNING
         self.state = self._load_state()
         self.config = self._load_config()
-        self.agent_factory = AgentFactory(self.path_config, self.sdk_config, mock_mode)
+        self.agent_factory = AgentFactory(self.sdk_config, self.path_config, mock_mode)
         self.agents = self._initialize_agents()
         self.stage_callbacks: dict[VModelStage, list[Callable]] = {}
 
@@ -242,7 +242,7 @@ class Orchestrator:
 
         except Exception as e:
             logger.error(f"Error executing stage {stage.value}: {e}")
-            error_result = {
+            error_result: dict[str, Any] = {
                 "status": "error",
                 "stage": stage.value,
                 "error": str(e),
@@ -821,7 +821,7 @@ class Orchestrator:
         if not agent_metrics:
             return {"message": "No agent performance data available"}
 
-        summary = {
+        summary: dict[str, Any] = {
             "total_executions": len(agent_metrics),
             "successful_executions": len(
                 [m for m in agent_metrics.values() if m.get("status") == "success"]

@@ -4,32 +4,35 @@ This module tests the QATesterAgent functionality including test generation,
 test execution, and quality validation.
 """
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 from verifflowcc.agents.qa_tester import QATesterAgent
 from verifflowcc.core.orchestrator import VModelStage
+from verifflowcc.core.path_config import PathConfig
 from verifflowcc.schemas.agent_schemas import TestingInput, TestingOutput
 
 
 class TestQATesterAgentInitialization:
     """Test QATesterAgent initialization and configuration."""
 
-    def test_qa_tester_agent_initialization(self, isolated_agilevv_dir):
+    def test_qa_tester_agent_initialization(self, isolated_agilevv_dir: PathConfig) -> None:
         """Test QATesterAgent initializes correctly."""
         agent = QATesterAgent(name="qa_tester", path_config=isolated_agilevv_dir)
 
         assert agent.name == "qa_tester"
         assert agent.path_config == isolated_agilevv_dir
-        assert agent.model == "claude-3-sonnet"  # default value
+        assert agent.agent_type == "qa"
 
 
 class TestQATesterAgentInputValidation:
     """Test QATesterAgent input validation and processing."""
 
-    def test_testing_input_validation(self, isolated_agilevv_dir):
+    def test_testing_input_validation(self, isolated_agilevv_dir: PathConfig) -> None:
         """Test that QATesterAgent validates TestingInput correctly."""
-        agent = QATesterAgent(path_config=isolated_agilevv_dir)
+        # Instantiate agent to verify it can be created with valid config
+        QATesterAgent(path_config=isolated_agilevv_dir)
 
         # Valid input
         valid_input = TestingInput(
@@ -51,7 +54,9 @@ class TestQATesterAgentProcessing:
     """Test QATesterAgent main processing functionality."""
 
     @patch("verifflowcc.agents.qa_tester.QATesterAgent._call_claude_api")
-    async def test_process_test_generation(self, mock_claude_api, isolated_agilevv_dir):
+    async def test_process_test_generation(
+        self, mock_claude_api: Any, isolated_agilevv_dir: PathConfig
+    ) -> None:
         """Test the main process method for test generation."""
         # Setup mock response
         mock_response = {
@@ -88,7 +93,9 @@ class TestQATesterAgentProcessing:
         assert test_artifact_path.exists()
 
     @patch("verifflowcc.agents.qa_tester.QATesterAgent._call_claude_api")
-    async def test_process_with_api_failure(self, mock_claude_api, isolated_agilevv_dir):
+    async def test_process_with_api_failure(
+        self, mock_claude_api: Any, isolated_agilevv_dir: PathConfig
+    ) -> None:
         """Test process method handles API failures gracefully."""
         # Setup mock to raise an exception
         mock_claude_api.side_effect = Exception("API Error: Test generation failed")
@@ -114,10 +121,10 @@ class TestQATesterAgentProcessing:
 class TestQATesterAgentIntegration:
     """Integration tests for QATesterAgent with V-Model workflow."""
 
-    def test_testing_output_validation(self, isolated_agilevv_dir):
+    def test_testing_output_validation(self, isolated_agilevv_dir: PathConfig) -> None:
         """Test TestingOutput validation for next stage."""
         # Create valid testing output
-        testing_output_data = {
+        testing_output_data: dict[str, Any] = {
             "status": "success",
             "artifacts": {"test_report": "path/to/tests.json"},
             "test_files": ["tests/test_user.py", "tests/test_auth.py"],
