@@ -247,8 +247,8 @@ Update the tasks.md file immediately after completing each task to track progres
 \</blocking_criteria>
 
 <instructions>
-  ACTION: Update tasks.md after each task completion
-  MARK: [x] for completed items immediately
+  ACTION: Update tasks.md after each task completion 
+  MARK: [x] for completed items immediately (ONLY if the task is fully done and verified)
   DOCUMENT: Blocking issues with ⚠️ emoji
   LIMIT: 3 attempts before marking as blocked
 </instructions>

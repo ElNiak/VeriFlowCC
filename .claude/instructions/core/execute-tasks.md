@@ -31,7 +31,7 @@ Identify which tasks to execute from the spec (using spec_srd_reference file pat
 
 <instructions>
   ACTION: Identify task(s) to execute
-  DEFAULT: Select next uncompleted parent task if not specified
+  DEFAULT: Select next uncompleted parent task if not specified (git branch name can be used as a hint)
   CONFIRM: Task selection with user
 </instructions>
 
@@ -199,11 +199,23 @@ Use the test-runner subagent to run the entire test suite to ensure no regressio
 
 </step>
 
-<step number="7" subagent="file-creator" name="create_tasks_md">
+<step number="7" subagent="precommit-error-analyzer" name="precommit_error_analysis">
 
-<step number="7" subagent="git-workflow" name="git_workflow">
+### Step 7: Pre-commit Error Analysis
 
-### Step 7: Git Workflow
+Use the precommit-error-analyzer subagent to analyze any errors reported by the pre-commit hooks.
+
+<instructions>
+  ACTION: Use precommit-error-analyzer subagent
+  REQUEST: "Analyze pre-commit errors"
+  WAIT: For analysis completion
+</instructions>
+
+</step>
+
+<step number="8" subagent="git-workflow" name="git_workflow">
+
+### Step 8: Git Workflow
 
 Use the git-workflow subagent to create git commit, push to GitHub, and create pull request for the implemented features.
 
@@ -235,9 +247,9 @@ Use the git-workflow subagent to create git commit, push to GitHub, and create p
 
 </step>
 
-<step number="8" name="roadmap_progress_check">
+<step number="9" name="roadmap_progress_check">
 
-### Step 8: Roadmap Progress Check (Conditional)
+### Step 9: Roadmap Progress Check (Conditional)
 
 Check @.agilevv/product/roadmap.md (if not in context) and update roadmap progress only if the executed tasks may have completed a roadmap item and the spec completes that item.
 
@@ -280,9 +292,9 @@ SKIP loading (use existing context)
 
 </step>
 
-<step number="9" name="completion_notification">
+<step number="10" name="completion_notification">
 
-### Step 9: Task Completion Notification
+### Step 10: Task Completion Notification
 
 Play a system sound to alert the user that tasks are complete.
 
@@ -297,9 +309,9 @@ afplay /System/Library/Sounds/Glass.aiff
 
 </step>
 
-<step number="10" name="completion_summary">
+<step number="11" name="completion_summary">
 
-### Step 10: Completion Summary
+### Step 11: Completion Summary
 
 Create a structured summary message with emojis showing what was done, any issues, testing instructions, and PR link.
 
@@ -373,7 +385,7 @@ View PR: [GITHUB_PR_URL]
 <verify>
 \- [ ] Task implementation complete
 \- [ ] All tests passing
-\- [ ] tasks.md updated
+\- [ ] tasks.md updated with task status (completed/incomplete/blocked)
 \- [ ] Code linted, typed checked and formatted
 \- [ ] Code committed and pushed
 \- [ ] Pull request created

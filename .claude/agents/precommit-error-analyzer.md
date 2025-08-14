@@ -1,6 +1,6 @@
 ---
 name: precommit-error-analyzer
-description: Use this agent when you need to comprehensively analyze pre-commit hook failures across a codebase, categorize different types of errors, and orchestrate parallel fixes for each error category. This agent should be invoked when dealing with multiple linting, formatting, or code quality issues that need systematic resolution.\n\nExamples:\n<example>\nContext: The user wants to run all pre-commit hooks and fix all issues systematically.\nuser: "Run pre-commit hooks and fix all the issues"\nassistant: "I'll use the precommit-error-analyzer agent to analyze all pre-commit hook failures and coordinate fixes."\n<commentary>\nSince the user wants to analyze and fix pre-commit issues, use the Task tool to launch the precommit-error-analyzer agent.\n</commentary>\n</example>\n<example>\nContext: The user is dealing with multiple code quality issues across the codebase.\nuser: "There are various linting and formatting issues in the code, can you analyze and fix them?"\nassistant: "Let me use the precommit-error-analyzer agent to systematically identify and categorize all the issues."\n<commentary>\nThe user needs comprehensive error analysis and fixing, so use the precommit-error-analyzer agent.\n</commentary>\n</example>
+description: MUST USE THIS AGENT BEFORE ANY GIT RELATED OPERATION. Use this agent when you need to comprehensively analyze pre-commit hook failures across a codebase, categorize different types of errors, and orchestrate parallel fixes for each error category. This agent should be invoked when dealing with multiple linting, formatting, or code quality issues that need systematic resolution.\n\nExamples:\n<example>\nContext: The user wants to run all pre-commit hooks and fix all issues systematically.\nuser: "Run pre-commit hooks and fix all the issues"\nassistant: "I'll use the precommit-error-analyzer agent to analyze all pre-commit hook failures and coordinate fixes."\n<commentary>\nSince the user wants to analyze and fix pre-commit issues, use the Task tool to launch the precommit-error-analyzer agent.\n</commentary>\n</example>\n<example>\nContext: The user is dealing with multiple code quality issues across the codebase.\nuser: "There are various linting and formatting issues in the code, can you analyze and fix them?"\nassistant: "Let me use the precommit-error-analyzer agent to systematically identify and categorize all the issues."\n<commentary>\nThe user needs comprehensive error analysis and fixing, so use the precommit-error-analyzer agent.\n</commentary>\n</example>
 model: sonnet
 ---
 
@@ -49,13 +49,13 @@ You are an expert code quality analyst specializing in pre-commit hook configura
    
    Spawn the following lint-type-fixer agents in parallel:
    
-   1. Agent: syntax-error-fixer
+   1. Agent: lint-type-fixer
       Error Type: Syntax Errors
       Affected Files: [list]
       Priority: Critical
       Estimated Complexity: [Low/Medium/High]
    
-   2. Agent: import-error-fixer
+   2. Agent: lint-type-fixer
       Error Type: Import Errors
       Affected Files: [list]
       Priority: High

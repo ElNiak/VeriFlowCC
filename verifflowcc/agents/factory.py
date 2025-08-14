@@ -43,10 +43,10 @@ class AgentFactory:
             from .requirements_analyst import RequirementsAnalystAgent
 
             self._agent_registry = {
-                "requirements": RequirementsAnalystAgent,
+                "requirements_analyst": RequirementsAnalystAgent,
                 "architect": ArchitectAgent,
                 "developer": DeveloperAgent,
-                "qa": QATesterAgent,
+                "qa_tester": QATesterAgent,
                 "integration": IntegrationAgent,
             }
             logger.info("Registered default V-Model agents")
@@ -78,7 +78,13 @@ class AgentFactory:
         Raises:
             ValueError: If agent_type is not supported
         """
-        if agent_type not in ["requirements", "architect", "developer", "qa", "integration"]:
+        if agent_type not in [
+            "requirements_analyst",
+            "architect",
+            "developer",
+            "qa_tester",
+            "integration",
+        ]:
             raise ValueError(f"Unsupported agent type: {agent_type}")
 
         agent_name = name or f"{agent_type}_agent"
@@ -110,7 +116,7 @@ class AgentFactory:
         Returns:
             Dictionary mapping agent types to agent instances
         """
-        agent_types = ["requirements", "architect", "developer", "qa", "integration"]
+        agent_types = ["requirements_analyst", "architect", "developer", "qa_tester", "integration"]
         agents = {}
 
         for agent_type in agent_types:
@@ -129,10 +135,10 @@ class AgentFactory:
             Dictionary mapping agent types to descriptions
         """
         return {
-            "requirements": "Requirements Analyst - Elaborates user stories and defines acceptance criteria",
+            "requirements_analyst": "Requirements Analyst - Elaborates user stories and defines acceptance criteria",
             "architect": "System Architect - Designs system architecture and component interfaces",
             "developer": "Developer - Implements code following design specifications",
-            "qa": "QA Tester - Creates and executes test strategies and cases",
+            "qa_tester": "QA Tester - Creates and executes test strategies and cases",
             "integration": "Integration Engineer - Validates system integration and deployment readiness",
         }
 

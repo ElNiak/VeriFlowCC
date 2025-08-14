@@ -4,8 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Thinking strategy
 
-- If the task concerns large code changes,large refactors, or new features, **always** ultrathink when working
-- else always think when working
+- IF the task/command concerns large code changes,large refactors, or new features, USE ultra-think mode.
+- ELSE ALWAYS use think mode
 
 ## Project Overview
 
