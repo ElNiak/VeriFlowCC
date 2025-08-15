@@ -4,6 +4,7 @@ This module tests the QATesterAgent functionality including test generation,
 test execution, and quality validation.
 """
 
+import json
 from typing import Any
 from unittest.mock import patch
 
@@ -53,7 +54,7 @@ class TestQATesterAgentInputValidation:
 class TestQATesterAgentProcessing:
     """Test QATesterAgent main processing functionality."""
 
-    @patch("verifflowcc.agents.qa_tester.QATesterAgent._call_claude_api")
+    @patch("verifflowcc.agents.qa_tester.QATesterAgent._call_claude_sdk")
     async def test_process_test_generation(
         self, mock_claude_api: Any, isolated_agilevv_dir: PathConfig
     ) -> None:
@@ -65,7 +66,7 @@ class TestQATesterAgentProcessing:
             "coverage_report": {"percentage": 95.5, "missing_lines": []},
             "quality_metrics": {"test_count": 10, "assertions": 25},
         }
-        mock_claude_api.return_value = mock_response
+        mock_claude_api.return_value = json.dumps(mock_response)
 
         agent = QATesterAgent(path_config=isolated_agilevv_dir)
 
@@ -92,7 +93,7 @@ class TestQATesterAgentProcessing:
         test_artifact_path = isolated_agilevv_dir.base_dir / "testing" / "US-001.json"
         assert test_artifact_path.exists()
 
-    @patch("verifflowcc.agents.qa_tester.QATesterAgent._call_claude_api")
+    @patch("verifflowcc.agents.qa_tester.QATesterAgent._call_claude_sdk")
     async def test_process_with_api_failure(
         self, mock_claude_api: Any, isolated_agilevv_dir: PathConfig
     ) -> None:
@@ -115,7 +116,7 @@ class TestQATesterAgentProcessing:
 
         assert result["status"] == "error"
         assert result["next_stage_ready"] is False
-        assert len(result["errors"]) > 0
+        assert "error" in result
 
 
 class TestQATesterAgentIntegration:

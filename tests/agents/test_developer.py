@@ -167,7 +167,7 @@ class UserService:
 class TestDeveloperAgentProcessing:
     """Test DeveloperAgent main processing functionality."""
 
-    @patch("verifflowcc.agents.developer.DeveloperAgent._call_claude_api")
+    @patch("verifflowcc.agents.developer.DeveloperAgent._call_claude_sdk")
     async def test_process_implementation_generation(
         self, mock_claude_api: Any, isolated_agilevv_dir: Any
     ) -> None:
@@ -190,7 +190,7 @@ class TestDeveloperAgentProcessing:
                 "dependencies_added": ["bcrypt", "jwt"],
             },
         }
-        mock_claude_api.return_value = mock_response
+        mock_claude_api.return_value = json.dumps(mock_response)
 
         agent = DeveloperAgent(path_config=isolated_agilevv_dir, mock_mode=True)
 
@@ -223,7 +223,7 @@ class TestDeveloperAgentProcessing:
         impl_artifact_path = isolated_agilevv_dir.base_dir / "implementation" / "US-001.json"
         assert impl_artifact_path.exists()
 
-    @patch("verifflowcc.agents.developer.DeveloperAgent._call_claude_api")
+    @patch("verifflowcc.agents.developer.DeveloperAgent._call_claude_sdk")
     async def test_process_with_api_failure(
         self, mock_claude_api: Any, isolated_agilevv_dir: Any
     ) -> None:
@@ -246,10 +246,10 @@ class TestDeveloperAgentProcessing:
 
         assert result["status"] == "error"
         assert result["next_stage_ready"] is False
-        assert len(result["errors"]) > 0
-        assert "API Error" in result["errors"][0]
+        assert "error" in result
+        assert "API Error" in result["error"]
 
-    @patch("verifflowcc.agents.developer.DeveloperAgent._call_claude_api")
+    @patch("verifflowcc.agents.developer.DeveloperAgent._call_claude_sdk")
     async def test_process_partial_implementation(
         self, mock_claude_api: Any, isolated_agilevv_dir: Any
     ) -> None:
@@ -264,7 +264,7 @@ class TestDeveloperAgentProcessing:
             },
             # Missing implementation_report
         }
-        mock_claude_api.return_value = mock_response
+        mock_claude_api.return_value = json.dumps(mock_response)
 
         agent = DeveloperAgent(path_config=isolated_agilevv_dir, mock_mode=True)
 
@@ -460,7 +460,7 @@ class User:
 class TestDeveloperAgentErrorRecovery:
     """Test DeveloperAgent error handling and recovery mechanisms."""
 
-    @patch("verifflowcc.agents.developer.DeveloperAgent._call_claude_api")
+    @patch("verifflowcc.agents.developer.DeveloperAgent._call_claude_sdk")
     async def test_retry_mechanism_for_compilation_errors(
         self, mock_claude_api: Any, isolated_agilevv_dir: Any
     ) -> None:
@@ -511,8 +511,8 @@ class TestDeveloperAgentErrorRecovery:
 
         assert result["status"] == "error"
         assert result["next_stage_ready"] is False
-        assert len(result["errors"]) > 0
-        assert any("validation" in error.lower() for error in result["errors"])
+        assert "error" in result
+        assert result["error"] and "validation" in result["error"].lower()
 
 
 class TestDeveloperAgentPromptTemplates:

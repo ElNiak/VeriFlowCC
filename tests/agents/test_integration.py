@@ -4,6 +4,7 @@ This module tests the IntegrationAgent functionality including system validation
 deployment verification, and integration reporting.
 """
 
+import json
 from typing import Any
 from unittest.mock import patch
 
@@ -53,7 +54,7 @@ class TestIntegrationAgentInputValidation:
 class TestIntegrationAgentProcessing:
     """Test IntegrationAgent main processing functionality."""
 
-    @patch("verifflowcc.agents.integration.IntegrationAgent._call_claude_api")
+    @patch("verifflowcc.agents.integration.IntegrationAgent._call_claude_sdk")
     async def test_process_integration_validation(
         self, mock_claude_api: Any, isolated_agilevv_dir: PathConfig
     ) -> None:
@@ -64,7 +65,7 @@ class TestIntegrationAgentProcessing:
             "deployment_validation": {"environment": "staging", "health_checks": True},
             "system_health": {"cpu": 25, "memory": 60, "uptime": "99.9%"},
         }
-        mock_claude_api.return_value = mock_response
+        mock_claude_api.return_value = json.dumps(mock_response)
 
         agent = IntegrationAgent(path_config=isolated_agilevv_dir)
 

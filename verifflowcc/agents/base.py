@@ -14,11 +14,31 @@ try:
     SDK_AVAILABLE = True
 except ImportError:
     # Fallback for testing or when SDK not available
+    from collections.abc import AsyncGenerator
+    from typing import Any
+
     class MockSDKClient:
-        pass
+        def __init__(self, options: Any | None = None) -> None:
+            self.options = options
+
+        async def __aenter__(self) -> "MockSDKClient":
+            return self
+
+        async def __aexit__(
+            self, exc_type: type | None, exc_val: BaseException | None, exc_tb: Any | None
+        ) -> None:
+            pass
+
+        async def query(self, prompt: str) -> None:
+            pass
+
+        async def receive_response(self) -> AsyncGenerator[dict[str, Any], None]:
+            yield {"type": "text", "content": "Mock response"}
 
     class MockSDKOptions:
-        pass
+        def __init__(self, **kwargs: Any) -> None:
+            for key, value in kwargs.items():
+                setattr(self, key, value)
 
     SDKClaudeCodeOptions = MockSDKOptions  # type: ignore[misc,assignment]
     ClaudeSDKClient = MockSDKClient  # type: ignore[misc,assignment]
