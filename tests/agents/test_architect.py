@@ -6,6 +6,7 @@ architecture.md updating, and artifact management.
 
 import json
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -17,35 +18,32 @@ from verifflowcc.schemas.agent_schemas import DesignInput, DesignOutput
 class TestArchitectAgentInitialization:
     """Test ArchitectAgent initialization and configuration."""
 
-    def test_architect_agent_initialization(self, isolated_agilevv_dir):
+    def test_architect_agent_initialization(self, isolated_agilevv_dir: Any) -> None:
         """Test ArchitectAgent initializes correctly."""
         agent = ArchitectAgent(name="architect", path_config=isolated_agilevv_dir)
 
         assert agent.name == "architect"
         assert agent.path_config == isolated_agilevv_dir
-        assert agent.model == "claude-3-sonnet"  # default value
-        assert agent.max_tokens == 4000  # default value
+        assert agent.agent_type == "architect"
 
-    def test_architect_agent_custom_configuration(self, isolated_agilevv_dir):
+    def test_architect_agent_custom_configuration(self, isolated_agilevv_dir: Any) -> None:
         """Test ArchitectAgent with custom configuration."""
         agent = ArchitectAgent(
             name="custom_architect",
-            model="claude-3-opus",
-            max_tokens=8000,
             path_config=isolated_agilevv_dir,
         )
 
         assert agent.name == "custom_architect"
-        assert agent.model == "claude-3-opus"
-        assert agent.max_tokens == 8000
+        assert agent.agent_type == "architect"
 
 
 class TestArchitectAgentInputValidation:
     """Test ArchitectAgent input validation and processing."""
 
-    def test_design_input_validation(self, isolated_agilevv_dir):
+    def test_design_input_validation(self, isolated_agilevv_dir: Any) -> None:
         """Test that ArchitectAgent validates DesignInput correctly."""
-        agent = ArchitectAgent(path_config=isolated_agilevv_dir)
+        # Instantiate agent to verify it can be created with valid config
+        ArchitectAgent(path_config=isolated_agilevv_dir)
 
         # Valid input
         valid_input = DesignInput(
@@ -63,7 +61,7 @@ class TestArchitectAgentInputValidation:
         assert valid_input.stage == VModelStage.DESIGN
         assert valid_input.requirements_artifacts is not None
 
-    def test_design_input_missing_requirements(self):
+    def test_design_input_missing_requirements(self) -> None:
         """Test that DesignInput requires requirements artifacts."""
         with pytest.raises(ValueError, match="requirements_artifacts cannot be empty"):
             DesignInput(
@@ -74,7 +72,7 @@ class TestArchitectAgentInputValidation:
 class TestArchitectAgentArtifactManagement:
     """Test ArchitectAgent artifact creation and management."""
 
-    def test_save_design_artifacts(self, isolated_agilevv_dir):
+    def test_save_design_artifacts(self, isolated_agilevv_dir: Any) -> None:
         """Test saving design artifacts to correct subdirectory."""
         agent = ArchitectAgent(path_config=isolated_agilevv_dir)
 
@@ -95,7 +93,7 @@ class TestArchitectAgentArtifactManagement:
         loaded_data = json.loads(artifact_path.read_text())
         assert loaded_data == design_data
 
-    def test_load_design_artifacts(self, isolated_agilevv_dir):
+    def test_load_design_artifacts(self, isolated_agilevv_dir: Any) -> None:
         """Test loading existing design artifacts."""
         agent = ArchitectAgent(path_config=isolated_agilevv_dir)
 
@@ -109,9 +107,10 @@ class TestArchitectAgentArtifactManagement:
         loaded_data = agent.load_artifact("design/US-002.json")
         assert loaded_data == design_data
 
-    def test_architecture_md_update(self, isolated_agilevv_dir):
+    def test_architecture_md_update(self, isolated_agilevv_dir: Any) -> None:
         """Test updating architecture.md file."""
-        agent = ArchitectAgent(path_config=isolated_agilevv_dir)
+        # Instantiate agent to verify it can be created with valid config
+        ArchitectAgent(path_config=isolated_agilevv_dir)
 
         # Create initial architecture.md
         arch_path = isolated_agilevv_dir.architecture_path
@@ -138,7 +137,9 @@ class TestArchitectAgentProcessing:
     """Test ArchitectAgent main processing functionality."""
 
     @patch("verifflowcc.agents.architect.ArchitectAgent._call_claude_api")
-    async def test_process_design_generation(self, mock_claude_api, isolated_agilevv_dir):
+    async def test_process_design_generation(
+        self, mock_claude_api: Any, isolated_agilevv_dir: Any
+    ) -> None:
         """Test the main process method for design generation."""
         # Setup mock response
         mock_response = {
@@ -190,7 +191,9 @@ class TestArchitectAgentProcessing:
         assert design_artifact_path.exists()
 
     @patch("verifflowcc.agents.architect.ArchitectAgent._call_claude_api")
-    async def test_process_with_api_failure(self, mock_claude_api, isolated_agilevv_dir):
+    async def test_process_with_api_failure(
+        self, mock_claude_api: Any, isolated_agilevv_dir: Any
+    ) -> None:
         """Test process method handles API failures gracefully."""
         # Setup mock to raise an exception
         mock_claude_api.side_effect = Exception("API Error: Rate limit exceeded")
@@ -213,7 +216,9 @@ class TestArchitectAgentProcessing:
         assert "API Error" in result["errors"][0]
 
     @patch("verifflowcc.agents.architect.ArchitectAgent._call_claude_api")
-    async def test_process_partial_success(self, mock_claude_api, isolated_agilevv_dir):
+    async def test_process_partial_success(
+        self, mock_claude_api: Any, isolated_agilevv_dir: Any
+    ) -> None:
         """Test process method handles partial success scenarios."""
         # Setup mock with incomplete response
         mock_response = {
@@ -244,9 +249,10 @@ class TestArchitectAgentProcessing:
 class TestArchitectAgentIntegration:
     """Integration tests for ArchitectAgent with V-Model workflow."""
 
-    def test_integration_with_requirements_analyst_output(self, isolated_agilevv_dir):
+    def test_integration_with_requirements_analyst_output(self, isolated_agilevv_dir: Any) -> None:
         """Test ArchitectAgent can process RequirementsAnalyst output."""
-        agent = ArchitectAgent(path_config=isolated_agilevv_dir)
+        # Instantiate agent to verify it can be created with valid config
+        ArchitectAgent(path_config=isolated_agilevv_dir)
 
         # Simulate requirements analyst output
         requirements_output = {
@@ -277,36 +283,34 @@ class TestArchitectAgentIntegration:
         assert design_input.story_id == "US-001"
         assert design_input.requirements_artifacts == requirements_output
 
-    def test_design_output_validation(self, isolated_agilevv_dir):
+    def test_design_output_validation(self, isolated_agilevv_dir: Any) -> None:
         """Test DesignOutput validation for next stage."""
         # Create valid design output
-        design_output_data = {
-            "status": "success",
-            "artifacts": {"design_document": "path/to/design.md"},
-            "design_specifications": {
+        design_output = DesignOutput(
+            status="success",
+            artifacts={"design_document": "path/to/design.md"},
+            metrics={"complexity": "medium", "components_designed": 2},
+            design_specifications={
                 "components": ["UserService", "AuthService"],
                 "interfaces": ["IUserRepo", "IAuthProvider"],
             },
-            "architecture_updates": {
+            architecture_updates={
                 "diagrams_added": ["login_sequence.puml"],
                 "components_updated": ["UserService"],
             },
-            "interface_contracts": {
+            interface_contracts={
                 "IUserRepo": {
                     "methods": ["findById", "save"],
                     "contracts": ["User findById(String id)", "boolean save(User user)"],
                 }
             },
-            "next_stage_ready": True,
-        }
-
-        # Should validate successfully
-        design_output = DesignOutput(**design_output_data)
+            next_stage_ready=True,
+        )
         assert design_output.status == "success"
         assert design_output.next_stage_ready is True
         assert design_output.design_specifications is not None
 
-    def test_error_handling_with_empty_design_specs(self):
+    def test_error_handling_with_empty_design_specs(self) -> None:
         """Test that DesignOutput requires non-empty design specifications."""
         with pytest.raises(ValueError, match="design_specifications cannot be empty"):
             DesignOutput(
@@ -321,7 +325,7 @@ class TestArchitectAgentIntegration:
 class TestArchitectAgentPromptTemplates:
     """Test ArchitectAgent prompt template handling."""
 
-    def test_load_design_prompt_template(self, isolated_agilevv_dir):
+    def test_load_design_prompt_template(self, isolated_agilevv_dir: Any) -> None:
         """Test loading design prompt template."""
         agent = ArchitectAgent(path_config=isolated_agilevv_dir)
 
@@ -348,7 +352,7 @@ class TestArchitectAgentPromptTemplates:
             if template_dir.exists() and not list(template_dir.iterdir()):
                 template_dir.rmdir()
 
-    def test_load_nonexistent_template(self, isolated_agilevv_dir):
+    def test_load_nonexistent_template(self, isolated_agilevv_dir: Any) -> None:
         """Test loading non-existent template returns empty string."""
         agent = ArchitectAgent(path_config=isolated_agilevv_dir)
 
@@ -361,7 +365,7 @@ class TestArchitectAgentErrorRecovery:
     """Test ArchitectAgent error handling and recovery mechanisms."""
 
     @patch("verifflowcc.agents.architect.ArchitectAgent._call_claude_api")
-    async def test_retry_mechanism(self, mock_claude_api, isolated_agilevv_dir):
+    async def test_retry_mechanism(self, mock_claude_api: Any, isolated_agilevv_dir: Any) -> None:
         """Test that agent implements retry logic for transient failures."""
         # First call fails, second call succeeds
         mock_claude_api.side_effect = [
@@ -387,7 +391,7 @@ class TestArchitectAgentErrorRecovery:
         assert result["status"] == "success"
         assert mock_claude_api.call_count == 2
 
-    async def test_validation_error_handling(self, isolated_agilevv_dir):
+    async def test_validation_error_handling(self, isolated_agilevv_dir: Any) -> None:
         """Test handling of input validation errors."""
         agent = ArchitectAgent(path_config=isolated_agilevv_dir)
 

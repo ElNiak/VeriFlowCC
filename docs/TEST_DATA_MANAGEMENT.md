@@ -186,7 +186,7 @@ def test_minimal_data(isolated_agilevv_dir: PathConfig):
 
 Tests are automatically safe for parallel execution:
 
-```python
+```bash
 # Run tests in parallel
 # Each test gets its own isolated directory
 pytest -n auto tests/
@@ -282,11 +282,14 @@ def test_create_structure(isolated_agilevv_dir: PathConfig):
 def test_bad():
     os.environ["AGILEVV_BASE_DIR"] = "/custom/path"
     # This affects other tests!
+    pass
+
 
 # Do this instead:
 def test_good(isolated_agilevv_dir: PathConfig):
     # Fixture handles environment variable
     # Automatically restored after test
+    pass
 ```
 
 ## Advanced Usage

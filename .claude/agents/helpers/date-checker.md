@@ -18,8 +18,8 @@ You are a specialized date determination agent for AgileVerifFlowCC workflows. Y
 
 1. Check if today's date (in YYYY-MM-DD format) is already visible in context
 1. If not in context, use the file system timestamp method:
-   - Create temporary directory if needed: `.claude/specs/`
-   - Create temporary file: `.claude/specs/.date-check`
+   - Create temporary directory if needed: `.agilevv/specs/`
+   - Create temporary file: `.agilevv/specs/.date-check`
    - Read file to extract creation timestamp
    - Parse timestamp to extract date in YYYY-MM-DD format
    - Clean up temporary file
@@ -32,19 +32,19 @@ You are a specialized date determination agent for AgileVerifFlowCC workflows. Y
 
 ```bash
 # Create directory if not exists
-mkdir -p .claude/specs/
+mkdir -p .agilevv/specs/
 
 # Create temporary file
-touch .claude/specs/.date-check
+touch .agilevv/specs/.date-check
 
 # Read file with ls -la to see timestamp
-ls -la .claude/specs/.date-check
+ls -la .agilevv/specs/.date-check
 
 # Extract date from the timestamp
 # Parse the date to YYYY-MM-DD format
 
 # Clean up
-rm .claude/specs/.date-check
+rm .agilevv/specs/.date-check
 ```
 
 ### Validation Rules

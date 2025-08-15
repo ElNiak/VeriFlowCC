@@ -22,12 +22,12 @@ EXECUTE: @.claude/instructions/meta/pre-flight.md
 
 ### Step 1: Gather User Input
 
-Use the context-fetcher subagent to collect all required inp duts from the user including main idea, key features (minimum 3), target users (minimum 1), and tech stack preferences with blocking validation before proceeding.
+Use the context-fetcher subagent to collect all required inputs from the user including main idea, key features (minimum 3), target users (minimum 1), and tech stack preferences with blocking validation before proceeding.
 
 \<data_sources>
 <primary>user_direct_input</primary>
 \<fallback_sequence>
-1\. @.claude/standards/tech-stack.md
+1\. @.agilevv/standards/tech-stack.md
 2\. @.claude/CLAUDE.md
 3\. Cursor User Rules
 \</fallback_sequence>
@@ -41,7 +41,7 @@ Please provide the following missing information:
 1. Target users and use cases (minimum 1)
 1. Tech stack preferences
 1. Has the new application been initialized yet and we're inside the project folder? (yes/no)
-   \</error_template>
+\</error_template>
 
 </step>
 
@@ -67,7 +67,7 @@ Use the file-creator subagent to create the following file_structure with valida
 
 ### Step 3: Create mission.md
 
-Use the file-creator subagent to create the file: .claude/product/mission.md and use the following template:
+Use the file-creator subagent to create the file: .agilevv/product/mission.md and use the following template:
 
 \<file_template>
 
@@ -195,7 +195,7 @@ Unlike [COMPETITOR_OR_ALTERNATIVE], we provide [SPECIFIC_ADVANTAGE]. This result
 
 ### Step 4: Create tech-stack.md
 
-Use the file-creator subagent to create the file: .claude/product/tech-stack.md and use the following template:
+Use the file-creator subagent to create the file: .agilevv/product/tech-stack.md and use the following template:
 
 \<file_template>
 
@@ -234,7 +234,7 @@ PROCEED: To manual resolution below
 \<for_each item="required_items">
 \<if_not_in>user_input\</if_not_in>
 \<then_check>
-1\. @.claude/standards/tech-stack.md
+1\. @.agilevv/standards/tech-stack.md
 2\. @.claude/CLAUDE.md
 3\. Cursor User Rules
 \</then_check>
@@ -256,7 +256,7 @@ You can respond with the technology choice or "n/a" for each item.
 
 ### Step 5: Create mission-lite.md
 
-Use the file-creator subagent to create the file: .claude/product/mission-lite.md for the purpose of establishing a condensed mission for efficient AI context usage.
+Use the file-creator subagent to create the file: .agilevv/product/mission-lite.md for the purpose of establishing a condensed mission for efficient AI context usage.
 
 Use the following template:
 
@@ -297,7 +297,7 @@ TaskFlow serves distributed software teams who need seamless task coordination a
 
 ### Step 6: Create roadmap.md
 
-Use the file-creator subagent to create the following file: .claude/product/roadmap.md using the following template:
+Use the file-creator subagent to create the following file: .agilevv/product/roadmap.md using the following template:
 
 \<file_template>
 
@@ -352,7 +352,7 @@ Use the file-creator subagent to create the following file: .claude/product/road
 
 ### Step 7: Create decisions.md
 
-Use the file-creator subagent to create the file: .claude/product/decisions.md using the following template:
+Use the file-creator subagent to create the file: .agilevv/product/decisions.md using the following template:
 
 \<file_template>
 
@@ -423,7 +423,7 @@ Use the file-creator subagent to create the file: .claude/product/decisions.md u
 
 \<final_checklist>
 <verify>
-\- [ ] All 5 files created in .claude/product/
+\- [ ] All 5 files created in .agilevv/product/
 \- [ ] User inputs incorporated throughout
 \- [ ] Missing tech stack items requested
 \- [ ] Initial decisions documented

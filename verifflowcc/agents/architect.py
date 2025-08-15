@@ -121,7 +121,7 @@ class ArchitectAgent(BaseAgent):
         try:
             # Try to parse as JSON first
             if response.strip().startswith("{"):
-                parsed_response = json.loads(response)
+                parsed_response: dict[str, Any] = json.loads(response)
 
                 # Add metadata
                 parsed_response.update(

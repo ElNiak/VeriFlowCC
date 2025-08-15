@@ -1,0 +1,366 @@
+"""Tests for SDK configuration module.
+
+This module tests the SDKConfig class including initialization, validation,
+environment variable handling, and agent-specific configuration.
+"""
+
+import os
+from typing import Any
+from unittest.mock import patch
+
+import pytest
+from verifflowcc.core.sdk_config import ClaudeCodeOptions, SDKConfig
+
+
+class TestSDKConfigInitialization:
+    """Test SDK configuration initialization and validation."""
+
+    def test_sdk_config_with_api_key(self) -> None:
+        """Test SDKConfig initialization with explicit API key."""
+        config = SDKConfig(api_key="test-key-123")
+
+        assert config.api_key == "test-key-123"
+        assert config.base_url is None
+        assert config.timeout == 30
+        assert config.max_retries == 3
+        assert config.retry_delay == 1.0
+        assert config.environment == "production"
+
+    def test_sdk_config_with_all_parameters(self) -> None:
+        """Test SDKConfig initialization with all parameters."""
+        config = SDKConfig(
+            api_key="test-key-123",
+            base_url="https://custom.api.com",
+            timeout=60,
+            max_retries=5,
+            retry_delay=2.0,
+            environment="staging",
+        )
+
+        assert config.api_key == "test-key-123"
+        assert config.base_url == "https://custom.api.com"
+        assert config.timeout == 60
+        assert config.max_retries == 5
+        assert config.retry_delay == 2.0
+        assert config.environment == "staging"
+
+    def test_sdk_config_defaults(self) -> None:
+        """Test SDKConfig default values."""
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "env-key"}):
+            config = SDKConfig()
+
+            assert config.api_key == "env-key"
+            assert config.base_url is None
+            assert config.timeout == 30
+            assert config.max_retries == 3
+            assert config.retry_delay == 1.0
+            assert config.environment == "production"
+
+
+class TestSDKConfigEnvironmentVariables:
+    """Test SDK configuration environment variable handling."""
+
+    def test_api_key_from_environment_variable(self) -> None:
+        """Test API key detection from ANTHROPIC_API_KEY environment variable."""
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "env-test-key"}):
+            config = SDKConfig()
+            assert config.api_key == "env-test-key"
+
+    def test_explicit_api_key_overrides_environment(self) -> None:
+        """Test that explicit API key overrides environment variable."""
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "env-key"}):
+            config = SDKConfig(api_key="explicit-key")
+            assert config.api_key == "explicit-key"
+
+    def test_missing_api_key_raises_error(self) -> None:
+        """Test that missing API key raises appropriate error."""
+        with patch.dict(os.environ, {}, clear=True):
+            with pytest.raises(ValueError, match="ANTHROPIC_API_KEY.*required"):
+                SDKConfig()
+
+    def test_empty_api_key_environment_variable_accepted(self) -> None:
+        """Test that empty API key environment variable is accepted (not validated)."""
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": ""}):
+            config = SDKConfig()
+            assert config.api_key == ""
+
+    def test_whitespace_api_key_environment_variable_raises_error(self) -> None:
+        """Test that whitespace-only API key environment variable raises error."""
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "   "}):
+            config = SDKConfig()
+            # Whitespace is preserved, but this should be valid as post_init doesn't strip
+            assert config.api_key == "   "
+
+
+class TestSDKConfigValidation:
+    """Test SDK configuration validation with invalid parameters."""
+
+    def test_negative_timeout_accepted(self) -> None:
+        """Test that negative timeout values are accepted (dataclass doesn't validate)."""
+        config = SDKConfig(api_key="test-key", timeout=-1)
+        assert config.timeout == -1
+
+    def test_zero_timeout_accepted(self) -> None:
+        """Test that zero timeout is accepted."""
+        config = SDKConfig(api_key="test-key", timeout=0)
+        assert config.timeout == 0
+
+    def test_negative_max_retries_accepted(self) -> None:
+        """Test that negative max_retries are accepted."""
+        config = SDKConfig(api_key="test-key", max_retries=-1)
+        assert config.max_retries == -1
+
+    def test_negative_retry_delay_accepted(self) -> None:
+        """Test that negative retry_delay is accepted."""
+        config = SDKConfig(api_key="test-key", retry_delay=-1.0)
+        assert config.retry_delay == -1.0
+
+
+class TestSDKConfigAgentOptions:
+    """Test agent-specific Claude Code options configuration."""
+
+    def test_get_client_options_requirements_agent(self) -> None:
+        """Test client options for requirements agent."""
+        config = SDKConfig(api_key="test-key")
+        options = config.get_client_options("requirements")
+
+        assert isinstance(options, ClaudeCodeOptions)
+        assert "Requirements Analyst" in options.system_prompt
+        assert "INVEST principles" in options.system_prompt
+        assert options.max_turns == 10
+        assert options.max_tokens == 4000
+        assert options.temperature == 0.7
+        assert options.model == "claude-3-5-sonnet-20241022"
+        assert options.stream is True
+        assert options.tools_enabled is True
+
+    def test_get_client_options_architect_agent(self) -> None:
+        """Test client options for architect agent."""
+        config = SDKConfig(api_key="test-key")
+        options = config.get_client_options("architect")
+
+        assert isinstance(options, ClaudeCodeOptions)
+        assert "System Architect" in options.system_prompt
+        assert "V-Model compliant design" in options.system_prompt
+        assert "SOLID principles" in options.system_prompt
+        assert options.max_turns == 10
+        assert options.max_tokens == 4000
+
+    def test_get_client_options_developer_agent(self) -> None:
+        """Test client options for developer agent."""
+        config = SDKConfig(api_key="test-key")
+        options = config.get_client_options("developer")
+
+        assert isinstance(options, ClaudeCodeOptions)
+        assert "Developer implementing" in options.system_prompt
+        assert "Test-Driven Development" in options.system_prompt
+        assert options.max_turns == 10
+        assert options.max_tokens == 4000
+
+    def test_get_client_options_qa_agent(self) -> None:
+        """Test client options for QA agent."""
+        config = SDKConfig(api_key="test-key")
+        options = config.get_client_options("qa")
+
+        assert isinstance(options, ClaudeCodeOptions)
+        assert "QA Engineer" in options.system_prompt
+        assert "test strategies" in options.system_prompt
+        assert options.max_turns == 10
+        assert options.max_tokens == 4000
+
+    def test_get_client_options_integration_agent(self) -> None:
+        """Test client options for integration agent."""
+        config = SDKConfig(api_key="test-key")
+        options = config.get_client_options("integration")
+
+        assert isinstance(options, ClaudeCodeOptions)
+        assert "Integration Engineer" in options.system_prompt
+        assert "system coherence" in options.system_prompt
+        assert options.max_turns == 10
+        assert options.max_tokens == 4000
+
+    def test_get_client_options_unknown_agent(self) -> None:
+        """Test client options for unknown agent type."""
+        config = SDKConfig(api_key="test-key")
+        options = config.get_client_options("unknown")
+
+        assert isinstance(options, ClaudeCodeOptions)
+        assert options.system_prompt == ""
+        assert options.max_turns == 10
+        assert options.max_tokens == 4000
+
+
+class TestSDKConfigToolPermissions:
+    """Test agent-specific tool permissions."""
+
+    def test_get_tool_permissions_requirements_agent(self) -> None:
+        """Test tool permissions for requirements agent."""
+        config = SDKConfig(api_key="test-key")
+        permissions = config.get_tool_permissions("requirements")
+
+        assert permissions["read"] is True
+        assert permissions["write"] is True  # Can create requirement documents
+        assert permissions["execute"] is False
+        assert permissions["web_search"] is False
+
+    def test_get_tool_permissions_architect_agent(self) -> None:
+        """Test tool permissions for architect agent."""
+        config = SDKConfig(api_key="test-key")
+        permissions = config.get_tool_permissions("architect")
+
+        assert permissions["read"] is True
+        assert permissions["write"] is True  # Can create design documents
+        assert permissions["execute"] is False
+        assert permissions["web_search"] is False
+
+    def test_get_tool_permissions_developer_agent(self) -> None:
+        """Test tool permissions for developer agent."""
+        config = SDKConfig(api_key="test-key")
+        permissions = config.get_tool_permissions("developer")
+
+        assert permissions["read"] is True
+        assert permissions["write"] is True
+        assert permissions["execute"] is True  # Can run code and tests
+        assert permissions["web_search"] is False
+
+    def test_get_tool_permissions_qa_agent(self) -> None:
+        """Test tool permissions for QA agent."""
+        config = SDKConfig(api_key="test-key")
+        permissions = config.get_tool_permissions("qa")
+
+        assert permissions["read"] is True
+        assert permissions["write"] is False
+        assert permissions["execute"] is True  # Can run tests
+        assert permissions["web_search"] is False
+
+    def test_get_tool_permissions_integration_agent(self) -> None:
+        """Test tool permissions for integration agent."""
+        config = SDKConfig(api_key="test-key")
+        permissions = config.get_tool_permissions("integration")
+
+        assert permissions["read"] is True
+        assert permissions["write"] is False
+        assert permissions["execute"] is True  # Can run integration tests
+        assert permissions["web_search"] is True  # May need to check external dependencies
+
+    def test_get_tool_permissions_unknown_agent(self) -> None:
+        """Test tool permissions for unknown agent type."""
+        config = SDKConfig(api_key="test-key")
+        permissions = config.get_tool_permissions("unknown")
+
+        assert permissions["read"] is True
+        assert permissions["write"] is False
+        assert permissions["execute"] is False
+        assert permissions["web_search"] is False
+
+
+class TestSDKConfigMockMode:
+    """Test SDK configuration mock mode and environment overrides."""
+
+    def test_mock_mode_configuration_loading(self) -> None:
+        """Test mock mode configuration with environment variable override."""
+        with patch.dict(os.environ, {"VERIFFLOWCC_MOCK_MODE": "true"}):
+            # Mock mode would be handled by actual application code
+            # Here we test that environment variable is readable
+            assert os.getenv("VERIFFLOWCC_MOCK_MODE") == "true"
+
+    def test_mock_mode_false_configuration(self) -> None:
+        """Test mock mode configuration set to false."""
+        with patch.dict(os.environ, {"VERIFFLOWCC_MOCK_MODE": "false"}):
+            assert os.getenv("VERIFFLOWCC_MOCK_MODE") == "false"
+
+    def test_mock_mode_not_set(self) -> None:
+        """Test mock mode configuration when not set."""
+        with patch.dict(os.environ, {}, clear=True):
+            assert os.getenv("VERIFFLOWCC_MOCK_MODE") is None
+
+
+class TestSDKConfigSerialization:
+    """Test SDK configuration serialization and deserialization for persistence."""
+
+    def test_config_serialization_to_dict(self) -> None:
+        """Test converting SDKConfig to dictionary format."""
+        config = SDKConfig(
+            api_key="test-key",
+            base_url="https://api.test.com",
+            timeout=45,
+            max_retries=3,
+            retry_delay=1.5,
+            environment="testing",
+        )
+
+        # Convert dataclass to dict using __dict__
+        config_dict = config.__dict__
+
+        assert config_dict["api_key"] == "test-key"
+        assert config_dict["base_url"] == "https://api.test.com"
+        assert config_dict["timeout"] == 45
+        assert config_dict["max_retries"] == 3
+        assert config_dict["retry_delay"] == 1.5
+        assert config_dict["environment"] == "testing"
+
+    def test_config_deserialization_from_dict(self) -> None:
+        """Test creating SDKConfig from dictionary format."""
+        config_dict: dict[str, Any] = {
+            "api_key": "restored-key",
+            "base_url": "https://restored.api.com",
+            "timeout": 90,
+            "max_retries": 5,
+            "retry_delay": 2.0,
+            "environment": "restored",
+        }
+
+        config = SDKConfig(**config_dict)
+
+        assert config.api_key == "restored-key"
+        assert config.base_url == "https://restored.api.com"
+        assert config.timeout == 90
+        assert config.max_retries == 5
+        assert config.retry_delay == 2.0
+        assert config.environment == "restored"
+
+
+class TestSDKConfigEdgeCases:
+    """Test edge cases for timeout and retry configurations."""
+
+    def test_large_timeout_values(self) -> None:
+        """Test SDKConfig with large timeout values."""
+        config = SDKConfig(api_key="test-key", timeout=3600)  # 1 hour
+        assert config.timeout == 3600
+
+    def test_large_max_retries_values(self) -> None:
+        """Test SDKConfig with large max_retries values."""
+        config = SDKConfig(api_key="test-key", max_retries=100)
+        assert config.max_retries == 100
+
+    def test_small_retry_delay_values(self) -> None:
+        """Test SDKConfig with very small retry delay values."""
+        config = SDKConfig(api_key="test-key", retry_delay=0.1)
+        assert config.retry_delay == 0.1
+
+    def test_special_environment_values(self) -> None:
+        """Test SDKConfig with special environment values."""
+        config = SDKConfig(api_key="test-key", environment="dev-local-test-123")
+        assert config.environment == "dev-local-test-123"
+
+    def test_unicode_api_key_handling(self) -> None:
+        """Test SDKConfig with Unicode characters in API key."""
+        unicode_key = "test-key-ñáéíóú-测试"
+        config = SDKConfig(api_key=unicode_key)
+        assert config.api_key == unicode_key
+
+    def test_very_long_api_key(self) -> None:
+        """Test SDKConfig with very long API key."""
+        long_key = "test-key-" + "x" * 1000
+        config = SDKConfig(api_key=long_key)
+        assert config.api_key == long_key
+
+    def test_none_base_url_handling(self) -> None:
+        """Test explicit None base_url handling."""
+        config = SDKConfig(api_key="test-key", base_url=None)
+        assert config.base_url is None
+
+    def test_empty_base_url_handling(self) -> None:
+        """Test empty string base_url handling."""
+        config = SDKConfig(api_key="test-key", base_url="")
+        assert config.base_url == ""

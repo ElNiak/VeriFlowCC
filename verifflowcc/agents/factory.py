@@ -43,10 +43,10 @@ class AgentFactory:
             from .requirements_analyst import RequirementsAnalystAgent
 
             self._agent_registry = {
-                "requirements": RequirementsAnalystAgent,
+                "requirements_analyst": RequirementsAnalystAgent,
                 "architect": ArchitectAgent,
                 "developer": DeveloperAgent,
-                "qa": QATesterAgent,
+                "qa_tester": QATesterAgent,
                 "integration": IntegrationAgent,
             }
             logger.info("Registered default V-Model agents")
@@ -78,14 +78,35 @@ class AgentFactory:
         Raises:
             ValueError: If agent_type is not supported
         """
-        if agent_type not in ["requirements", "architect", "developer", "qa", "integration"]:
+        # Map short names to full names for backwards compatibility
+        short_name_mapping = {
+            "requirements": "requirements_analyst",
+            "qa": "qa_tester",
+        }
+
+        # Use full name if short name is provided
+        full_agent_type = short_name_mapping.get(agent_type, agent_type)
+
+        # Check if it's a valid default agent type or registered custom type
+        default_agent_types = [
+            "requirements_analyst",
+            "architect",
+            "developer",
+            "qa_tester",
+            "integration",
+        ]
+
+        if full_agent_type not in default_agent_types and agent_type not in self._agent_registry:
             raise ValueError(f"Unsupported agent type: {agent_type}")
+
+        # Use the original agent_type for lookups (to allow custom registered names)
+        lookup_type = agent_type if agent_type in self._agent_registry else full_agent_type
 
         agent_name = name or f"{agent_type}_agent"
 
         # Try to use registered agent class
-        if agent_type in self._agent_registry:
-            agent_class = self._agent_registry[agent_type]
+        if lookup_type in self._agent_registry:
+            agent_class = self._agent_registry[lookup_type]
             return agent_class(
                 name=agent_name,
                 agent_type=agent_type,
@@ -95,8 +116,8 @@ class AgentFactory:
             )
 
         # Fallback: create a generic agent with the base class
-        logger.warning(f"No specific agent class for {agent_type}, creating fallback agent")
-        return FallbackAgent(
+        logger.warning(f"No specific agent class for {agent_type}, creating task agent")
+        return TaskAgent(
             name=agent_name,
             agent_type=agent_type,
             path_config=self.path_config,
@@ -110,7 +131,7 @@ class AgentFactory:
         Returns:
             Dictionary mapping agent types to agent instances
         """
-        agent_types = ["requirements", "architect", "developer", "qa", "integration"]
+        agent_types = ["requirements_analyst", "architect", "developer", "qa_tester", "integration"]
         agents = {}
 
         for agent_type in agent_types:
@@ -129,16 +150,16 @@ class AgentFactory:
             Dictionary mapping agent types to descriptions
         """
         return {
-            "requirements": "Requirements Analyst - Elaborates user stories and defines acceptance criteria",
+            "requirements_analyst": "Requirements Analyst - Elaborates user stories and defines acceptance criteria",
             "architect": "System Architect - Designs system architecture and component interfaces",
             "developer": "Developer - Implements code following design specifications",
-            "qa": "QA Tester - Creates and executes test strategies and cases",
+            "qa_tester": "QA Tester - Creates and executes test strategies and cases",
             "integration": "Integration Engineer - Validates system integration and deployment readiness",
         }
 
 
-class FallbackAgent(BaseAgent):
-    """Fallback agent when specific agent implementations are not available."""
+class TaskAgent(BaseAgent):
+    """Generic task agent when specific agent implementations are not available."""
 
     async def process(self, input_data: dict[str, Any]) -> dict[str, Any]:
         """Process input using generic agent logic.

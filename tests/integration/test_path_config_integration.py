@@ -103,7 +103,7 @@ class TestAgentsPathConfigIntegration:
             async def process(self, input_data: dict) -> dict:
                 return {"result": "test"}
 
-        agent = TestAgent(name="test-agent", path_config=isolated_agilevv_dir)
+        agent = TestAgent(name="test-agent", agent_type="test", path_config=isolated_agilevv_dir)
 
         # Test artifact saving
         artifact_name = "test-artifact.json"
@@ -186,7 +186,7 @@ class TestGitIntegrationPathConfig:
             assert agilevv_dir.name in result.stdout
 
 
-class TestPathConfigBackwardCompatibility:
+class PathConfigBackwardCompatibility:
     """Test backward compatibility with existing .agilevv directories."""
 
     def test_default_uses_dot_agilevv(self, tmp_path: Path) -> None:

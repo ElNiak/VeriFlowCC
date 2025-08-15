@@ -126,7 +126,7 @@ I'm installing AgileVerifFlowCC into an existing product. Here's what I've gathe
 <instructions>
   ACTION: Execute plan-product.md with gathered information
   PROVIDE: All context as structured input
-  ALLOW: plan-product.md to create .claude/product/ structure
+  ALLOW: plan-product.md to create .agilevv/product/ structure
 </instructions>
 
 </step>
@@ -182,7 +182,7 @@ Verify installation completeness and provide clear next steps for the user to st
 
 \<verification_checklist>
 
-- [ ] .claude/product/ directory created
+- [ ] .agilevv/product/ directory created
 - [ ] All product documentation reflects actual codebase
 - [ ] Roadmap shows completed and planned features accurately
 - [ ] Tech stack matches installed dependencies
@@ -203,13 +203,13 @@ I've analyzed your [PRODUCT_TYPE] codebase and set up AgileVerifFlowCC with docu
 
 ### What Was Created
 
-- ✓ Product documentation in `.claude/product/`
+- ✓ Product documentation in `.agilevv/product/`
 - ✓ Roadmap with completed work in Phase 0
 - ✓ Tech stack reflecting actual dependencies
 
 ### Next Steps
 
-1. Review the generated documentation in `.claude/product/`
+1. Review the generated documentation in `.agilevv/product/`
 
 1. Make any necessary adjustments to reflect your vision
 

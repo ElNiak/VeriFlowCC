@@ -16,7 +16,7 @@ The central class for managing VeriFlowCC directory paths and structure.
 ### Constructor
 
 ```python
-PathConfig(base_dir: Optional[Union[str, Path]] = None)
+def __init__(self, base_dir: Optional[Union[str, Path]] = None): ...
 ```
 
 Creates a new PathConfig instance.
@@ -44,7 +44,7 @@ config = PathConfig(base_dir=Path.home() / ".agilevv-test")
 
 ```python
 @property
-def base_dir(self) -> Path
+def base_dir(self) -> Path: ...
 ```
 
 Returns the base directory path.
@@ -53,7 +53,7 @@ Returns the base directory path.
 
 ```python
 @property
-def config_path(self) -> Path
+def config_path(self) -> Path: ...
 ```
 
 Returns path to config.yaml file.
@@ -62,7 +62,7 @@ Returns path to config.yaml file.
 
 ```python
 @property
-def state_path(self) -> Path
+def state_path(self) -> Path: ...
 ```
 
 Returns path to state.json file.
@@ -71,7 +71,7 @@ Returns path to state.json file.
 
 ```python
 @property
-def backlog_path(self) -> Path
+def backlog_path(self) -> Path: ...
 ```
 
 Returns path to backlog.md file.
@@ -80,7 +80,7 @@ Returns path to backlog.md file.
 
 ```python
 @property
-def architecture_path(self) -> Path
+def architecture_path(self) -> Path: ...
 ```
 
 Returns path to architecture.md file.
@@ -89,7 +89,7 @@ Returns path to architecture.md file.
 
 ```python
 @property
-def requirements_dir(self) -> Path
+def requirements_dir(self) -> Path: ...
 ```
 
 Returns path to requirements directory.
@@ -98,7 +98,7 @@ Returns path to requirements directory.
 
 ```python
 @property
-def c4_diagrams_dir(self) -> Path
+def c4_diagrams_dir(self) -> Path: ...
 ```
 
 Returns path to C4 diagrams directory.
@@ -107,7 +107,7 @@ Returns path to C4 diagrams directory.
 
 ```python
 @property
-def checkpoints_dir(self) -> Path
+def checkpoints_dir(self) -> Path: ...
 ```
 
 Returns path to checkpoints directory.
@@ -116,7 +116,7 @@ Returns path to checkpoints directory.
 
 ```python
 @property
-def logs_dir(self) -> Path
+def logs_dir(self) -> Path: ...
 ```
 
 Returns path to logs directory.
@@ -126,7 +126,7 @@ Returns path to logs directory.
 #### get_artifact_path
 
 ```python
-def get_artifact_path(self, relative_path: str) -> Path
+def get_artifact_path(self, relative_path: str) -> Path: ...
 ```
 
 Get a safe artifact path within the base directory.
@@ -158,7 +158,7 @@ config.get_artifact_path("../../../etc/passwd")  # Path traversal
 #### ensure_base_exists
 
 ```python
-def ensure_base_exists(self) -> None
+def ensure_base_exists(self) -> None: ...
 ```
 
 Create the base directory if it doesn't exist.
@@ -174,7 +174,7 @@ config.ensure_base_exists()
 #### ensure_structure
 
 ```python
-def ensure_structure(self, create_defaults: bool = False) -> None
+def ensure_structure(self, create_defaults: bool = False) -> None: ...
 ```
 
 Create the complete .agilevv directory structure.
@@ -194,7 +194,7 @@ config.ensure_structure(create_defaults=True)
 #### validate_path
 
 ```python
-def validate_path(self, path: Path, must_exist: bool = True) -> bool
+def validate_path(self, path: Path, must_exist: bool = True) -> bool: ...
 ```
 
 Validate that a path is within base directory and optionally exists.
@@ -224,7 +224,7 @@ config.validate_path(Path("/etc/passwd"))  # Raises ValueError
 #### is_test_environment
 
 ```python
-def is_test_environment(self) -> bool
+def is_test_environment(self) -> bool: ...
 ```
 
 Check if this is a test environment.
@@ -246,7 +246,7 @@ config.is_test_environment()  # Returns False
 #### cleanup
 
 ```python
-def cleanup(self) -> None
+def cleanup(self) -> None: ...
 ```
 
 Clean up the directory structure (only in test environments).
@@ -266,7 +266,7 @@ config.cleanup()  # Removes entire directory tree
 
 ```python
 @classmethod
-def create_test_instance(cls, test_name: str = "test") -> "PathConfig"
+def create_test_instance(cls, test_name: str = "test") -> "PathConfig": ...
 ```
 
 Create a PathConfig instance for testing.
@@ -290,7 +290,7 @@ config = PathConfig.create_test_instance("my_test")
 
 ```python
 @contextmanager
-def test_isolation(cls, test_name: str = "test")
+def test_isolation(cls, test_name: str = "test"): ...
 ```
 
 Context manager for test isolation.
@@ -321,9 +321,8 @@ Pytest fixtures for test isolation, defined in `tests/conftest.py`.
 ```python
 @pytest.fixture(scope="function")
 def isolated_agilevv_dir(
-    request: pytest.FixtureRequest,
-    tmp_path: Path
-) -> Generator[PathConfig, None, None]
+    request: pytest.FixtureRequest, tmp_path: Path
+) -> Generator[PathConfig, None, None]: ...
 ```
 
 Function-scoped fixture providing isolated test directory.
@@ -347,9 +346,8 @@ def test_example(isolated_agilevv_dir: PathConfig):
 ```python
 @pytest.fixture(scope="module")
 def shared_agilevv_dir(
-    request: pytest.FixtureRequest,
-    tmp_path_factory: pytest.TempPathFactory
-) -> Generator[PathConfig, None, None]
+    request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory
+) -> Generator[PathConfig, None, None]: ...
 ```
 
 Module-scoped fixture providing shared test directory.
@@ -376,9 +374,8 @@ class TestSuite:
 ```python
 @pytest.fixture(scope="session")
 def session_agilevv_dir(
-    request: pytest.FixtureRequest,
-    tmp_path_factory: pytest.TempPathFactory
-) -> Generator[PathConfig, None, None]
+    request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory
+) -> Generator[PathConfig, None, None]: ...
 ```
 
 Session-scoped fixture providing persistent test directory.
@@ -402,7 +399,7 @@ def test_expensive_setup(session_agilevv_dir: PathConfig):
 
 ```python
 @pytest.fixture
-def agilevv_factory(tmp_path: Path) -> Generator[AgileVVDirFactory, None, None]
+def agilevv_factory(tmp_path: Path) -> Generator[AgileVVDirFactory, None, None]: ...
 ```
 
 Factory fixture for creating complex test structures.
@@ -428,7 +425,7 @@ Factory class for creating test directory structures.
 ### Constructor
 
 ```python
-AgileVVDirFactory(base_path: Path)
+def __init__(self, base_path: Path): ...
 ```
 
 **Parameters:**
@@ -440,7 +437,7 @@ AgileVVDirFactory(base_path: Path)
 #### create_basic
 
 ```python
-def create_basic(self, name: str = "test") -> PathConfig
+def create_basic(self, name: str = "test") -> PathConfig: ...
 ```
 
 Create a basic test directory structure.
@@ -464,10 +461,8 @@ config = factory.create_basic("my-test")
 
 ```python
 def create_with_backlog(
-    self,
-    name: str = "test",
-    stories: Optional[List[str]] = None
-) -> PathConfig
+    self, name: str = "test", stories: Optional[List[str]] = None
+) -> PathConfig: ...
 ```
 
 Create test directory with pre-populated backlog.
@@ -492,11 +487,7 @@ config = factory.create_with_backlog(
 #### create_with_sprint
 
 ```python
-def create_with_sprint(
-    self,
-    name: str = "test",
-    sprint_num: int = 1
-) -> PathConfig
+def create_with_sprint(self, name: str = "test", sprint_num: int = 1) -> PathConfig: ...
 ```
 
 Create test directory with sprint structure.
@@ -521,10 +512,8 @@ config = factory.create_with_sprint(name="sprint-test", sprint_num=1)
 
 ```python
 def create_with_memory(
-    self,
-    name: str = "test",
-    memories: Optional[Dict[str, str]] = None
-) -> PathConfig
+    self, name: str = "test", memories: Optional[Dict[str, str]] = None
+) -> PathConfig: ...
 ```
 
 Create test directory with memory files.
@@ -550,7 +539,7 @@ config = factory.create_with_memory(
 #### create_full_structure
 
 ```python
-def create_full_structure(self, name: str = "test") -> PathConfig
+def create_full_structure(self, name: str = "test") -> PathConfig: ...
 ```
 
 Create complete test directory structure.
@@ -573,7 +562,7 @@ config = factory.create_full_structure("integration-test")
 #### cleanup_all
 
 ```python
-def cleanup_all(self, keep_dirs: bool = False) -> None
+def cleanup_all(self, keep_dirs: bool = False) -> None: ...
 ```
 
 Clean up all created test directories.
@@ -592,7 +581,7 @@ factory.cleanup_all(keep_dirs=True)  # Keep for debugging
 #### cleanup_selective
 
 ```python
-def cleanup_selective(self, patterns: List[str]) -> None
+def cleanup_selective(self, patterns: List[str]) -> None: ...
 ```
 
 Clean up only files matching specific patterns.
@@ -615,11 +604,7 @@ Utility functions for test data creation.
 ### build_sample_user_story
 
 ```python
-def build_sample_user_story(
-    story_id: str,
-    title: str,
-    description: str
-) -> Dict[str, str]
+def build_sample_user_story(story_id: str, title: str, description: str) -> Dict[str, str]: ...
 ```
 
 Build a sample user story for testing.
@@ -647,10 +632,7 @@ story = build_sample_user_story(
 ### build_sample_sprint_data
 
 ```python
-def build_sample_sprint_data(
-    sprint_num: int,
-    stories: List[str]
-) -> Dict[str, Any]
+def build_sample_sprint_data(sprint_num: int, stories: List[str]) -> Dict[str, Any]: ...
 ```
 
 Build sample sprint data for testing.

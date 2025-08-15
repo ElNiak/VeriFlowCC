@@ -71,3 +71,4 @@ temp/
 .venv
 .ruff_cache
 .serena
+.benchmarks
