@@ -230,6 +230,7 @@ Returning control to primary agent.
 - Include sprint/stage metadata in commits
 - Update CHANGELOG only on final validation
 - Preserve rollback ability with proper tags
+- Do not commit junk files (e.g. `.DS_Store`, `__pycache__`, backuped files, etc.)
 
 ## Error Handling
 
