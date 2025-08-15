@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import pytest
 from verifflowcc.agents.base import BaseAgent
-from verifflowcc.agents.factory import AgentFactory, FallbackAgent
+from verifflowcc.agents.factory import AgentFactory, TaskAgent
 from verifflowcc.core.path_config import PathConfig
 from verifflowcc.core.sdk_config import SDKConfig
 
@@ -202,7 +202,7 @@ class TestAgentFactoryCreation:
 
         agent = factory.create_agent("requirements")
 
-        assert isinstance(agent, FallbackAgent)
+        assert isinstance(agent, TaskAgent)
         assert agent.agent_type == "requirements"
         assert agent.name == "requirements_agent"
 
@@ -289,7 +289,7 @@ class TestAgentFactoryBulkOperations:
 
         # Should get fallback agents for valid types
         for agent_type in agents:
-            assert isinstance(agents[agent_type], FallbackAgent)
+            assert isinstance(agents[agent_type], TaskAgent)
 
     def test_list_available_agents(self, isolated_agilevv_dir: TestPathConfig) -> None:
         """Test listing available agent types and descriptions."""
@@ -422,7 +422,7 @@ class TestAgentFactoryErrorHandling:
 
         # Should fallback gracefully
         agent = factory.create_agent("requirements")
-        assert isinstance(agent, FallbackAgent)
+        assert isinstance(agent, TaskAgent)
 
     def test_agent_import_failure_handling(self, isolated_agilevv_dir: TestPathConfig) -> None:
         """Test handling of agent import failures."""
