@@ -11,6 +11,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **VeriFlowCC** (Verification Flow Command Center) is an AI-driven development pipeline that integrates Claude Code SDK with the Agile V-Model methodology. It enforces rigorous verification and validation (V&V) at each stage of feature development through a structured, agent-driven approach powered by real Claude AI agents.
 
+### Project Guidelines
+
+- NO mock data or fallback implementations
+- NO mock methods or fallback methods implementations
+- NO mock MCP tools
+- NO regex MCP tools
+- All services are configured and live
+- Use real API calls only
+
 ## Development Commands
 
 ### Package Management

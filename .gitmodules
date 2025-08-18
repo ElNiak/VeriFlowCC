@@ -1,0 +1,3 @@
+[submodule "tests/integration/fake-project/MailBuddy"]
+	path = tests/integration/fake-project/MailBuddy
+	url = https://github.com/ElNiak/MailBuddy.git
