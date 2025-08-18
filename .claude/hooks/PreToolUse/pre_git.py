@@ -198,9 +198,9 @@ def target_branches_from_push(seg: list[str]) -> list[str]:
 
 def deny(reason: str, message: str, data: dict[str, Any]) -> int:
     payload = {"decision": "deny", "reason": reason, "message": message, "data": data}
-    print("BEGIN_HOOK_REPORT")
-    print(json.dumps(payload, indent=2))
-    print("END_HOOK_REPORT")
+    print("BEGIN_HOOK_REPORT", file=sys.stderr)
+    print(json.dumps(payload, indent=2), file=sys.stderr)
+    print("END_HOOK_REPORT", file=sys.stderr)
     return 2
 
 def allow(reason: str, data: dict[str, Any]) -> int:

@@ -191,10 +191,11 @@ def bash_target_paths(cmd: str) -> List[str]:
     return uniq
 
 # -------- Policy decisions --------
-
 def deny(reason: str, message: str, data: Dict[str, Any]) -> int:
     payload = {"decision": "deny", "reason": reason, "message": message, "data": data}
-    print("BEGIN_HOOK_REPORT"); print(json.dumps(payload, indent=2)); print("END_HOOK_REPORT")
+    print("BEGIN_HOOK_REPORT", file=sys.stderr)
+    print(json.dumps(payload, indent=2), file=sys.stderr)
+    print("END_HOOK_REPORT", file=sys.stderr)
     return 2
 
 def allow(reason: str, data: Dict[str, Any]) -> int:

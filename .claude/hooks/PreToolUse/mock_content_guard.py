@@ -209,7 +209,9 @@ def low_diversity_rows(s: str, min_rows: int = 20, max_unique_ratio: float = 0.3
 
 def deny(reason: str, message: str, data: Dict[str, Any]) -> int:
     payload = {"decision": "deny", "reason": reason, "message": message, "data": data}
-    print("BEGIN_HOOK_REPORT"); print(json.dumps(payload, indent=2)); print("END_HOOK_REPORT")
+    print("BEGIN_HOOK_REPORT", file=sys.stderr)
+    print(json.dumps(payload, indent=2), file=sys.stderr)
+    print("END_HOOK_REPORT", file=sys.stderr)
     return 2
 
 def allow(reason: str, data: Dict[str, Any]) -> int:

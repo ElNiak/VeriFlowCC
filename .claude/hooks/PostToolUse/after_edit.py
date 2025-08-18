@@ -267,7 +267,9 @@ def print_report(status: str, files: list[str], fmt_res: list[dict[str, Any]], l
             ("Some tools are missing. Install/pin them or adjust settings." if status == "tool_error" else "")
         ),
     }
-    print("BEGIN_HOOK_REPORT"); print(json.dumps(report, indent=2)); print("END_HOOK_REPORT")
+    print("BEGIN_HOOK_REPORT", file=sys.stderr if status != "ok" else sys.stdout)
+    print(json.dumps(report, indent=2), file=sys.stderr if status != "ok" else sys.stdout)
+    print("END_HOOK_REPORT", file=sys.stderr if status != "ok" else sys.stdout)
 
 # ---------- entrypoint ----------
 
