@@ -1,30 +1,59 @@
+# tools/hooks/prompt_gate.py
+# Purpose: Validate/shape user prompts before Claude processes them; inject guardrails & helpful context.
+
+from __future__ import annotations
+import json, os, re, sys
+from pathlib import Path
+
+BYPASS_ENV = "CLAUDE_PROMPT_GATE_BYPASS"
+
+# Examples: add your own org rules
+BANNED_PATTERNS = [
+    r"\brm\s+-rf\s+/\b",
+    r"--no-verify\b",
+    r"\bskip tests\b",
+]
+REQUIRE_TOKENS = [r"\bV\s*=\s*[1-3]\b"]  # your “verbosity” convention
+
+GUIDELINES = """\
+ALWAYS HARD THINK BEFORE ANY ACTION
+Project norms:
+- Use V=1/2/3 to set response verbosity.
+- Prefer updating existing files; no *_enhanced/*_unified duplicates.
+- Fix QA issues before committing.
 """
-Append default tokens to the user prompt.
-"""
 
-import json
-import sys
+def deny(msg: str) -> int:
+    sys.stderr.write(f"❌ Prompt blocked by policy:\n{msg}\n")
+    return 2  # blocks and clears the prompt
 
-
-def main() -> None:
-    """
-    Append default tokens to the user prompt.
-    
-    Args:
-        user_prompt (str): The original user prompt.
-    
-    Returns:
-        str: The modified user prompt with default tokens appended.
-    """
+def main() -> int:
     try:
-        data = json.loads(sys.stdin)
-        user_prompt = data.get("prompt", None)
-        if user_prompt:
-            print("\nThink harder to this problem, analyze it, and provide a short  and simple answer.")
-            sys.exit(0)
-    except Exception as e:
-        print(f"Error reading user prompt: {e}")
-        sys.exit(1)
+        env = json.load(sys.stdin)
+    except Exception:
+        return 0  # fail-open: do not block if envelope missing
+
+    if os.getenv(BYPASS_ENV) == "1":
+        print(GUIDELINES)
+        return 0
+
+    prompt = (env or {}).get("prompt", "") or ""
+
+    # Block obviously dangerous or disallowed instructions
+    for rx in BANNED_PATTERNS:
+        if re.search(rx, prompt, flags=re.IGNORECASE):
+            return deny(f"Matched forbidden pattern: {rx}")
+
+    # Nudge: enforce your house style (e.g., V= level)
+    missing = [rx for rx in REQUIRE_TOKENS if not re.search(rx, prompt)]
+    if missing:
+        # Do not block—just inject guidance to context so Claude adapts.
+        print(f"{GUIDELINES}\nNote: Consider adding V=1..3 for this prompt.")
+        return 0
+
+    # Happy path: inject helpful context anyway
+    print(GUIDELINES)
+    return 0
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
