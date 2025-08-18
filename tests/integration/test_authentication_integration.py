@@ -10,8 +10,6 @@ No mocks are used for core authentication logic to ensure real integration testi
 """
 
 import os
-import tempfile
-from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 

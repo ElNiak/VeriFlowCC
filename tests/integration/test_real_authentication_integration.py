@@ -5,14 +5,11 @@ real authentication behavior in production-like scenarios.
 """
 
 import os
-import tempfile
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
-from verifflowcc.core.sdk_config import SDKConfig, get_sdk_config, set_sdk_config
 from verifflowcc.agents.factory import AgentFactory
+from verifflowcc.core.sdk_config import SDKConfig, get_sdk_config, set_sdk_config
 
 
 class TestRealAuthenticationIntegration:

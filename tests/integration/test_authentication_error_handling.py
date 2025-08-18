@@ -14,7 +14,6 @@ Tests focus on:
 
 import os
 import time
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -345,7 +344,7 @@ class TestUserFriendlyErrorMessaging:
             auth_method = config._detect_authentication_method()
 
             # Debug output to understand what's happening
-            print(f"\nDEBUG {scenario}: api_key={repr(api_key)}, final_api_key={repr(config.api_key)}, method={auth_method}")
+            print(f"\nDEBUG {scenario}: api_key={api_key!r}, final_api_key={config.api_key!r}, method={auth_method}")
             print(f"  bool(api_key)={bool(api_key)}, bool(config.api_key)={bool(config.api_key)}")
 
             # Match the actual implementation behavior: if self.api_key: return "api_key"
