@@ -1,7 +1,7 @@
 {
   "blockInTests": true,
   "blockInSrc": true,
-  "allowDirs": ["tests/support/**", "test/support/**", "migrations/**", "examples/**", "docs/**"],
+  "allowDirs": [],
   "allowNameGlobs": [],
   "langByExt": {
     ".py": "python", ".pyi": "python",

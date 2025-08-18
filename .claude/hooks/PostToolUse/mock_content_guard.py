@@ -11,7 +11,7 @@ POLICY_FILE = Path(".claude/mock_policy.json")
 
 DEFAULT_POLICY: Dict[str, Any] = {
     # Directories where generated/fixture content is allowed
-    "allowDirs": ["tests/**", "test/**", "e2e/**", "cypress/fixtures/**", "playwright/fixtures/**", "docs/**"],
+    "allowDirs": [],
     # File extensions we treat as "data"
     "dataExtensions": [".json", ".yaml", ".yml", ".csv", ".ndjson", ".tsv", ".toml", ".xml", ".txt"],
     # Absolute caps (deny if any exceeded)

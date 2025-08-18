@@ -21,7 +21,7 @@ DEFAULT_POLICY: Dict[str, Any] = {
     "blockInTests": True,      # deny mock usage under tests/**
     "blockInSrc": True,        # deny mock usage under src/** and other code dirs
     # Allowed directories (overrides blocks)
-    "allowDirs": ["tests/support/**", "test/support/**", "migrations/**", "examples/**", "docs/**"],
+    "allowDirs": [],
     # Allowed filename patterns (overrides blocks)
     "allowNameGlobs": [],
     # Language detection by file extension
