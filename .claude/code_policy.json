@@ -1,0 +1,38 @@
+{
+  "blockInTests": true,
+  "blockInSrc": true,
+  "allowDirs": ["tests/support/**", "test/support/**", "migrations/**", "examples/**", "docs/**"],
+  "allowNameGlobs": [],
+  "langByExt": {
+    ".py": "python", ".pyi": "python",
+    ".js": "javascript", ".jsx": "javascript", ".ts": "javascript", ".tsx": "javascript",
+    ".java": "java", ".kt": "kotlin", ".kts": "kotlin",
+    ".cs": "csharp", ".go": "go", ".rs": "rust"
+  },
+  "mockApiPatterns": {
+    "python": [
+      "\\bfrom\\s+unittest\\s+import\\s+mock\\b",
+      "\\bfrom\\s+unittest\\.mock\\s+import\\b",
+      "\\bimport\\s+unittest\\.mock\\b",
+      "\\b(MagicMock|Mock|AsyncMock|create_autospec)\\s*\\(",
+      "\\b@patch\\(",
+      "\\bpatch\\(",
+      "\\bmocker\\.",
+      "\\bfaker\\.", "\\bFaker\\("
+    ],
+    "javascript": [
+      "\\bjest\\.mock\\(", "\\bvi\\.mock\\(", "\\bjest\\.fn\\(", "\\bvi\\.fn\\(",
+      "\\bsinon\\.(stub|fake|mock)\\(", "\\bnock\\(", "\\bmsw\\b", "\\bproxyquire\\b", "\\brewiremock\\b",
+      "\\btd\\.(replace|when|verify)\\(", "\\bfaker\\.", "@faker-js/faker"
+    ],
+    "java": ["\\borg\\.mockito\\b", "\\bMockito\\.", "\\b@Mock\\b", "\\bwhen\\(", "\\bgiven\\(", "\\bBDDMockito\\b", "\\bwiremock\\b"],
+    "kotlin": ["\\bio\\.mockk\\b", "\\bmockk<", "\\bevery\\s*\\{", "\\bverify\\s*\\{"],
+    "csharp": ["\\busing\\s+Moq;", "\\bnew\\s+Mock<", "\\bSubstitute\\.For<", "\\bNSubstitute\\b", "\\bFakeItEasy\\b"],
+    "go": ["github\\.com/golang/mock/gomock", "gomock\\.NewController\\(", "github\\.com/stretchr/testify/mock"],
+    "rust": ["\\bmockall(::|::prelude::)", "\\bmockito::", "#\\[automock\\]"]
+  },
+  "testsDirs": ["tests/**", "test/**", "spec/**"],
+  "srcDirs": ["src/**", "lib/**", "app/**", "cmd/**", "internal/**", "pkg/**"],
+  "bypassEnv": "CLAUDE_ALLOW_MOCK_CODE",
+  "includeSuggestion": true
+}

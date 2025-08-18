@@ -1,0 +1,19 @@
+{
+  "allowDirs": [],
+  "dataExtensions": [".json", ".yaml", ".yml", ".csv", ".ndjson", ".tsv", ".toml", ".xml", ".txt"],
+  "maxBytesPerFile": 64000,
+  "maxJsonArrayLen": 200,
+  "maxCsvRows": 200,
+  "maxNdjsonLines": 200,
+  "denyContentRegexes": [
+    "\\blorem ipsum\\b",
+    "\\bjohn\\s+doe\\b",
+    "\\bexample\\.com\\b",
+    "\\b123\\s+main\\s+st\\b",
+    "\\bfoo\\b.*\\bbar\\b",
+    "\\bdummy\\b|\\bmock\\b|\\bsample\\b|\\bfixture\\b|\\bsynthetic\\b"
+  ],
+  "blockAllNewDataFiles": false,
+  "allowNameGlobs": [],
+  "bypassEnv": "CLAUDE_ALLOW_MOCK_DATA"
+}

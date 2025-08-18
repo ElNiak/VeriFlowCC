@@ -1,0 +1,6 @@
+{
+  "protectedBranches": ["main", "master", "release/*", "hotfix/*", "stable", "prod", "production"],
+  "allowForceOn": [],
+  "allowForceWithLeaseOn": ["feature/*", "bugfix/*", "chore/*", "refactor/*", "wip/*"],
+  "blockNoVerify": true
+}

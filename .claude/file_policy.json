@@ -1,0 +1,26 @@
+{
+  "denyNameGlobs": [
+    "*enhanced*",
+    "*unified*",
+    "*final*",
+    "*copy*",
+    "*duplicate*",
+    "*new*",
+    "*tmp*",
+    "*draft*",
+    "*alt*",
+    "*alternative*",
+    "*rewrite*",
+    "*refactor*",
+    "*_v[0-9]*",
+    "*v[0-9]*"
+  ],
+  "denyNameRegexes": [
+    "(^|/).*(enhanced|unified|final|copy|duplicate|new|tmp|draft|alt|alternative|rewrite|refactor)([-_ ]?\\d+)?\\.",
+    "(^|/).*[._-]v\\d+\\."
+  ],
+  "allowDirs": ["migrations/**", "docs/**", "tests/**", "test/**", "generated/**"],
+  "allowNameGlobs": [],
+  "blockAllNewFiles": false,
+  "duplicateSuffixTokens": ["enhanced", "unified", "final", "copy", "duplicate", "new", "tmp", "draft", "alt", "alternative", "rewrite", "refactor"]
+}
