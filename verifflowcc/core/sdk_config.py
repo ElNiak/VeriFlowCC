@@ -68,10 +68,9 @@ class SDKConfig:
         try:
             if self._verify_claude_subscription():
                 return "subscription"
-        except Exception as e:
-            # Subscription authentication unavailable
-            # Log the specific exception for debugging
-            print(f"Subscription verification failed: {e}")  # TODO: Replace with proper logging
+        except Exception:
+            # Subscription authentication unavailable - clean fallback
+            pass
 
         return "none"
 
@@ -81,7 +80,7 @@ class SDKConfig:
         Returns:
             True if Claude Code subscription is available, False otherwise
         """
-        # Implementation for Claude Code subscription verification
+        # TODO: Implementation for Claude Code subscription verification
         # This is a placeholder - actual implementation would integrate
         # with Claude Code's authentication system
 
