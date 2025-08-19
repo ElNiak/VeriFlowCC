@@ -8,14 +8,14 @@ These are the tasks to be completed for the spec detailed in @.agilevv/specs/202
 
 ## Tasks
 
-- [ ] 1. Claude Code SDK Real Agent Execution Testing
+- [x] 1. Claude Code SDK Real Agent Execution Testing
 
-  - [ ] 1.1 Write integration tests for real Claude Code SDK Requirements Analyst processing MailBuddy user stories
-  - [ ] 1.2 Test SDK client initialization and agent session creation with subscription-based authentication
-  - [ ] 1.3 Validate real AI-generated requirements.md contains structured INVEST-compliant user stories
-  - [ ] 1.4 Test streaming response handling and real-time feedback during Requirements Analyst execution
-  - [ ] 1.5 Format code, run linters and fix issues
-  - [ ] 1.6 Verify all tests pass with authentic Claude Code SDK agent outputs
+  - [x] 1.1 Write integration tests for real Claude Code SDK Requirements Analyst processing MailBuddy user stories
+  - [x] 1.2 Test SDK client initialization and agent session creation with subscription-based authentication
+  - [x] 1.3 Validate real AI-generated requirements.md contains structured INVEST-compliant user stories
+  - [x] 1.4 Test streaming response handling and real-time feedback during Requirements Analyst execution
+  - [x] 1.5 Format code, run linters and fix issues
+  - [x] 1.6 Verify all tests pass with authentic Claude Code SDK agent outputs
 
 - [ ] 2. Document-Based Session Management and Context Preservation
 
