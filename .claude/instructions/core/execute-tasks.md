@@ -199,9 +199,44 @@ Use the test-runner subagent to run the entire test suite to ensure no regressio
 
 </step>
 
-<step number="7" subagent="precommit-error-analyzer" name="precommit_error_analysis">
+<step number="7" name="task_completion_check">
 
-### Step 7: Pre-commit Error Analysis
+### Step 7: Task Completion Check
+
+Read and analyze the given parent task and all its sub-tasks from tasks.md to gain complete understanding of what needs to be built.
+
+Then, for each sub-task, analyse and think about the related changes in the project, think about the implementation details, and determine if it can be marked as completed or not. If all sub-tasks are done, mark the parent task as complete. Else, mark it as incomplete and list the remaining sub-tasks.
+
+\<task_analysis>
+\<read_from_tasks_md>
+\ - Parent task description
+\ - All sub-task descriptions
+\ - Task dependencies
+\ - Expected outcomes
+\</read_from_tasks_md>
+\</task_analysis>
+
+<instructions>
+  ACTION: Read the specific parent task and all its sub-tasks
+  ANALYZE: Full scope of implementation realized
+\- Parent task description
+\- All sub-task descriptions
+\- Task dependencies
+\- Expected outcomes vs actual outcomes
+  UNDERSTAND: Dependencies and expected deliverables
+  NOTE: Test requirements for each sub-task
+  CHECK: If all sub-tasks are complete
+  MARK: Parent task as complete if all sub-tasks are done, update tasks.md with status
+  LIST: Remaining sub-tasks if any are incomplete, update TodoList if needed and go to step 5 for the remaining sub-tasks.
+</instructions>
+\</read_from_tasks_md>
+\</task_analysis>
+
+</step>
+
+<step number="8" subagent="precommit-error-analyzer" name="precommit_error_analysis">
+
+### Step 8: Pre-commit Error Analysis
 
 Use the precommit-error-analyzer subagent to analyze any errors reported by the pre-commit hooks.
 

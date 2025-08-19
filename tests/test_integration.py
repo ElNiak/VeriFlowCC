@@ -83,7 +83,12 @@ class TestEndToEndWorkflow:
             logger.debug(f"Checking existence of .agilevv directory: {agilevv_dir}")
             assert agilevv_dir.exists()
 
-            files_to_check = ["config.yaml", "state.json", "backlog.md", "architecture.md"]
+            files_to_check = [
+                "config.yaml",
+                "state.json",
+                "backlog.md",
+                "architecture.md",
+            ]
             for file_name in files_to_check:
                 file_path = agilevv_dir / file_name
                 logger.debug(f"Checking existence of {file_name}: {file_path.exists()}")
@@ -486,7 +491,10 @@ class TestIntegrationWorkflowScenarios:
 
                 mock_orchestrator_instance.run_sprint.return_value = {
                     "sprint_number": sprint_num,
-                    "story": {"id": f"TEST-{sprint_num:03d}", "title": f"Test Story {sprint_num}"},
+                    "story": {
+                        "id": f"TEST-{sprint_num:03d}",
+                        "title": f"Test Story {sprint_num}",
+                    },
                     "stages": {
                         "requirements": {"status": "success"},
                         "design": {"status": "success"},
@@ -548,6 +556,9 @@ class TestIntegrationWorkflowScenarios:
                 mock_async_run.return_value = mock_orchestrator_instance.run_sprint.return_value
                 result = runner.invoke(app, ["sprint", "--story", "Failing Story"])
                 # Should handle failure gracefully
-                assert result.exit_code in [0, 1], "Should handle sprint failure gracefully"
+                assert result.exit_code in [
+                    0,
+                    1,
+                ], "Should handle sprint failure gracefully"
 
         logger.info("Error recovery scenarios test completed")
