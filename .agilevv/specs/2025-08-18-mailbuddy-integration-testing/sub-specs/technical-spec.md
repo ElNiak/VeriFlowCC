@@ -3,76 +3,82 @@
 This is the technical specification for the spec detailed in @.agilevv/specs/2025-08-18-mailbuddy-integration-testing/spec.md
 
 > Created: 2025-08-18
-> Version: 1.0.0
+> Updated: 2025-08-18
+> Version: 2.0.0 - Real Claude Code SDK Integration
 
 ## Technical Requirements
 
-### MailBuddy Flask Application Architecture
-- **Application Factory Pattern**: Use Flask application factory with environment-specific configurations (development, testing, production)
-- **SQLAlchemy ORM**: Implement User, EmailTemplate, Email, and ScheduledEmail models with proper relationships and constraints
-- **Blueprint Structure**: Organize routes into logical blueprints (auth, email, templates, api) for maintainable code organization
-- **Configuration Management**: Environment-based config classes supporting in-memory SQLite for testing and file-based SQLite for development
-- **Template System**: Jinja2 templates with Bootstrap CSS for basic UI components (login, dashboard, email composer)
+### Claude Code SDK Integration Architecture
 
-### VeriFlowCC Behavior Validation Framework
-- **Artifact Quality Validation**: Test `.agilevv/` directory structure and content quality after each V-Model stage execution
-- **Workflow Orchestration Testing**: Validate proper sequencing of Requirements → Architecture → Development → QA → Integration stages
-- **Agent Handoff Verification**: Ensure context and artifacts are correctly passed between V-Model agents
-- **Document Traceability Testing**: Verify requirements trace through architecture to implementation tasks and test specifications
-- **Session State Management**: Test checkpoint creation, context preservation, and rollback functionality across agent invocations
-- **Quality Gate Enforcement**: Validate that V-Model verification gates properly enforce quality standards before stage progression
-- **Performance Benchmarking**: Ensure complete V-Model workflow execution completes within 2-3 minutes for realistic project scenarios
+- **SDK Client Initialization**: Configure Claude Code SDK client with subscription-based authentication for real AI agent access
+- **Document-Based Session Management**: Persist session state using simple JSON/YAML files across V-Model agent transitions with context preservation
+- **Streaming Response Processing**: Handle real-time streaming responses from Claude Code SDK agents with proper buffering and display
+- **Structured Output Validation**: Parse and validate JSON, YAML, and Markdown outputs from authentic AI agents using Pydantic schemas
 
-### V-Model Agent Artifact Validation
-- **Requirements Analyst Output**: Validate generated requirements.md contains INVEST-compliant user stories, acceptance criteria, and dependency analysis for MailBuddy features
-- **Architect Document Quality**: Test architecture.md includes component diagrams, interface definitions, risk assessments, and design decisions with proper MailBuddy context
-- **Developer Task Breakdown**: Verify tasks.md contains implementable task sequences, test-first approach, and clear implementation guidance for Flask features
-- **QA Strategy Documents**: Validate test-strategy.md includes comprehensive testing approach, coverage requirements, and quality metrics for email application
-- **Integration Readiness Reports**: Test integration-report.md contains deployment assessment, dependency validation, and GO/NO-GO decisions with proper rationale
+### Real AI Agent Response Validation Framework
 
-### Performance and Reliability Specifications
-- **Test Execution Speed**: Maximum 30 seconds for complete integration test suite execution with parallel test capability
-- **Memory Efficiency**: Use in-memory SQLite databases to minimize disk I/O and enable fast test setup/teardown cycles
-- **Resource Isolation**: Ensure tests don't interfere with each other through proper fixture scoping and database state management
-- **Error Handling**: Implement comprehensive error scenarios for testing agent resilience (database connection failures, invalid configurations, service timeouts)
-- **Scalability Considerations**: Design test framework to support adding new MailBuddy features without requiring extensive test refactoring
+- **Authentic Output Quality**: Validate real Claude Code SDK agent outputs meet INVEST/SMART criteria and structured quality standards
+- **SDK Response Processing**: Test parsing and validation for authentic AI-generated JSON, YAML, and Markdown content
+- **Streaming Response Management**: Validate real-time streaming response handling and proper display mechanisms
+- **Session Context Preservation**: Test Claude Code SDK session state persistence and conversation history across V-Model agent transitions using document-based storage
+
+### Claude Code SDK Agent Output Validation
+
+- **Real Requirements Analyst Validation**: Test authentic Claude Code SDK Requirements Analyst generates structured INVEST-compliant user stories with proper acceptance criteria and dependency analysis
+- **Authentic Architect Response Testing**: Validate real AI Architect agent produces component diagrams, PlantUML artifacts, interface definitions, and risk assessments with MailBuddy context understanding
+- **Live Developer Agent Output**: Test Claude Code SDK Developer agent generates implementable Flask code, task sequences, and technical guidance with proper test-first approach
+- **AI QA Strategy Generation**: Validate real QA agent produces comprehensive testing strategies, coverage requirements, and quality metrics specific to MailBuddy application architecture
+- **Real Integration Decision Making**: Test authentic Integration agent generates deployment assessments, dependency validation, and GO/NO-GO decisions with proper technical rationale
+
+### Claude Code SDK Session and Response Management
+
+- **Document-Based Session Storage**: Use simple JSON/YAML files to persist Claude Code SDK session state and conversation history across V-Model agent transitions
+- **Streaming Response Handling**: Process real-time streaming responses from Claude Code SDK agents with proper display and buffering
+- **Structured Output Processing**: Parse and validate Claude Code SDK agent responses in JSON, YAML, and Markdown formats using Pydantic schemas
+- **Session Context Preservation**: Maintain conversation context between Requirements, Architecture, Development, QA, and Integration agent executions through document persistence
 
 ## Approach
 
-The implementation will follow a three-phase approach:
+The implementation will follow a three-phase approach for Claude Code SDK integration:
 
-1. **Phase 1: VeriFlowCC-Driven MailBuddy Initialization**
-   - Use VeriFlowCC's V-Model workflow to initialize MailBuddy project from scratch
-   - Demonstrate Requirements Analyst creating user stories for email functionality
-   - Show Architect designing Flask application structure and database models
-   - Validate Developer agent implementing Flask routes, models, and templates
-   - Showcase complete V-Model capability for project initialization
+1. **Phase 1: Real Claude Code SDK V-Model Initialization**
 
-2. **Phase 2: Integration Test Framework Enhancement**
-   - Develop MailBuddyTestFactory with comprehensive test data generation
-   - Implement database isolation patterns for reliable test execution
-   - Create mock service implementations for external dependencies
+   - Configure authentic Claude Code SDK client with subscription-based authentication
+   - Test real Requirements Analyst agent generating MailBuddy user stories with proper INVEST compliance
+   - Validate authentic Architect agent producing PlantUML diagrams and Flask application design
+   - Test real Developer agent implementing actual Flask routes, models, and templates
+   - Showcase complete authentic AI-powered V-Model workflow execution
 
-3. **Phase 3: V-Model Agent Integration**
-   - Update test fixtures to provide authentic application context
-   - Implement performance benchmarking for 30-second execution target
-   - Validate agent analysis capabilities with realistic application scenarios
+1. **Phase 2: SDK Integration Testing Framework**
+
+   - Develop Claude Code SDK response validation and structured output parsing using Pydantic schemas
+   - Implement streaming response handling with real-time display mechanisms
+   - Create document-based session storage for conversation context persistence
+
+1. **Phase 3: Authentic AI Workflow Validation**
+
+   - Test session state persistence and context preservation using JSON/YAML document files
+   - Validate end-to-end V-Model workflow execution with real Claude Code SDK agents
+   - Ensure authentic AI-generated artifacts meet quality standards and workflow requirements
 
 ## External Dependencies
 
-### MailBuddy Context Dependencies (for VeriFlowCC analysis only)
-- **flask (>=3.0.0)** - Core web framework for realistic project structure
-- **Justification**: Provides authentic Flask application context for V-Model agents to analyze and generate artifacts about
+### Claude Code SDK Integration Dependencies
 
-- **flask-sqlalchemy (>=3.1.0)** - ORM for realistic database models
-- **Justification**: Gives agents realistic database design scenarios to document in architecture artifacts
+- **claude-code-sdk-python** - Official Claude Code SDK for real AI agent integration
 
-### VeriFlowCC Artifact Validation Dependencies
+- **Justification**: Provides authentic Claude API access with built-in session management and streaming capabilities for V-Model agent execution
+
+- **pydantic (>=2.0.0)** - Structured validation for Claude Code SDK agent outputs
+
+- **Justification**: Validates authentic AI-generated JSON, YAML, and structured content against predefined schemas for Requirements, Architecture, Development, QA, and Integration agents
+
+### VeriFlowCC Testing Framework Dependencies
+
 - **jsonschema (>=4.17.0)** - JSON schema validation for structured agent outputs
-- **Justification**: Enables validation of agent-generated JSON artifacts and structured documents
+
+- **Justification**: Enables validation of Claude Code SDK agent-generated JSON artifacts and structured documents
 
 - **pyyaml (>=6.0)** - YAML parsing for configuration and artifact validation
-- **Justification**: Required for validating `.agilevv/config.yaml` and other YAML-based VeriFlowCC artifacts
 
-- **markdown (>=3.4.0)** - Markdown parsing for document quality validation
-- **Justification**: Enables content analysis of generated requirements.md, architecture.md, and task documents
+- **Justification**: Required for validating `.agilevv/config.yaml` and other YAML-based VeriFlowCC artifacts generated by real AI agents
