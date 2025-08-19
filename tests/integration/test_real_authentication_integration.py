@@ -9,18 +9,23 @@ from unittest.mock import patch
 
 import pytest
 from verifflowcc.agents.factory import AgentFactory
-from verifflowcc.core.sdk_config import SDKConfig, get_sdk_config, set_sdk_config
+from verifflowcc.core.sdk_config import (
+    AuthenticationError,
+    SDKConfig,
+    get_sdk_config,
+    set_sdk_config,
+)
 
 
 class TestRealAuthenticationIntegration:
     """Integration tests for authentication using real components."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Reset global SDK config before each test."""
         # Reset global config to ensure test isolation
         set_sdk_config(SDKConfig(api_key="test-integration-key"))
 
-    def test_real_sdk_config_initialization_with_api_key(self):
+    def test_real_sdk_config_initialization_with_api_key(self) -> None:
         """Test real SDKConfig initialization with API key works end-to-end."""
         # Arrange: Create real config with explicit API key
         config = SDKConfig(api_key="real-test-key-123")
@@ -34,14 +39,14 @@ class TestRealAuthenticationIntegration:
         assert config.timeout == 30
         assert config.max_retries == 3
 
-    def test_real_sdk_config_with_environment_variable(self):
+    def test_real_sdk_config_with_environment_variable(self) -> None:
         """Test real environment variable detection without mocks."""
         # Arrange: Set real environment variable
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "env-real-key"}):
             # Patch only test detection to ensure we test production path
             with patch("os.getenv") as mock_getenv:
 
-                def getenv_side_effect(key, default=None):
+                def getenv_side_effect(key: str, default: str | None = None) -> str | None:
                     if key == "ANTHROPIC_API_KEY":
                         return "env-real-key"
                     elif key == "PYTEST_CURRENT_TEST":
@@ -58,7 +63,7 @@ class TestRealAuthenticationIntegration:
                 assert config.api_key == "env-real-key"
                 assert auth_method == "api_key"
 
-    def test_real_subscription_fallback_integration(self):
+    def test_real_subscription_fallback_integration(self) -> None:
         """Test real subscription fallback behavior without mocks."""
         # Arrange: No API key provided, simulate production environment
         with patch.dict(os.environ, {}, clear=True):
@@ -74,7 +79,7 @@ class TestRealAuthenticationIntegration:
                 # In real implementation, this would be "subscription" when available
                 assert auth_method in ["subscription", "none"]
 
-    def test_real_agent_factory_integration_with_authentication(self):
+    def test_real_agent_factory_integration_with_authentication(self) -> None:
         """Test real agent factory creation with authentication."""
         # Arrange: Create real SDKConfig with authentication
         config = SDKConfig(api_key="factory-test-key")
@@ -88,7 +93,7 @@ class TestRealAuthenticationIntegration:
         assert factory.sdk_config.api_key == "factory-test-key"
         assert factory.sdk_config._detect_authentication_method() == "api_key"
 
-    def test_real_global_sdk_config_integration(self):
+    def test_real_global_sdk_config_integration(self) -> None:
         """Test real global SDK configuration management."""
         # Arrange: Set real global config
         original_config = SDKConfig(api_key="global-test-key")
@@ -101,7 +106,7 @@ class TestRealAuthenticationIntegration:
         assert retrieved_config.api_key == "global-test-key"
         assert retrieved_config is original_config
 
-    def test_real_authentication_priority_integration(self):
+    def test_real_authentication_priority_integration(self) -> None:
         """Test real authentication priority without mocks."""
         # Test 1: Explicit API key has highest priority
         config1 = SDKConfig(api_key="explicit-key")
@@ -111,7 +116,7 @@ class TestRealAuthenticationIntegration:
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "env-priority-key"}):
             with patch("os.getenv") as mock_getenv:
 
-                def getenv_side_effect(key, default=None):
+                def getenv_side_effect(key: str, default: str | None = None) -> str | None:
                     if key == "ANTHROPIC_API_KEY":
                         return "env-priority-key"
                     elif key == "PYTEST_CURRENT_TEST":
@@ -124,7 +129,7 @@ class TestRealAuthenticationIntegration:
                 assert config2.api_key == "env-priority-key"
                 assert config2._detect_authentication_method() == "api_key"
 
-    def test_real_agent_options_integration(self):
+    def test_real_agent_options_integration(self) -> None:
         """Test real agent options generation with authentication."""
         # Arrange: Create real config
         config = SDKConfig(api_key="options-test-key")
@@ -139,7 +144,7 @@ class TestRealAuthenticationIntegration:
         assert requirements_options.max_tokens == 4000
         assert architect_options.temperature == 0.7
 
-    def test_real_tool_permissions_integration(self):
+    def test_real_tool_permissions_integration(self) -> None:
         """Test real tool permissions with authentication."""
         # Arrange: Create real config
         config = SDKConfig(api_key="permissions-test-key")
@@ -155,11 +160,14 @@ class TestRealAuthenticationIntegration:
         assert qa_permissions["write"] is False
         assert qa_permissions["execute"] is True
 
-    def test_real_config_serialization_integration(self):
+    def test_real_config_serialization_integration(self) -> None:
         """Test real configuration serialization for persistence."""
         # Arrange: Create real config with authentication
         original_config = SDKConfig(
-            api_key="serialize-test-key", timeout=45, max_retries=5, environment="integration-test"
+            api_key="serialize-test-key",
+            timeout=45,
+            max_retries=5,
+            environment="integration-test",
         )
 
         # Act: Serialize and deserialize real config
@@ -173,34 +181,33 @@ class TestRealAuthenticationIntegration:
         assert restored_config.environment == "integration-test"
         assert restored_config._detect_authentication_method() == "api_key"
 
-    def test_real_authentication_validation_integration(self):
+    def test_real_authentication_validation_integration(self) -> None:
         """Test real authentication validation without mocks."""
         # Arrange: Create config that will fail authentication
         config = SDKConfig()
         config.api_key = None
 
-        # Mock subscription verification to fail
-        def mock_verify_subscription():
+        # Mock subscription verification to fail using patch
+        def mock_verify_subscription() -> bool:
             return False
 
-        config._verify_claude_subscription = mock_verify_subscription
-
-        # Act & Assert: Real validation behavior
-        auth_method = config._detect_authentication_method()
-        assert auth_method == "none"
+        with patch.object(config, "_verify_claude_subscription", mock_verify_subscription):
+            # Act & Assert: Real validation behavior
+            auth_method = config._detect_authentication_method()
+            assert auth_method == "none"
 
         # Test that validation method exists and can be called
         assert hasattr(config, "_validate_authentication")
 
         # In real usage, this would raise AuthenticationError
-        with pytest.raises(Exception):  # AuthenticationError
+        with pytest.raises(AuthenticationError):
             config._validate_authentication()
 
 
 class TestRealEnvironmentIntegration:
     """Integration tests for real environment detection and handling."""
 
-    def test_real_test_environment_detection(self):
+    def test_real_test_environment_detection(self) -> None:
         """Test real test environment detection mechanism."""
         # Arrange & Act: Create config in real pytest environment
         config = SDKConfig()
@@ -209,7 +216,7 @@ class TestRealEnvironmentIntegration:
         assert config._is_test_environment() is True
         assert config.api_key == "sk-test-mock-api-key"
 
-    def test_real_production_environment_simulation(self):
+    def test_real_production_environment_simulation(self) -> None:
         """Test real production environment simulation."""
         # Arrange: Simulate production by mocking only test detection
         with patch("os.getenv") as mock_getenv:
@@ -222,7 +229,7 @@ class TestRealEnvironmentIntegration:
             assert config._is_test_environment() is False
             assert config.api_key is None  # No mandatory requirement in production
 
-    def test_real_edge_case_integration(self):
+    def test_real_edge_case_integration(self) -> None:
         """Test real edge cases that could break in production."""
         # Test Unicode API keys
         unicode_config = SDKConfig(api_key="test-ñáéíóú-测试")
@@ -244,7 +251,7 @@ class TestRealEnvironmentIntegration:
 class TestRealWorkflowIntegration:
     """End-to-end workflow integration tests without mocks."""
 
-    def test_real_complete_authentication_workflow(self):
+    def test_real_complete_authentication_workflow(self) -> None:
         """Test complete authentication workflow as used in production."""
         # Step 1: Initialize configuration
         config = SDKConfig(api_key="workflow-test-key")
@@ -269,7 +276,7 @@ class TestRealWorkflowIntegration:
         agent = factory.create_agent("developer")
         assert agent is not None
 
-    def test_real_fallback_authentication_workflow(self):
+    def test_real_fallback_authentication_workflow(self) -> None:
         """Test fallback authentication workflow without mocks."""
         # Simulate environment with no API key
         with patch("os.getenv") as mock_getenv:
@@ -283,13 +290,13 @@ class TestRealWorkflowIntegration:
             assert auth_method in ["subscription", "none"]
             assert config.api_key is None
 
-    def test_real_backward_compatibility_workflow(self):
+    def test_real_backward_compatibility_workflow(self) -> None:
         """Test that existing workflows continue to work."""
         # Existing workflow 1: Environment variable
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "backward-compat-key"}):
             with patch("os.getenv") as mock_getenv:
 
-                def getenv_side_effect(key, default=None):
+                def getenv_side_effect(key: str, default: str | None = None) -> str | None:
                     if key == "ANTHROPIC_API_KEY":
                         return "backward-compat-key"
                     elif key == "PYTEST_CURRENT_TEST":

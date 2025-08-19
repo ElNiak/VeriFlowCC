@@ -186,7 +186,7 @@ Verify installation completeness and provide clear next steps for the user to st
 - [ ] All product documentation reflects actual codebase
 - [ ] Roadmap shows completed and planned features accurately
 - [ ] Tech stack matches installed dependencies
-  \</verification_checklist>
+      \</verification_checklist>
 
 \<summary_template>
 
@@ -206,6 +206,8 @@ I've analyzed your [PRODUCT_TYPE] codebase and set up AgileVerifFlowCC with docu
 - ✓ Product documentation in `.agilevv/product/`
 - ✓ Roadmap with completed work in Phase 0
 - ✓ Tech stack reflecting actual dependencies
+- ✓ Decision log capturing key architectural choices
+- ✓ Mission statement summarizing product vision
 
 ### Next Steps
 

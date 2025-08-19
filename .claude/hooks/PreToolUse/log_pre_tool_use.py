@@ -2,8 +2,11 @@
 
 import json
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+# TODO Should create individual log files per tool use with date and time
+# For now, we will log all tool uses in a single file for simplicity
 
 
 def main():
@@ -28,7 +31,7 @@ def main():
 
         # Load existing data or create empty list
         if log_file.exists():
-            with open(log_file, "r") as f:
+            with log_file.open() as f:
                 logs = json.load(f)
         else:
             logs = []
@@ -37,7 +40,7 @@ def main():
         logs.append(log_entry)
 
         # Save back to file
-        with open(log_file, "w") as f:
+        with log_file.open("w") as f:
             json.dump(logs, f, indent=2)
 
         print(f"Tool input logged to {log_file}")

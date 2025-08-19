@@ -31,7 +31,7 @@ Identify which tasks to execute from the spec (using spec_srd_reference file pat
 
 <instructions>
   ACTION: Identify task(s) to execute
-  DEFAULT: Select next uncompleted parent task if not specified (git branch name can be used as a hint)
+  DEFAULT: Select next uncompleted parent task if not specified (current git branch name or git worktree name can be used as a hint)
   CONFIRM: Task selection with user
 </instructions>
 
@@ -97,12 +97,12 @@ Should I shut it down before proceeding? (yes/no)
 
 ### Step 4: Git Branch Management
 
-Use the git-workflow subagent to manage git branches to ensure proper isolation by creating or switching to the appropriate branch for the spec.
+Use the git-workflow subagent to manage git branches and worktrees to ensure proper isolation by creating or switching to the appropriate branch for the spec.
 
 <instructions>
   ACTION: Use git-workflow subagent
   REQUEST: "Check and manage branch for spec: [SPEC_FOLDER]
-            - Create branch if needed
+            - Create branch if needed following procedure at @.claude/instructions/core/create-worktrees.md
             - Switch to correct branch
             - Handle any uncommitted changes"
   WAIT: For branch setup completion

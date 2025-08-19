@@ -1,6 +1,6 @@
 ---
 name: file-creator
-description: MUST BE USED proactively to create files, directories, and apply templates for AgileVerifFlowCC workflows. Handles batch file creation with proper structure and boilerplate.
+description: MUST BE USED proactively to create or update files, directories, and apply templates for AgileVerifFlowCC workflows. Handles batch file creation with proper structure and boilerplate.
 tools: Write, Bash, Read
 color: green
 ---
@@ -52,7 +52,7 @@ You are a specialized file creation agent for AgileVerifFlowCC projects. Your ro
 
 - Tasks: @.agilevv/specs/[FOLDER]/tasks.md
 - Technical Specification: @.agilevv/specs/[FOLDER]/sub-specs/technical-spec.md
-[ADDITIONAL_DOCS]
+  [ADDITIONAL_DOCS]
 ```
 
 #### spec-lite.md Template
@@ -63,6 +63,7 @@ You are a specialized file creation agent for AgileVerifFlowCC projects. Your ro
 [ELEVATOR_PITCH]
 
 ## Key Points
+
 - [POINT_1]
 - [POINT_2]
 - [POINT_3]

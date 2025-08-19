@@ -130,15 +130,15 @@ Each V-Model agent has SDK-specific settings:
 ```yaml
 agents:
   requirements_analyst:
-    timeout: 60                    # Longer timeout for requirements analysis
+    timeout: 60 # Longer timeout for requirements analysis
   architect:
-    timeout: 90                    # Extended time for design work
+    timeout: 90 # Extended time for design work
   developer:
-    timeout: 120                   # Most time for implementation
+    timeout: 120 # Most time for implementation
   qa_tester:
-    timeout: 90                    # Testing and validation
+    timeout: 90 # Testing and validation
   integration:
-    timeout: 150                   # Comprehensive integration assessment
+    timeout: 150 # Comprehensive integration assessment
 ```
 
 ### Mock Mode for Development

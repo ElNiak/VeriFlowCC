@@ -28,7 +28,7 @@ Use the context-fetcher subagent to collect all required inputs from the user in
 <primary>user_direct_input</primary>
 \<fallback_sequence>
 1\. @.agilevv/standards/tech-stack.md
-2\. @.claude/CLAUDE.md
+2\. @CLAUDE.md
 3\. Cursor User Rules
 \</fallback_sequence>
 \</data_sources>
@@ -41,7 +41,7 @@ Please provide the following missing information:
 1. Target users and use cases (minimum 1)
 1. Tech stack preferences
 1. Has the new application been initialized yet and we're inside the project folder? (yes/no)
-\</error_template>
+   \</error_template>
 
 </step>
 
@@ -52,7 +52,7 @@ Please provide the following missing information:
 Use the file-creator subagent to create the following file_structure with validation for write permissions and protection against overwriting existing files:
 
 \<file_structure>
-.claude/
+.agilevv/
 └── product/
 ├── mission.md # Product vision and purpose
 ├── mission-lite.md # Condensed mission for AI context
@@ -235,7 +235,7 @@ PROCEED: To manual resolution below
 \<if_not_in>user_input\</if_not_in>
 \<then_check>
 1\. @.agilevv/standards/tech-stack.md
-2\. @.claude/CLAUDE.md
+2\. @CLAUDE.md
 3\. Cursor User Rules
 \</then_check>
 <else>add_to_missing_list</else>

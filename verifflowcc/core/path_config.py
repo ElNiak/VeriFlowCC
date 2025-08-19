@@ -90,6 +90,11 @@ class PathConfig:
         """Path to logs directory."""
         return self.base_dir / "logs"
 
+    @property
+    def artifacts_dir(self) -> Path:
+        """Path to artifacts directory."""
+        return self.base_dir / "artifacts"
+
     def get_artifact_path(self, artifact_name: str) -> Path:
         """Get path for a specific artifact within base directory.
 
@@ -134,6 +139,7 @@ class PathConfig:
         self.c4_diagrams_dir.mkdir(parents=True, exist_ok=True)
         self.checkpoints_dir.mkdir(parents=True, exist_ok=True)
         self.logs_dir.mkdir(parents=True, exist_ok=True)
+        self.artifacts_dir.mkdir(parents=True, exist_ok=True)
 
         # Create default config files if requested
         if create_defaults:
