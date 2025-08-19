@@ -5,7 +5,7 @@
 default_language_version:
   python: python3.10
 
-fail_fast: true
+fail_fast: false
 
 # Exclude .claude directory from all hooks
 exclude: '^\.claude/'
@@ -58,11 +58,10 @@ repos:
           [
             --ignore-missing-imports,
             --no-strict-optional,
-            --no-incremental,
-            --cache-dir=/dev/null,
+            verifflowcc,
           ]
-        require_serial: true
-        pass_filenames: true
+        require_serial: false
+        pass_filenames: false
 
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.23

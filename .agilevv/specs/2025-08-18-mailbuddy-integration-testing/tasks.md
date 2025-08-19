@@ -17,15 +17,15 @@ These are the tasks to be completed for the spec detailed in @.agilevv/specs/202
   - [x] 1.5 Format code, run linters and fix issues
   - [x] 1.6 Verify all tests pass with authentic Claude Code SDK agent outputs
 
-- [ ] 2. Document-Based Session Management and Context Preservation
+- [x] 2. Document-Based Session Management and Context Preservation
 
-  - [ ] 2.1 Write tests for document-based session storage using JSON/YAML files for conversation context
-  - [ ] 2.2 Test session file persistence and context handoff between Requirements and Architecture stages
-  - [ ] 2.3 Validate real Architect agent receives Requirements Analyst output via document-based session files
-  - [ ] 2.4 Test streaming responses during Architecture agent PlantUML diagram generation
-  - [ ] 2.5 Verify real AI-generated architecture.md includes authentic design decisions and risk assessments
-  - [ ] 2.6 Format code, run linters and fix issues
-  - [ ] 2.7 Verify all document-based session management tests pass with proper context preservation
+  - [x] 2.1 Write tests for document-based session storage using JSON/YAML files for conversation context
+  - [x] 2.2 Test session file persistence and context handoff between Requirements and Architecture stages
+  - [x] 2.3 Validate real Architect agent receives Requirements Analyst output via document-based session files
+  - [x] 2.4 Test streaming responses during Architecture agent PlantUML diagram generation
+  - [x] 2.5 Verify real AI-generated architecture.md includes authentic design decisions and risk assessments
+  - [x] 2.6 Format code, run linters and fix issues
+  - [x] 2.7 Verify all document-based session management tests pass with proper context preservation
 
 - [ ] 3. Real AI Code Generation and Structured Output Validation
 

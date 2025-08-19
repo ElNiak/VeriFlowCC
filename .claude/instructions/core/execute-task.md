@@ -129,7 +129,11 @@ FIND style rules for:
 
 ### Step 5: Task and Sub-task Execution
 
-Execute the parent task and all sub-tasks in order using test-driven development (TDD) approach.
+Create a clear execution plan for the parent task and its sub-tasks, following a TDD approach.
+
+Spawn the appropriate sub-agent to handle the execution of the parent task and its sub-tasks in a structured manner.
+
+Once
 
 \<typical_task_structure>
 \<first_subtask>Write tests for [feature]\</first_subtask>
