@@ -10,7 +10,7 @@ encoding: UTF-8
 
 ## Overview
 
-After all tasks in the current spec have been completed, follow these steps to mark your progress updates, create a recap, and deliver the final report to the user.
+After all tasks in the current spec have been completed, follow these steps to mark your progress updates, create a recap, and deliver the final report to the user at .agilevv/specs/[spec-folder-name]/[completion-report].md
 
 <pre_flight_check>
 EXECUTE: @.claude/instructions/meta/pre-flight.md

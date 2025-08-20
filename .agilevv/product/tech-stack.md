@@ -193,4 +193,3 @@
 - Designed for extensibility
 - Plugin architecture planned
 - API versioning considered
-- Backward compatibility focus

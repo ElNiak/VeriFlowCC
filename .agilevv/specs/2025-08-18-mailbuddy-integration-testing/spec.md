@@ -31,7 +31,7 @@ The testing framework validates real AI responses against structured output sche
 
 ## Spec Scope
 
-1. **Claude Code SDK Authentication** - Implement and validate real API key management, SDK configuration, and secure authentication patterns for production V-Model agent execution
+1. **Claude Code SDK Authentication** - Implement and validate real API key and subscription management, SDK configuration, and secure authentication patterns for production V-Model agent execution
 1. **Real AI Agent Integration** - Replace all mock agent implementations with authentic Claude Code SDK agents and validate their outputs against structured quality schemas
 1. **Session State Management** - Implement and test session persistence, context preservation, and agent handoff mechanisms across complete V-Model workflows
 1. **Streaming Response Validation** - Test real-time streaming responses from Claude Code SDK agents and validate proper response handling and user feedback
