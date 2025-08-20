@@ -172,7 +172,3 @@ git worktree add -b "$branch_name" "$branch_path" "$base_commit"
 ```
 
 This will allow you to specify any commit, tag, or branch name as the starting point for your new branch.
-
-<post_flight_check>
-  EXECUTE: @.claude/instructions/meta/post-flight.md
-</post_flight_check>

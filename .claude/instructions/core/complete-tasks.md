@@ -12,10 +12,6 @@ encoding: UTF-8
 
 After all tasks in the current spec have been completed, follow these steps to mark your progress updates, create a recap, and deliver the final report to the user at .agilevv/specs/[spec-folder-name]/[completion-report].md
 
-<pre_flight_check>
-EXECUTE: @.claude/instructions/meta/pre-flight.md
-</pre_flight_check>
-
 <process_flow>
 
 <step number="1" subagent="test-runner" name="test_suite_verification">
@@ -45,18 +41,31 @@ Use the test-runner subagent to run the ALL tests in the application's test suit
 
 </step>
 
-
-
 <step number="2" subagent="precommit-error-analyzer" name="precommit_error_analysis">
 
 ### Step 2: Pre-commit Error Analysis
 
 Use the precommit-error-analyzer subagent to analyze any errors reported by the pre-commit hooks.
+split the errors into categories like linting, formatting, or other issues that need to be addressed before finalizing the tasks.
 
 <instructions>
   ACTION: Use precommit-error-analyzer subagent
   REQUEST: "Analyze pre-commit errors"
   WAIT: For analysis completion
+</instructions>
+
+</step>
+
+<step number="3" subagent="lint-type-fixer" name="precommit_fix">
+
+### Step 3: Pre-commit Fix
+
+Use the lint-type-fixer subagents to automatically fix any linting issues reported by the pre-commit hooks.
+
+<instructions>
+  ACTION: Use lint-type-fixer subagent
+  REQUEST: "Fix pre-commit linting issues"
+  WAIT: For fixing completion
 </instructions>
 
 </step>
@@ -282,7 +291,3 @@ afplay /System/Library/Sounds/Glass.aiff
 </step>
 
 </process_flow>
-
-<post_flight_check>
-EXECUTE: @.claude/instructions/meta/post-flight.md
-</post_flight_check>

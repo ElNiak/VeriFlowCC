@@ -12,10 +12,6 @@ encoding: UTF-8
 
 Generate product docs for new projects: mission, tech-stack, roadmap, decisions files for AI agent consumption.
 
-<pre_flight_check>
-EXECUTE: @.claude/instructions/meta/pre-flight.md
-</pre_flight_check>
-
 <process_flow>
 
 <step number="1" subagent="context-fetcher" name="gather_user_input">
@@ -272,13 +268,13 @@ Use the following template:
 
 - source: Step 3 mission.md pitch section
 - format: single sentence
-</elevator_pitch>
-<value_summary>
+  </elevator_pitch>
+  <value_summary>
 - length: 1-3 sentences
 - includes: value proposition, target users, key differentiator
 - excludes: secondary users, secondary differentiators
-</value_summary>
-</content_structure>
+  </value_summary>
+  </content_structure>
 
 <content_template>
 [ELEVATOR_PITCH_FROM_MISSION_MD]
@@ -429,7 +425,7 @@ Use the file-creator subagent to create the file: .agilevv/product/decisions.md 
 - [ ] User inputs incorporated throughout
 - [ ] Missing tech stack items requested
 - [ ] Initial decisions documented
-</verify>
+      </verify>
 
 </final_checklist>
 
@@ -440,8 +436,4 @@ Use the file-creator subagent to create the file: .agilevv/product/decisions.md 
 3. Generate each file sequentially
 4. Request any missing information
 5. Validate complete documentation set
-</execution_order>
-
-<post_flight_check>
-  EXECUTE: @.claude/instructions/meta/post-flight.md
-</post_flight_check>
+   </execution_order>

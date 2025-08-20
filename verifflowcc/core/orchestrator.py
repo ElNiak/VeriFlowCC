@@ -28,7 +28,6 @@ class Orchestrator:
         config_path: Path | None = None,
         path_config: PathConfig | None = None,
         sdk_config: SDKConfig | None = None,
-        mock_mode: bool = False,
     ):
         """Initialize the Orchestrator with SDK integration.
 
@@ -36,7 +35,6 @@ class Orchestrator:
             config_path: Path to configuration file (deprecated, use path_config)
             path_config: PathConfig instance for managing project paths
             sdk_config: SDK configuration for agents
-            mock_mode: Whether to run agents in mock mode
         """
         # Use provided PathConfig or create default
         self.path_config = path_config or PathConfig()
@@ -52,12 +50,11 @@ class Orchestrator:
 
         self.state_path = self.path_config.state_path
         self.sdk_config = sdk_config or SDKConfig()
-        self.mock_mode = mock_mode
         self.console = Console()
         self.current_stage = VModelStage.PLANNING
         self.state = self._load_state()
         self.config = self._load_config()
-        self.agent_factory = AgentFactory(self.sdk_config, self.path_config, mock_mode)
+        self.agent_factory = AgentFactory(self.sdk_config, self.path_config)
         self.agents = self._initialize_agents()
         self.stage_callbacks: dict[VModelStage, list[Callable]] = {}
 
@@ -129,7 +126,11 @@ class Orchestrator:
                     "system_prompt_override": None,
                     "timeout": 120,
                 },
-                "qa_tester": {"agent_type": "qa", "system_prompt_override": None, "timeout": 90},
+                "qa_tester": {
+                    "agent_type": "qa",
+                    "system_prompt_override": None,
+                    "timeout": 90,
+                },
                 "integration": {
                     "agent_type": "integration",
                     "system_prompt_override": None,
@@ -156,7 +157,7 @@ class Orchestrator:
             agents["qa_tester"] = self.agent_factory.create_agent("qa_tester")
             agents["integration"] = self.agent_factory.create_agent("integration")
 
-            logger.info(f"Initialized {len(agents)} SDK-based agents (mock_mode={self.mock_mode})")
+            logger.info(f"Initialized {len(agents)} SDK-based agents")
 
         except Exception as e:
             logger.error(f"Failed to initialize agents: {e}")
@@ -687,7 +688,6 @@ class Orchestrator:
             "agent_metrics": self.state.get("agent_metrics", {}),
             "quality_gates": self.state.get("quality_gates", {}),
             "sdk_config": {
-                "mock_mode": self.mock_mode,
                 "agents_initialized": len(self.agents),
                 "session_persistence": self.config.get("sdk", {}).get("session_persistence", True),
             },
@@ -717,12 +717,12 @@ class Orchestrator:
 
         table.add_row(
             "Completed Stages",
-            ", ".join(status["completed_stages"][-3:]) if status["completed_stages"] else "None",
+            (", ".join(status["completed_stages"][-3:]) if status["completed_stages"] else "None"),
         )
 
         # SDK status
         sdk_info = status["sdk_config"]
-        table.add_row("SDK Mode", "Mock" if sdk_info["mock_mode"] else "Live")
+        table.add_row("SDK Mode", "Live")
         table.add_row("Agents Initialized", str(sdk_info["agents_initialized"]))
         table.add_row("Session Persistence", str(sdk_info["session_persistence"]))
 
@@ -761,7 +761,9 @@ class Orchestrator:
             "timestamp": datetime.now().isoformat(),
             "state": self.state.copy(),
             "stage": self.current_stage.value,
-            "sdk_config": {"mock_mode": self.mock_mode, "agents_count": len(self.agents)},
+            "sdk_config": {
+                "agents_count": len(self.agents),
+            },
         }
 
         # Save checkpoint

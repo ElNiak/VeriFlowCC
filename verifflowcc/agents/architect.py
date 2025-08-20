@@ -30,7 +30,6 @@ class ArchitectAgent(BaseAgent):
         agent_type: str = "architect",
         path_config: PathConfig | None = None,
         sdk_config: SDKConfig | None = None,
-        mock_mode: bool = False,
     ):
         """Initialize the ArchitectAgent.
 
@@ -39,14 +38,12 @@ class ArchitectAgent(BaseAgent):
             agent_type: Agent type (architect)
             path_config: PathConfig instance for managing project paths
             sdk_config: SDK configuration instance
-            mock_mode: Whether to use mock responses
         """
         super().__init__(
             name=name,
             agent_type=agent_type,
             path_config=path_config,
             sdk_config=sdk_config,
-            mock_mode=mock_mode,
         )
 
     async def process(self, input_data: dict[str, Any]) -> dict[str, Any]:
@@ -75,10 +72,12 @@ class ArchitectAgent(BaseAgent):
                 "task_description": task_description,
                 "project_name": project_context.get("project_name", "VeriFlowCC"),
                 "sprint_number": project_context.get("sprint_number", "Current Sprint"),
-                "requirements": json.dumps(requirements, indent=2)
-                if requirements
-                else "No requirements provided",
-                "context": json.dumps(project_context, indent=2) if project_context else "",
+                "requirements": (
+                    json.dumps(requirements, indent=2)
+                    if requirements
+                    else "No requirements provided"
+                ),
+                "context": (json.dumps(project_context, indent=2) if project_context else ""),
                 "tech_stack": project_context.get("tech_stack", "Python, FastAPI, SQLAlchemy"),
             }
 
@@ -146,7 +145,7 @@ class ArchitectAgent(BaseAgent):
                 "response_text": response,
                 "architecture_overview": {
                     "style": "Generated from text response",
-                    "description": response[:200] + "..." if len(response) > 200 else response,
+                    "description": (response[:200] + "..." if len(response) > 200 else response),
                     "rationale": "Generated from Claude text response",
                 },
                 "components": [],
@@ -204,7 +203,8 @@ class ArchitectAgent(BaseAgent):
                         component_name = component.get("name", f"component_{i}")
                         diagram_content = self._generate_component_diagram(component, story_id)
                         self.save_artifact(
-                            f"design/diagrams/{story_id}_{component_name}.puml", diagram_content
+                            f"design/diagrams/{story_id}_{component_name}.puml",
+                            diagram_content,
                         )
 
             # Save interface specifications

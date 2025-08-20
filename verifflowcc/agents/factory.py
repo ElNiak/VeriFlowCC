@@ -18,18 +18,15 @@ class AgentFactory:
         self,
         sdk_config: SDKConfig | None = None,
         path_config: PathConfig | None = None,
-        mock_mode: bool = False,
     ):
         """Initialize the agent factory.
 
         Args:
             sdk_config: SDK configuration instance
             path_config: Path configuration instance
-            mock_mode: Whether to create agents in mock mode
         """
         self.sdk_config = sdk_config or get_sdk_config()
         self.path_config = path_config or PathConfig()
-        self.mock_mode = mock_mode
         self._agent_registry: dict[str, type[BaseAgent]] = {}
         self._register_default_agents()
 
@@ -112,7 +109,6 @@ class AgentFactory:
                 agent_type=agent_type,
                 path_config=self.path_config,
                 sdk_config=self.sdk_config,
-                mock_mode=self.mock_mode,
             )
 
         # Fallback: create a generic agent with the base class
@@ -122,7 +118,6 @@ class AgentFactory:
             agent_type=agent_type,
             path_config=self.path_config,
             sdk_config=self.sdk_config,
-            mock_mode=self.mock_mode,
         )
 
     def create_all_agents(self) -> dict[str, BaseAgent]:
@@ -131,7 +126,13 @@ class AgentFactory:
         Returns:
             Dictionary mapping agent types to agent instances
         """
-        agent_types = ["requirements_analyst", "architect", "developer", "qa_tester", "integration"]
+        agent_types = [
+            "requirements_analyst",
+            "architect",
+            "developer",
+            "qa_tester",
+            "integration",
+        ]
         agents = {}
 
         for agent_type in agent_types:

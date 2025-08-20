@@ -7,50 +7,15 @@ from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import Any
 
-try:
-    from claude_code_sdk import ClaudeCodeOptions as SDKClaudeCodeOptions
-    from claude_code_sdk import ClaudeSDKClient
-
-    SDK_AVAILABLE = True
-except ImportError:
-    # Fallback for testing or when SDK not available
-    from collections.abc import AsyncGenerator
-    from typing import Any
-
-    class MockSDKClient:
-        def __init__(self, options: Any = None) -> None:
-            self.options = options
-
-        async def __aenter__(self) -> "MockSDKClient":
-            return self
-
-        async def __aexit__(
-            self,
-            exc_type: type | None = None,
-            exc_val: BaseException | None = None,
-            exc_tb: Any | None = None,
-        ) -> None:
-            pass
-
-        async def query(self, prompt: str) -> None:
-            pass
-
-        async def receive_response(self) -> AsyncGenerator[dict[str, Any], None]:
-            yield {"type": "text", "content": "Mock response"}
-
-    class MockSDKOptions:
-        def __init__(self, **kwargs: Any) -> None:
-            for key, value in kwargs.items():
-                setattr(self, key, value)
-
-    SDKClaudeCodeOptions = MockSDKOptions  # type: ignore[misc,assignment]
-    ClaudeSDKClient = MockSDKClient  # type: ignore[misc,assignment]
-    SDK_AVAILABLE = False
-
+# Real Claude Code SDK integration only - no mock fallbacks
+from claude_code_sdk import ClaudeCodeOptions as SDKClaudeCodeOptions
+from claude_code_sdk import ClaudeSDKClient
 from jinja2 import Template
 
 from verifflowcc.core.path_config import PathConfig
 from verifflowcc.core.sdk_config import SDKConfig, get_sdk_config
+
+SDK_AVAILABLE = True
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +29,6 @@ class BaseAgent(ABC):
         agent_type: str,
         path_config: PathConfig | None = None,
         sdk_config: SDKConfig | None = None,
-        mock_mode: bool = False,
     ):
         """Initialize the base agent.
 
@@ -73,13 +37,14 @@ class BaseAgent(ABC):
             agent_type: Type of agent (requirements, architect, developer, qa, integration)
             path_config: PathConfig instance for managing project paths
             sdk_config: SDK configuration instance
-            mock_mode: Whether to use mock responses instead of real API calls
         """
         self.name = name
         self.agent_type = agent_type
         self.path_config = path_config or PathConfig()
         self.sdk_config = sdk_config or get_sdk_config()
-        self.mock_mode = mock_mode or not SDK_AVAILABLE
+        # Real SDK integration only - no mock mode
+        if not SDK_AVAILABLE:
+            raise RuntimeError("Claude Code SDK is required for VeriFlowCC agents")
         self.context: dict[str, Any] = {}
         self.session_history: list[dict[str, str]] = []
 
@@ -110,11 +75,8 @@ class BaseAgent(ABC):
             Response from Claude
 
         Raises:
-            RuntimeError: If SDK is not available and not in mock mode
+            RuntimeError: If SDK is not available
         """
-        if self.mock_mode:
-            return self._get_mock_response(prompt, context)
-
         if not SDK_AVAILABLE:
             raise RuntimeError(
                 "Claude Code SDK not available. Install with: pip install claude-code-sdk"
@@ -429,12 +391,7 @@ Please provide your response in structured JSON format appropriate for a {self.a
             self.load_session_state()
             self.context.update(input_data)
 
-            # If in mock mode, yield mock response
-            if self.mock_mode:
-                yield {"status": "processing", "message": "Processing with mock data"}
-                result = await self.process(input_data)
-                yield {"status": "completed", "result": result}
-                return
+            # Real SDK streaming processing
 
             # Real streaming with Claude Code SDK
             if not SDK_AVAILABLE:

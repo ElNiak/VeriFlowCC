@@ -29,7 +29,6 @@ class IntegrationAgent(BaseAgent):
         agent_type: str = "integration",
         path_config: PathConfig | None = None,
         sdk_config: SDKConfig | None = None,
-        mock_mode: bool = False,
     ):
         """Initialize the IntegrationAgent.
 
@@ -38,14 +37,12 @@ class IntegrationAgent(BaseAgent):
             agent_type: Agent type (integration)
             path_config: PathConfig instance for managing project paths
             sdk_config: SDK configuration instance
-            mock_mode: Whether to use mock responses
         """
         super().__init__(
             name=name,
             agent_type=agent_type,
             path_config=path_config,
             sdk_config=sdk_config,
-            mock_mode=mock_mode,
         )
 
     async def process(self, input_data: dict[str, Any]) -> dict[str, Any]:
@@ -78,13 +75,17 @@ class IntegrationAgent(BaseAgent):
                 "project_name": project_context.get("project_name", "VeriFlowCC"),
                 "sprint_number": project_context.get("sprint_number", "Current Sprint"),
                 "deployment_target": deployment_target,
-                "system_components": json.dumps(system_artifacts.get("components", []), indent=2)
-                if system_artifacts.get("components")
-                else "No components provided",
-                "previous_stages": json.dumps(previous_stages, indent=2)
-                if previous_stages
-                else "No previous stage data provided",
-                "context": json.dumps(project_context, indent=2) if project_context else "",
+                "system_components": (
+                    json.dumps(system_artifacts.get("components", []), indent=2)
+                    if system_artifacts.get("components")
+                    else "No components provided"
+                ),
+                "previous_stages": (
+                    json.dumps(previous_stages, indent=2)
+                    if previous_stages
+                    else "No previous stage data provided"
+                ),
+                "context": (json.dumps(project_context, indent=2) if project_context else ""),
             }
 
             # Load template and create prompt
@@ -221,10 +222,18 @@ class IntegrationAgent(BaseAgent):
                     "load_testing": {
                         "test_scenarios": "Not conducted",
                         "performance_metrics": {
-                            "response_time": {"avg": "0ms", "95th": "0ms", "99th": "0ms"},
+                            "response_time": {
+                                "avg": "0ms",
+                                "95th": "0ms",
+                                "99th": "0ms",
+                            },
                             "throughput": "0 requests per second",
                             "error_rate": "Unknown",
-                            "resource_utilization": {"cpu": "0%", "memory": "0%", "disk": "0%"},
+                            "resource_utilization": {
+                                "cpu": "0%",
+                                "memory": "0%",
+                                "disk": "0%",
+                            },
                         },
                     }
                 },
@@ -277,10 +286,10 @@ class IntegrationAgent(BaseAgent):
             # Basic deployment readiness assessment
             environment_readiness = {
                 "production_environment": {
-                    "infrastructure": "Cloud-ready" if len(components) > 0 else "Not assessed",
-                    "compute_resources": "Adequate for current load"
-                    if len(components) <= 5
-                    else "May need scaling",
+                    "infrastructure": ("Cloud-ready" if len(components) > 0 else "Not assessed"),
+                    "compute_resources": (
+                        "Adequate for current load" if len(components) <= 5 else "May need scaling"
+                    ),
                     "storage_resources": "Sufficient",
                     "network_configuration": "Security groups configured",
                     "monitoring_setup": "Basic monitoring in place",
@@ -328,7 +337,10 @@ class IntegrationAgent(BaseAgent):
         except Exception as e:
             logger.error(f"Error performing deployment validation: {e}")
             return {
-                "environment_readiness": {"validation_error": str(e), "status": "failed"},
+                "environment_readiness": {
+                    "validation_error": str(e),
+                    "status": "failed",
+                },
                 "security_validation": {"validation_error": str(e), "status": "failed"},
             }
 
@@ -369,12 +381,16 @@ class IntegrationAgent(BaseAgent):
 
             return {
                 "availability_testing": f"{overall_health:.1f}% uptime achieved during test period",
-                "fault_tolerance": "System handles component failures gracefully"
-                if overall_health > 85
-                else "Fault tolerance needs improvement",
-                "recovery_testing": "System recovers within RTO"
-                if overall_health > 90
-                else "Recovery time may exceed RTO",
+                "fault_tolerance": (
+                    "System handles component failures gracefully"
+                    if overall_health > 85
+                    else "Fault tolerance needs improvement"
+                ),
+                "recovery_testing": (
+                    "System recovers within RTO"
+                    if overall_health > 90
+                    else "Recovery time may exceed RTO"
+                ),
                 "backup_validation": "Backup and restore procedures verified",
                 "health_score": overall_health,
             }
@@ -502,14 +518,16 @@ class IntegrationAgent(BaseAgent):
                     "mitigation_strategies": mitigation_strategies,
                 },
                 "release_plan": {
-                    "deployment_strategy": "blue-green" if decision == "GO" else "postponed",
-                    "rollout_phases": [
-                        "Phase 1: 25% traffic",
-                        "Phase 2: 75% traffic",
-                        "Phase 3: 100% traffic",
-                    ]
-                    if decision == "GO"
-                    else [],
+                    "deployment_strategy": ("blue-green" if decision == "GO" else "postponed"),
+                    "rollout_phases": (
+                        [
+                            "Phase 1: 25% traffic",
+                            "Phase 2: 75% traffic",
+                            "Phase 3: 100% traffic",
+                        ]
+                        if decision == "GO"
+                        else []
+                    ),
                     "success_criteria": [
                         "No critical errors",
                         "Response time < 200ms",
@@ -534,7 +552,10 @@ class IntegrationAgent(BaseAgent):
                     "deployment_risks": ["Assessment system failure"],
                     "operational_risks": ["Cannot assess system readiness"],
                     "business_risks": ["High risk due to incomplete assessment"],
-                    "mitigation_strategies": ["Fix assessment system", "Manual review required"],
+                    "mitigation_strategies": [
+                        "Fix assessment system",
+                        "Manual review required",
+                    ],
                 },
                 "release_plan": {
                     "deployment_strategy": "postponed",
@@ -575,7 +596,8 @@ class IntegrationAgent(BaseAgent):
             release_recommendation = integration_data.get("release_recommendation", {})
             if release_recommendation:
                 self.save_artifact(
-                    f"integration/{story_id}_release_decision.json", release_recommendation
+                    f"integration/{story_id}_release_decision.json",
+                    release_recommendation,
                 )
 
             # Save final validation summary
@@ -591,7 +613,10 @@ class IntegrationAgent(BaseAgent):
             logger.error(f"Error saving integration artifacts: {e}")
 
     async def _generate_final_validation_report(
-        self, story_id: str, integration_data: dict[str, Any], previous_stages: dict[str, Any]
+        self,
+        story_id: str,
+        integration_data: dict[str, Any],
+        previous_stages: dict[str, Any],
     ) -> None:
         """Generate comprehensive final validation report.
 
@@ -715,9 +740,11 @@ Generated: {datetime.now().isoformat()}
                     for gate in integration_data.get("quality_gates", {}).values()
                     if isinstance(gate, dict) and "test_coverage" in str(gate)
                 ),
-                "deployment_readiness": "ready"
-                if deployment_validation and "validation_error" not in deployment_validation
-                else "not_ready",
+                "deployment_readiness": (
+                    "ready"
+                    if deployment_validation and "validation_error" not in deployment_validation
+                    else "not_ready"
+                ),
             },
             "next_stage_ready": release_recommendation.get("go_no_go_decision", "NO-GO") == "GO",
             "validation_passed": release_recommendation.get("overall_readiness_score", 0.0) >= 70,
