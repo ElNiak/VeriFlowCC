@@ -46,7 +46,7 @@ Use the test-runner subagent to run the ALL tests in the application's test suit
 ### Step 2: Pre-commit Error Analysis
 
 Use the precommit-error-analyzer subagent to analyze any errors reported by the pre-commit hooks.
-split the errors into categories like linting, formatting, or other issues that need to be addressed before finalizing the tasks.
+Split the errors into categories like linting, formatting, or other issues PER file that need to be addressed before finalizing the tasks.
 
 <instructions>
   ACTION: Use precommit-error-analyzer subagent
@@ -60,7 +60,8 @@ split the errors into categories like linting, formatting, or other issues that 
 
 ### Step 3: Pre-commit Fix
 
-Use the lint-type-fixer subagents to automatically fix any linting issues reported by the pre-commit hooks.
+Use one lint-type-fixer subagent per file to automatically fix any linting issues reported by the pre-commit hooks.
+Spawn all subagents in parallel in a single message to speed up the process.
 
 <instructions>
   ACTION: Use lint-type-fixer subagent
@@ -70,7 +71,7 @@ Use the lint-type-fixer subagents to automatically fix any linting issues report
 
 </step>
 
-<step number="3" subagent="git-workflow" name="git_workflow">
+<step number="4" subagent="git-workflow" name="git_workflow">
 
 ### Step 3: Git Workflow
 
@@ -105,9 +106,9 @@ Use the git-workflow subagent to create git commit, push to GitHub, and create/e
 
 </step>
 
-<step number="4" subagent="project-manager" name="tasks_list_check">
+<step number="5" subagent="project-manager" name="tasks_list_check">
 
-### Step 4: Tasks Completion Verification
+### Step 5: Tasks Completion Verification
 
 Use the project-manager subagent to read the current spec's tasks.md file and verify that all tasks have been properly marked as complete with [x] or documented with blockers.
 
@@ -147,11 +148,11 @@ Use the project-manager subagent to read the current spec's tasks.md file and ve
 
 </step>
 
-<step number="5" subagent="project-manager" name="roadmap_progress_check">
+<step number="6" subagent="project-manager" name="roadmap_progress_check">
 
-### Step 5: Roadmap Progress Update (conditional)
+### Step 6: Roadmap Progress Update (conditional)
 
-Use the project-manager subagent to read @.claude/product/roadmap.md and mark roadmap items as complete with [x] ONLY IF the executed tasks have completed any roadmap item(s) and the spec completes that item.
+Use the project-manager subagent to read @.agilevv/product/roadmap.md and mark roadmap items as complete with [x] ONLY IF the executed tasks have completed any roadmap item(s) and the spec completes that item.
 
 <conditional_execution>
 <preliminary_check>
@@ -179,16 +180,16 @@ CONTINUE with roadmap check
 
 </step>
 
-<step number="6" subagent="project-manager" name="document_recap">
+<step number="7" subagent="project-manager" name="document_recap">
 
-### Step 6: Create Recap Document
+### Step 7: Create Recap Document
 
-Use the project-manager subagent to create a recap document in .claude/recaps/ folder that summarizes what was built for this spec.
+Use the project-manager subagent to create a recap document in .agilevv/recaps/ folder that summarizes what was built for this spec.
 
 <instructions>
   ACTION: Use project-manager subagent
   REQUEST: "Create recap document for current spec:
-            - Create file: .claude/recaps/[SPEC_FOLDER_NAME].md
+            - Create file: .agilevv/recaps/[SPEC_FOLDER_NAME].md
             - Use template format with completed features summary
             - Include context from spec-lite.md
             - Document: [SPEC_FOLDER_PATH]"
@@ -200,7 +201,7 @@ Use the project-manager subagent to create a recap document in .claude/recaps/ f
 
 # [yyyy-mm-dd] Recap: Feature Name
 
-This recaps what was built for the spec documented at .claude/specs/[spec-folder-name]/spec.md.
+This recaps what was built for the spec documented at .agilevv/specs/[spec-folder-name]/spec.md.
 
 ## Recap
 
@@ -212,13 +213,12 @@ This recaps what was built for the spec documented at .claude/specs/[spec-folder
 </recap_template>
 
 <file_creation>
-<location>.claude/recaps/</location>
-<naming>[SPEC_FOLDER_NAME].md</naming>
-<format>markdown with yaml frontmatter if needed</format>
+  <location>.agilevv/recaps/</location>
+  <naming>[SPEC_FOLDER_NAME].md</naming>
+  <format>markdown with yaml frontmatter if needed</format>
 </file_creation>
 
 <content_requirements>
-
   <summary>1 paragraph plus bullet points</summary>
   <context>from spec-lite.md summary</context>
   <reference>link to original spec</reference>
@@ -226,9 +226,9 @@ This recaps what was built for the spec documented at .claude/specs/[spec-folder
 
 </step>
 
-<step number="7" subagent="project-manager" name="completion_summary">
+<step number="8" subagent="project-manager" name="completion_summary">
 
-### Step 7: Completion Summary
+### Step 8: Completion Summary
 
 Use the project-manager subagent to create a structured summary message with emojis showing what was done, any issues, testing instructions, and PR link.
 
@@ -273,9 +273,9 @@ View PR: [GITHUB_PR_URL]
 
 </step>
 
-<step number="8" subagent="project-manager" name="completion_notification">
+<step number="9" subagent="project-manager" name="completion_notification">
 
-### Step 8: Task Completion Notification
+### Step 9: Task Completion Notification
 
 Use the project-manager subagent to play a system sound to alert the user that tasks are complete.
 
