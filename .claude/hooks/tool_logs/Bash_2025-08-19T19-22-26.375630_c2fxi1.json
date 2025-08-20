@@ -1,0 +1,7 @@
+{
+  "timestamp": "2025-08-19T19:22:26.375584",
+  "session_id": "0db89026-481b-4386-a2ae-65d42e222b16",
+  "tool_name": "Bash",
+  "command": "find tests -type d -name \"test*\" -o -name \"*test*\"",
+  "description": "Find all test directories"
+}

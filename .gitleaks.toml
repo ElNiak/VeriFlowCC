@@ -1,0 +1,47 @@
+# GitLeaks Configuration for VeriFlowCC
+#
+# This configuration excludes false positives from security scanning,
+# particularly test data strings that simulate authentication scenarios
+# but are not real secrets.
+
+[extend]
+# Use the default GitLeaks rules as a base
+useDefault = true
+
+# Global allowlist for test patterns
+[allowlist]
+description = "Test patterns and mock data"
+regexTarget = "line"
+regexes = [
+    # Kubernetes test authentication placeholder
+    "k8s-secret-api-key-from-vault",
+    # CI/CD test authentication placeholder
+    "cicd-encrypted-api-key-12345",
+    # Common test patterns
+    "test-api-key-.*",
+    "mock-.*-key",
+    "fake-.*-secret",
+    "dummy-.*-token",
+    "placeholder-.*-credential",
+    # Environment simulation patterns
+    "container-mounted-secret-key",
+    "env-fallback-key",
+    "explicit-override-key",
+    "consistency-test-key",
+    "initial-key",
+    "restored-key",
+    # Test environment variable patterns
+    "ANTHROPIC_API_KEY.*=.*test.*",
+    "ANTHROPIC_API_KEY.*=.*mock.*",
+    "ANTHROPIC_API_KEY.*=.*fake.*",
+    "ANTHROPIC_API_KEY.*=.*dummy.*",
+    # Low entropy test strings
+    "test.*key.*123.*",
+    "mock.*secret.*456.*",
+    "fake.*token.*789.*"
+]
+# Restrict to test directories and files
+paths = [
+    "tests/.*",
+    ".*test.*\\.py"
+]

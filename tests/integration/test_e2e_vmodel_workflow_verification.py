@@ -8,8 +8,10 @@ Verifying all end-to-end workflow tests pass and system integration.
 # Import MockSDKAgent from the main workflow test file
 import sys
 import time
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -20,6 +22,7 @@ from verifflowcc.core.sdk_config import SDKConfig
 from verifflowcc.core.vmodel import VModelStage
 
 sys.path.append(str(Path(__file__).parent))
+from .test_e2e_vmodel_workflow import MockSDKAgent
 
 # Test markers for organization
 pytestmark = [
@@ -35,11 +38,14 @@ class TestWorkflowVerificationSuite:
 
     @pytest.mark.asyncio
     async def test_comprehensive_workflow_validation(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory, sample_user_story
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
+        sample_user_story: dict[str, Any],
     ) -> None:
         """Comprehensive validation of complete V-Model workflow execution."""
         with patch.object(AgentFactory, "create_agent") as mock_create_agent:
-            mock_create_agent.side_effect = lambda name: mock_agent_factory(name)
+            mock_create_agent.side_effect = lambda name: mock_agent_factory(name, None)
 
             orchestrator = Orchestrator(
                 path_config=isolated_agilevv_dir,
@@ -62,7 +68,10 @@ class TestWorkflowVerificationSuite:
             assert "stages" in result, "Result should include stage results"
 
             # Workflow completion validation
-            assert result["final_decision"] in ["GO", "NO-GO"], "Should have final decision"
+            assert result["final_decision"] in [
+                "GO",
+                "NO-GO",
+            ], "Should have final decision"
             assert "readiness_score" in result, "Should have readiness score"
             assert result["readiness_score"] >= 0, "Readiness score should be non-negative"
 
@@ -113,7 +122,10 @@ class TestWorkflowVerificationSuite:
 
     @pytest.mark.asyncio
     async def test_workflow_consistency_across_multiple_runs(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory, sample_user_story
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
+        sample_user_story: dict[str, Any],
     ) -> None:
         """Test workflow consistency across multiple independent runs."""
         results = []
@@ -121,7 +133,7 @@ class TestWorkflowVerificationSuite:
         # Run workflow multiple times
         for run_number in range(3):
             with patch.object(AgentFactory, "create_agent") as mock_create_agent:
-                mock_create_agent.side_effect = lambda name: mock_agent_factory(name)
+                mock_create_agent.side_effect = lambda name: mock_agent_factory(name, None)
 
                 # Create fresh orchestrator for each run
                 orchestrator = Orchestrator(
@@ -167,11 +179,14 @@ class TestWorkflowVerificationSuite:
 
     @pytest.mark.asyncio
     async def test_workflow_state_persistence_and_recovery(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory, sample_user_story
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
+        sample_user_story: dict[str, Any],
     ) -> None:
         """Test workflow state persistence and recovery capabilities."""
         with patch.object(AgentFactory, "create_agent") as mock_create_agent:
-            mock_create_agent.side_effect = lambda name: mock_agent_factory(name)
+            mock_create_agent.side_effect = lambda name: mock_agent_factory(name, None)
 
             # Create orchestrator and execute partial workflow
             orchestrator1 = Orchestrator(
@@ -228,7 +243,9 @@ class TestWorkflowVerificationSuite:
 
     @pytest.mark.asyncio
     async def test_workflow_performance_and_scalability(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
     ) -> None:
         """Test workflow performance characteristics and scalability limits."""
 
@@ -252,7 +269,7 @@ class TestWorkflowVerificationSuite:
         # Execute workflows and measure performance
         for story in stories:
             with patch.object(AgentFactory, "create_agent") as mock_create_agent:
-                mock_create_agent.side_effect = lambda name: mock_agent_factory(name)
+                mock_create_agent.side_effect = lambda name: mock_agent_factory(name, None)
 
                 orchestrator = Orchestrator(
                     path_config=isolated_agilevv_dir,
@@ -306,7 +323,10 @@ class TestWorkflowVerificationSuite:
 
     @pytest.mark.asyncio
     async def test_workflow_error_handling_robustness(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory, sample_user_story
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
+        sample_user_story: dict[str, Any],
     ) -> None:
         """Test workflow robustness under various error conditions."""
 
@@ -345,15 +365,22 @@ class TestWorkflowVerificationSuite:
 
         for scenario in error_scenarios:
 
-            def error_injecting_factory(agent_type: str, scenario=scenario):
-                agent = mock_agent_factory(agent_type)
+            def error_injecting_factory(
+                agent_type: str, scenario: dict[str, Any] = scenario
+            ) -> MockSDKAgent:
+                agent = mock_agent_factory(agent_type, None)
 
                 if agent_type == scenario["failing_agent"]:
 
-                    async def failing_process(input_data, scenario=scenario, agent_type=agent_type):
+                    async def failing_process(
+                        input_data: dict[str, Any],
+                        scenario: dict[str, Any] = scenario,
+                        agent_type: str = agent_type,
+                    ) -> dict[str, Any]:
                         raise Exception(f"Simulated {scenario['error_type']} in {agent_type}")
 
-                    agent.process = failing_process
+                    # Replace the process method directly
+                    agent.process = failing_process  # type: ignore[method-assign]
 
                 return agent
 
@@ -404,11 +431,14 @@ class TestWorkflowVerificationSuite:
 
     @pytest.mark.asyncio
     async def test_end_to_end_integration_validation(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory, sample_user_story
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
+        sample_user_story: dict[str, Any],
     ) -> None:
         """Final end-to-end integration validation test."""
         with patch.object(AgentFactory, "create_agent") as mock_create_agent:
-            mock_create_agent.side_effect = lambda name: mock_agent_factory(name)
+            mock_create_agent.side_effect = lambda name: mock_agent_factory(name, None)
 
             orchestrator = Orchestrator(
                 path_config=isolated_agilevv_dir,
@@ -484,7 +514,10 @@ class TestWorkflowVerificationSuite:
                 validation_checklist["state_persistence"] = True
 
             # Validate final decision
-            if "final_decision" in result and result["final_decision"] in ["GO", "NO-GO"]:
+            if "final_decision" in result and result["final_decision"] in [
+                "GO",
+                "NO-GO",
+            ]:
                 validation_checklist["final_decision"] = True
 
             # Assert all validations pass
@@ -508,11 +541,14 @@ class TestWorkflowVerificationSuite:
 
     @pytest.mark.asyncio
     async def test_workflow_documentation_and_reporting(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory, sample_user_story
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
+        sample_user_story: dict[str, Any],
     ) -> None:
         """Test workflow documentation and reporting capabilities."""
         with patch.object(AgentFactory, "create_agent") as mock_create_agent:
-            mock_create_agent.side_effect = lambda name: mock_agent_factory(name)
+            mock_create_agent.side_effect = lambda name: mock_agent_factory(name, None)
 
             orchestrator = Orchestrator(
                 path_config=isolated_agilevv_dir,
@@ -589,7 +625,7 @@ class TestWorkflowVerificationSuite:
 class TestIntegrationTestSuiteCompletion:
     """Final validation that all integration test requirements are met."""
 
-    def test_all_task_requirements_covered(self):
+    def test_all_task_requirements_covered(self) -> None:
         """Verify all Task 5 requirements are covered by test suite."""
 
         # Task 5.1: Complete V-Model workflow execution with SDK
@@ -689,7 +725,7 @@ class TestIntegrationTestSuiteCompletion:
             assert test_name.startswith("test_"), f"Test {test_name} should start with 'test_'"
             assert "_" in test_name, f"Test {test_name} should use snake_case naming"
 
-    def test_test_suite_markers_and_organization(self):
+    def test_test_suite_markers_and_organization(self) -> None:
         """Verify test suite has proper markers and organization."""
 
         # Required pytest markers
@@ -707,8 +743,16 @@ class TestIntegrationTestSuiteCompletion:
 
         # Test categories by complexity
         test_categories = {
-            "basic_workflow": ["workflow_execution", "stage_completion", "agent_coordination"],
-            "advanced_workflow": ["quality_gating", "error_handling", "performance_validation"],
+            "basic_workflow": [
+                "workflow_execution",
+                "stage_completion",
+                "agent_coordination",
+            ],
+            "advanced_workflow": [
+                "quality_gating",
+                "error_handling",
+                "performance_validation",
+            ],
             "enterprise_workflow": [
                 "session_management",
                 "artifact_persistence",
@@ -729,14 +773,26 @@ class TestIntegrationTestSuiteCompletion:
 
         assert len(isolation_requirements) == 4, "Should have comprehensive isolation requirements"
 
-    def test_sdk_integration_coverage(self):
+    def test_sdk_integration_coverage(self) -> None:
         """Verify SDK integration is comprehensively tested."""
 
         sdk_integration_areas = {
             "configuration": ["api_key_handling", "timeout_management", "retry_logic"],
-            "session_management": ["session_creation", "context_preservation", "session_cleanup"],
-            "agent_communication": ["agent_initialization", "sdk_calls", "response_processing"],
-            "error_handling": ["connection_failures", "timeout_scenarios", "retry_mechanisms"],
+            "session_management": [
+                "session_creation",
+                "context_preservation",
+                "session_cleanup",
+            ],
+            "agent_communication": [
+                "agent_initialization",
+                "sdk_calls",
+                "response_processing",
+            ],
+            "error_handling": [
+                "connection_failures",
+                "timeout_scenarios",
+                "retry_mechanisms",
+            ],
             "performance": ["response_times", "concurrent_sessions", "resource_usage"],
         }
 
@@ -749,7 +805,7 @@ class TestIntegrationTestSuiteCompletion:
             total_sdk_aspects >= 15
         ), f"Should have comprehensive SDK testing coverage, found {total_sdk_aspects}"
 
-    def test_quality_assurance_standards(self):
+    def test_quality_assurance_standards(self) -> None:
         """Verify test suite meets quality assurance standards."""
 
         qa_standards = {

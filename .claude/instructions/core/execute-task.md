@@ -129,7 +129,11 @@ FIND style rules for:
 
 ### Step 5: Task and Sub-task Execution
 
-Execute the parent task and all sub-tasks in order using test-driven development (TDD) approach.
+Create a clear execution plan for the parent task and its sub-tasks, following a TDD approach.
+
+Spawn the appropriate sub-agent to handle the execution of the parent task and its sub-tasks in a structured manner.
+
+Once
 
 \<typical_task_structure>
 \<first_subtask>Write tests for [feature]\</first_subtask>
@@ -225,9 +229,44 @@ ELSE:
 
 </step>
 
-<step number="7" name="task_status_updates">
+<step number="7" name="task_completion_check">
 
-### Step 7: Task Status Updates
+### Step 7: Task Completion Check
+
+Read and analyze the given parent task and all its sub-tasks from tasks.md to gain complete understanding of what needs to be built.
+
+Then, for each sub-task, check the related changes in the project, think about the implementation details, and determine if it can be marked as complete or not. If all sub-tasks are done, mark the parent task as complete. Else, mark it as incomplete and list the remaining sub-tasks.
+
+\<task_analysis>
+\<read_from_tasks_md>
+\ - Parent task description
+\ - All sub-task descriptions
+\ - Task dependencies
+\ - Expected outcomes
+\</read_from_tasks_md>
+\</task_analysis>
+
+<instructions>
+  ACTION: Read the specific parent task and all its sub-tasks
+  ANALYZE: Full scope of implementation realized
+\- Parent task description
+\- All sub-task descriptions
+\- Task dependencies
+\- Expected outcomes vs actual outcomes
+  UNDERSTAND: Dependencies and expected deliverables
+  NOTE: Test requirements for each sub-task
+  CHECK: If all sub-tasks are complete
+  MARK: Parent task as complete if all sub-tasks are done, update tasks.md with status
+  LIST: Remaining sub-tasks if any are incomplete, update TodoList if needed and go to step 5 for the remaining sub-tasks.
+</instructions>
+\</read_from_tasks_md>
+\</task_analysis>
+
+</step>
+
+<step number="8" name="task_status_updates">
+
+### Step 8: Task Status Updates
 
 Update the tasks.md file immediately after completing each task to track progress.
 

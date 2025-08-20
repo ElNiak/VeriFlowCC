@@ -12,26 +12,26 @@ encoding: UTF-8
 
 Initiate execution of one or more tasks for a given spec.
 
-\<pre_flight_check>
+<pre_flight_check>
 EXECUTE: @.claude/instructions/meta/pre-flight.md
-\</pre_flight_check>
+</pre_flight_check>
 
-\<process_flow>
+<process_flow>
 
 <step number="1" name="task_assignment">
 
 ### Step 1: Task Assignment
 
-Identify which tasks to execute from the spec (using spec_srd_reference file path and optional specific_tasks array), defaulting to the next uncompleted parent task if not specified.
+Identify which tasks to execute from the .agilevv/specs (using spec_srd_reference file path and optional specific_tasks array), defaulting to the next uncompleted parent task if not specified.
 
-\<task_selection>
+<task_selection>
 <explicit>user specifies exact task(s)</explicit>
 <implicit>find next uncompleted task in tasks.md</implicit>
-\</task_selection>
+</task_selection>
 
 <instructions>
   ACTION: Identify task(s) to execute
-  DEFAULT: Select next uncompleted parent task if not specified (git branch name can be used as a hint)
+  DEFAULT: Select next uncompleted parent task if not specified (current git branch name or git worktree name can be used as a hint)
   CONFIRM: Task selection with user
 </instructions>
 
@@ -51,16 +51,17 @@ Use the context-fetcher subagent to gather minimal context for task understandin
   PROCESS: Returned information
 </instructions>
 
-\<context_gathering>
-\<essential_docs>
-\- tasks.md for task breakdown
-\</essential_docs>
-\<conditional_docs>
-\- mission-lite.md for product alignment
-\- spec-lite.md for feature summary
-\- technical-spec.md for implementation details
-\</conditional_docs>
-\</context_gathering>
+<context_gathering>
+<essential_docs>
+
+- tasks.md for task breakdown
+</essential_docs>
+<conditional_docs>
+- mission-lite.md for product alignment
+- spec-lite.md for feature summary
+- technical-spec.md for implementation details
+</conditional_docs>
+</context_gathering>
 
 </step>
 
@@ -70,20 +71,20 @@ Use the context-fetcher subagent to gather minimal context for task understandin
 
 Check for any running development server and ask user permission to shut it down if found to prevent port conflicts.
 
-\<server_check_flow>
-\<if_running>
+<server_check_flow>
+<if_running>
 ASK user to shut down
 WAIT for response
-\</if_running>
-\<if_not_running>
+</if_running>
+<if_not_running>
 PROCEED immediately
-\</if_not_running>
-\</server_check_flow>
+</if_not_running>
+</server_check_flow>
 
-\<user_prompt>
+<user_prompt>
 A development server is currently running.
 Should I shut it down before proceeding? (yes/no)
-\</user_prompt>
+</user_prompt>
 
 <instructions>
   ACTION: Check for running local development server
@@ -97,18 +98,18 @@ Should I shut it down before proceeding? (yes/no)
 
 ### Step 4: Git Branch Management
 
-Use the git-workflow subagent to manage git branches to ensure proper isolation by creating or switching to the appropriate branch for the spec.
+Use the git-workflow subagent to manage git branches and worktrees to ensure proper isolation by creating or switching to the appropriate branch for the spec.
 
 <instructions>
   ACTION: Use git-workflow subagent
   REQUEST: "Check and manage branch for spec: [SPEC_FOLDER]
-            - Create branch if needed
+            - Create branch if needed following procedure at @.claude/instructions/core/create-worktrees.md
             - Switch to correct branch
             - Handle any uncommitted changes"
   WAIT: For branch setup completion
 </instructions>
 
-\<branch_naming>
+<branch_naming>
 
 <source>spec folder name</source>
   <format>exclude date prefix</format>
@@ -126,38 +127,40 @@ Use the git-workflow subagent to manage git branches to ensure proper isolation 
 
 Execute all assigned parent tasks and their subtasks using @.claude/instructions/core/execute-task.md instructions, continuing until all tasks are complete.
 
-\<execution_flow>
+<execution_flow>
 LOAD @.claude/instructions/core/execute-task.md ONCE
 
 FOR each parent_task assigned in Step 1:
 EXECUTE instructions from execute-task.md with:
-\- parent_task_number
-\- all associated subtasks
+
+- parent_task_number
+- all associated subtasks
 WAIT for task completion
 UPDATE tasks.md status
 END FOR
-\</execution_flow>
+</execution_flow>
 
-\<loop_logic>
-\<continue_conditions>
-\- More unfinished parent tasks exist
-\- User has not requested stop
-\</continue_conditions>
-\<exit_conditions>
-\- All assigned tasks marked complete
-\- User requests early termination
-\- Blocking issue prevents continuation
-\</exit_conditions>
-\</loop_logic>
+<loop_logic>
+<continue_conditions>
 
-\<task_status_check>
+- More unfinished parent tasks exist
+- User has not requested stop
+</continue_conditions>
+<exit_conditions>
+- All assigned tasks marked complete
+- User requests early termination
+- Blocking issue prevents continuation
+</exit_conditions>
+</loop_logic>
+
+<task_status_check>
 AFTER each task execution:
 CHECK tasks.md for remaining tasks
 IF all assigned tasks complete:
 PROCEED to next step
 ELSE:
 CONTINUE with next task
-\</task_status_check>
+</task_status_check>
 
 <instructions>
   ACTION: Load execute-task.md instructions once at start
@@ -170,226 +173,19 @@ CONTINUE with next task
 
 </step>
 
-<step number="6" subagent="test-runner" name="test_suite_verification">
+<step number="6" name="complete_tasks">
 
-### Step 6: Run All Tests
+### Step 6: Run the task completion steps
 
-Use the test-runner subagent to run the entire test suite to ensure no regressions and fix any failures until all tests pass.
-
-<instructions>
-  ACTION: Use test-runner subagent
-  REQUEST: "Run the full test suite"
-  WAIT: For test-runner analysis
-  PROCESS: Fix any reported failures
-  REPEAT: Until all tests pass
-</instructions>
-
-\<test_execution>
-<order>
-1\. Run entire test suite
-2\. Fix any failures
-</order>
-<requirement>100% pass rate</requirement>
-\</test_execution>
-
-\<failure_handling>
-<action>troubleshoot and fix</action>
-<priority>before proceeding</priority>
-\</failure_handling>
-
-</step>
-
-<step number="7" subagent="precommit-error-analyzer" name="precommit_error_analysis">
-
-### Step 7: Pre-commit Error Analysis
-
-Use the precommit-error-analyzer subagent to analyze any errors reported by the pre-commit hooks.
+After all tasks in tasks.md have been implemented, use @.claude/instructions/core/complete-tasks.md to run our series of steps we always run when finishing and delivering a new feature.
 
 <instructions>
-  ACTION: Use precommit-error-analyzer subagent
-  REQUEST: "Analyze pre-commit errors"
-  WAIT: For analysis completion
+  LOAD: @.claude/instructions/core/complete-tasks.md once
+  ACTION: execute all steps in the complete-tasks.md process_flow.
 </instructions>
 
 </step>
 
-<step number="8" subagent="git-workflow" name="git_workflow">
-
-### Step 8: Git Workflow
-
-Use the git-workflow subagent to create git commit, push to GitHub, and create pull request for the implemented features.
-
-<instructions>
-  ACTION: Use git-workflow subagent
-  REQUEST: "Complete git workflow for [SPEC_NAME] feature:
-            - Spec: [SPEC_FOLDER_PATH]
-            - Changes: All modified files
-            - Target: main branch
-            - Description: [SUMMARY_OF_IMPLEMENTED_FEATURES]"
-  WAIT: For workflow completion
-  PROCESS: Save PR URL for summary
-</instructions>
-
-\<commit_process>
-<commit>
-<message>descriptive summary of changes</message>
-<format>conventional commits if applicable</format>
-</commit>
-<push>
-<target>spec branch</target>
-<remote>origin</remote>
-</push>
-\<pull_request>
-    <title>descriptive PR title</title>
-<description>functionality recap</description>
-\</pull_request>
-\</commit_process>
-
-</step>
-
-<step number="9" name="roadmap_progress_check">
-
-### Step 9: Roadmap Progress Check (Conditional)
-
-Check @.agilevv/product/roadmap.md (if not in context) and update roadmap progress only if the executed tasks may have completed a roadmap item and the spec completes that item.
-
-\<conditional_execution>
-\<preliminary_check>
-EVALUATE: Did executed tasks potentially complete a roadmap item?
-IF NO:
-SKIP this entire step
-PROCEED to step 9
-IF YES:
-CONTINUE with roadmap check
-\</preliminary_check>
-\</conditional_execution>
-
-\<conditional_loading>
-IF roadmap.md NOT already in context:
-LOAD @.agilevv/product/roadmap.md
-ELSE:
-SKIP loading (use existing context)
-\</conditional_loading>
-
-\<roadmap_criteria>
-\<update_when>
-\- spec fully implements roadmap feature
-\- all related tasks completed
-\- tests passing
-\</update_when>
-<caution>only mark complete if absolutely certain</caution>
-\</roadmap_criteria>
-
-<instructions>
-  ACTION: First evaluate if roadmap check is needed
-  SKIP: If tasks clearly don't complete roadmap items
-  CHECK: If roadmap.md already in context
-  LOAD: Only if needed and not in context
-  EVALUATE: If current spec completes roadmap goals
-  UPDATE: Mark roadmap items complete if applicable
-  VERIFY: Certainty before marking complete
-</instructions>
-
-</step>
-
-<step number="10" name="completion_notification">
-
-### Step 10: Task Completion Notification
-
-Play a system sound to alert the user that tasks are complete.
-
-\<notification_command>
-afplay /System/Library/Sounds/Glass.aiff
-\</notification_command>
-
-<instructions>
-  ACTION: Play completion sound
-  PURPOSE: Alert user that task is complete
-</instructions>
-
-</step>
-
-<step number="11" name="completion_summary">
-
-### Step 11: Completion Summary
-
-Create a structured summary message with emojis showing what was done, any issues, testing instructions, and PR link.
-
-\<summary_template>
-
-## ✅ What's been done
-
-1. **[FEATURE_1]** - [ONE_SENTENCE_DESCRIPTION]
-1. **[FEATURE_2]** - [ONE_SENTENCE_DESCRIPTION]
-
-## ⚠️ Issues encountered
-
-[ONLY_IF_APPLICABLE]
-
-- **[ISSUE_1]** - [DESCRIPTION_AND_REASON]
-
-## 👀 Ready to test in browser
-
-[ONLY_IF_APPLICABLE]
-
-1. [STEP_1_TO_TEST]
-1. [STEP_2_TO_TEST]
-
-## 📦 Pull Request
-
-View PR: [GITHUB_PR_URL]
-\</summary_template>
-
-\<summary_sections>
-<required>
-\- functionality recap
-\- pull request info
-</required>
-<conditional>
-\- issues encountered (if any)
-\- testing instructions (if testable in browser)
-</conditional>
-\</summary_sections>
-
-<instructions>
-  ACTION: Create comprehensive summary
-  INCLUDE: All required sections
-  ADD: Conditional sections if applicable
-  FORMAT: Use emoji headers for scannability
-</instructions>
-
-</step>
-
-\</process_flow>
-
-## Error Handling
-
-\<error_protocols>
-\<blocking_issues>
-\- document in tasks.md
-\- mark with ⚠️ emoji
-\- include in summary
-\</blocking_issues>
-\<test_failures>
-\- fix before proceeding
-\- never commit broken tests
-\</test_failures>
-\<technical_roadblocks>
-\- attempt 3 approaches
-\- document if unresolved
-\- seek user input
-\</technical_roadblocks>
-\</error_protocols>
-
-\<final_checklist>
-<verify>
-\- [ ] Task implementation complete
-\- [ ] All tests passing
-\- [ ] tasks.md updated with task status (completed/incomplete/blocked)
-\- [ ] Code linted, typed checked and formatted
-\- [ ] Code committed and pushed
-\- [ ] Pull request created
-\- [ ] Roadmap checked/updated
-\- [ ] Summary provided to user
-</verify>
-\</final_checklist>
+<post_flight_check>
+  EXECUTE: @.claude/instructions/meta/post-flight.md
+</post_flight_check>

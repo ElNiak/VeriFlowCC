@@ -12,11 +12,11 @@ encoding: UTF-8
 
 Generate product docs for new projects: mission, tech-stack, roadmap, decisions files for AI agent consumption.
 
-\<pre_flight_check>
+<pre_flight_check>
 EXECUTE: @.claude/instructions/meta/pre-flight.md
-\</pre_flight_check>
+</pre_flight_check>
 
-\<process_flow>
+<process_flow>
 
 <step number="1" subagent="context-fetcher" name="gather_user_input">
 
@@ -24,16 +24,16 @@ EXECUTE: @.claude/instructions/meta/pre-flight.md
 
 Use the context-fetcher subagent to collect all required inputs from the user including main idea, key features (minimum 3), target users (minimum 1), and tech stack preferences with blocking validation before proceeding.
 
-\<data_sources>
+<data_sources>
 <primary>user_direct_input</primary>
-\<fallback_sequence>
+<fallback_sequence>
 1\. @.agilevv/standards/tech-stack.md
-2\. @.claude/CLAUDE.md
+2\. @CLAUDE.md
 3\. Cursor User Rules
-\</fallback_sequence>
-\</data_sources>
+</fallback_sequence>
+</data_sources>
 
-\<error_template>
+<error_template>
 Please provide the following missing information:
 
 1. Main idea for the product
@@ -41,7 +41,7 @@ Please provide the following missing information:
 1. Target users and use cases (minimum 1)
 1. Tech stack preferences
 1. Has the new application been initialized yet and we're inside the project folder? (yes/no)
-\</error_template>
+   </error_template>
 
 </step>
 
@@ -51,15 +51,15 @@ Please provide the following missing information:
 
 Use the file-creator subagent to create the following file_structure with validation for write permissions and protection against overwriting existing files:
 
-\<file_structure>
-.claude/
+<file_structure>
+.agilevv/
 └── product/
 ├── mission.md # Product vision and purpose
 ├── mission-lite.md # Condensed mission for AI context
 ├── tech-stack.md # Technical architecture
 ├── roadmap.md # Development phases
 └── decisions.md # Decision log
-\</file_structure>
+</file_structure>
 
 </step>
 
@@ -69,7 +69,7 @@ Use the file-creator subagent to create the following file_structure with valida
 
 Use the file-creator subagent to create the file: .agilevv/product/mission.md and use the following template:
 
-\<file_template>
+<file_template>
 
 <header>
     # Product Mission
@@ -197,14 +197,14 @@ Unlike [COMPETITOR_OR_ALTERNATIVE], we provide [SPECIFIC_ADVANTAGE]. This result
 
 Use the file-creator subagent to create the file: .agilevv/product/tech-stack.md and use the following template:
 
-\<file_template>
+<file_template>
 
 <header>
     # Technical Stack
   </header>
 </file_template>
 
-\<required_items>
+<required_items>
 
 - application_framework: string + version
 - database_system: string
@@ -219,9 +219,9 @@ Use the file-creator subagent to create the file: .agilevv/product/tech-stack.md
 - asset_hosting: string
 - deployment_solution: string
 - code_repository_url: string
-  \</required_items>
+  </required_items>
 
-\<data_resolution>
+<data_resolution>
 IF has_context_fetcher:
 FOR missing tech stack items:
 USE: @agent:context-fetcher
@@ -230,25 +230,25 @@ PROCESS: Use found defaults
 ELSE:
 PROCEED: To manual resolution below
 
-\<manual_resolution>
-\<for_each item="required_items">
-\<if_not_in>user_input\</if_not_in>
-\<then_check>
+<manual_resolution>
+<for_each item="required_items">
+<if_not_in>user_input</if_not_in>
+<then_check>
 1\. @.agilevv/standards/tech-stack.md
-2\. @.claude/CLAUDE.md
+2\. @CLAUDE.md
 3\. Cursor User Rules
-\</then_check>
+</then_check>
 <else>add_to_missing_list</else>
-\</for_each>
-\</manual_resolution>
-\</data_resolution>
+</for_each>
+</manual_resolution>
+</data_resolution>
 
-\<missing_items_template>
+<missing_items_template>
 Please provide the following technical stack details:
 [NUMBERED_LIST_OF_MISSING_ITEMS]
 
 You can respond with the technology choice or "n/a" for each item.
-\</missing_items_template>
+</missing_items_template>
 
 </step>
 
@@ -260,30 +260,31 @@ Use the file-creator subagent to create the file: .agilevv/product/mission-lite.
 
 Use the following template:
 
-\<file_template>
+<file_template>
 
 <header>
     # Product Mission (Lite)
   </header>
 </file_template>
 
-\<content_structure>
-\<elevator_pitch>
-\- source: Step 3 mission.md pitch section
-\- format: single sentence
-\</elevator_pitch>
-\<value_summary>
-\- length: 1-3 sentences
-\- includes: value proposition, target users, key differentiator
-\- excludes: secondary users, secondary differentiators
-\</value_summary>
-\</content_structure>
+<content_structure>
+<elevator_pitch>
 
-\<content_template>
+- source: Step 3 mission.md pitch section
+- format: single sentence
+</elevator_pitch>
+<value_summary>
+- length: 1-3 sentences
+- includes: value proposition, target users, key differentiator
+- excludes: secondary users, secondary differentiators
+</value_summary>
+</content_structure>
+
+<content_template>
 [ELEVATOR_PITCH_FROM_MISSION_MD]
 
 [1-3_SENTENCES_SUMMARIZING_VALUE_TARGET_USERS_AND_PRIMARY_DIFFERENTIATOR]
-\</content_template>
+</content_template>
 
 <example>
   TaskFlow is a project management tool that helps remote teams coordinate work efficiently by providing real-time collaboration and automated workflow tracking.
@@ -299,17 +300,17 @@ TaskFlow serves distributed software teams who need seamless task coordination a
 
 Use the file-creator subagent to create the following file: .agilevv/product/roadmap.md using the following template:
 
-\<file_template>
+<file_template>
 
 <header>
     # Product Roadmap
   </header>
 </file_template>
 
-\<phase_structure>
-\<phase_count>1-3\</phase_count>
-\<features_per_phase>3-7\</features_per_phase>
-\<phase_template>
+<phase_structure>
+<phase_count>1-3</phase_count>
+<features_per_phase>3-7</features_per_phase>
+<phase_template>
 \## Phase \[NUMBER\]: [NAME]
 
 ```
@@ -325,26 +326,26 @@ Use the file-creator subagent to create the following file: .agilevv/product/roa
 - [DEPENDENCY]
 ```
 
-\</phase_template>
-\</phase_structure>
+</phase_template>
+</phase_structure>
 
-\<phase_guidelines>
+<phase_guidelines>
 
 - Phase 1: Core MVP functionality
 - Phase 2: Key differentiators
 - Phase 3: Scale and polish
 - Phase 4: Advanced features
 - Phase 5: Enterprise features
-  \</phase_guidelines>
+  </phase_guidelines>
 
-\<effort_scale>
+<effort_scale>
 
 - XS: 1 day
 - S: 2-3 days
 - M: 1 week
 - L: 2 weeks
 - XL: 3+ weeks
-  \</effort_scale>
+  </effort_scale>
 
 </step>
 
@@ -354,7 +355,7 @@ Use the file-creator subagent to create the following file: .agilevv/product/roa
 
 Use the file-creator subagent to create the file: .agilevv/product/decisions.md using the following template:
 
-\<file_template>
+<file_template>
 
 <header>
     # Product Decisions Log
@@ -368,16 +369,16 @@ Use the file-creator subagent to create the file: .agilevv/product/decisions.md 
 </header>
 </file_template>
 
-\<decision_schema>
+<decision_schema>
 
 - date: YYYY-MM-DD
 - id: DEC-XXX
 - status: ["proposed", "accepted", "rejected", "superseded"]
 - category: ["technical", "product", "business", "process"]
 - stakeholders: array[string]
-  \</decision_schema>
+  </decision_schema>
 
-\<initial_decision_template>
+<initial_decision_template>
 
 ## \[CURRENT_DATE\]: Initial Product Planning
 
@@ -413,28 +414,34 @@ Use the file-creator subagent to create the file: .agilevv/product/decisions.md 
   **Negative:**
 
 - [KNOWN_TRADEOFFS]
-  \</initial_decision_template>
+  </initial_decision_template>
 
 </step>
 
-\</process_flow>
+</process_flow>
 
 ## Execution Summary
 
-\<final_checklist>
+<final_checklist>
 <verify>
-\- [ ] All 5 files created in .agilevv/product/
-\- [ ] User inputs incorporated throughout
-\- [ ] Missing tech stack items requested
-\- [ ] Initial decisions documented
-</verify>
-\</final_checklist>
 
-\<execution_order>
+- [ ] All 5 files created in .agilevv/product/
+- [ ] User inputs incorporated throughout
+- [ ] Missing tech stack items requested
+- [ ] Initial decisions documented
+</verify>
+
+</final_checklist>
+
+<execution_order>
 
 1. Gather and validate all inputs
-1. Create directory structure
-1. Generate each file sequentially
-1. Request any missing information
-1. Validate complete documentation set
-   \</execution_order>
+2. Create directory structure
+3. Generate each file sequentially
+4. Request any missing information
+5. Validate complete documentation set
+</execution_order>
+
+<post_flight_check>
+  EXECUTE: @.claude/instructions/meta/post-flight.md
+</post_flight_check>

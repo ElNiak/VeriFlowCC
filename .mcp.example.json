@@ -40,6 +40,8 @@
 				"20",
 				"--mode",
 				"planning",
+				"--mode",
+				"one-shot",
 				"--enable-web-dashboard",
 				"false"
 			],

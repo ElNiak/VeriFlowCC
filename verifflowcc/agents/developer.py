@@ -62,6 +62,12 @@ class DeveloperAgent(BaseAgent):
         try:
             logger.info("Processing development implementation request")
 
+            # Validate required input data
+            if not input_data.get("design_artifacts") and not input_data.get("design_spec"):
+                return self._create_error_output(
+                    "Input validation error: Missing required field design_artifacts or design_spec"
+                )
+
             # Extract input data
             design_spec = input_data.get("design_spec", {})
             story_id = input_data.get("story_id", f"DEV-{datetime.now().strftime('%Y%m%d-%H%M%S')}")
@@ -74,10 +80,12 @@ class DeveloperAgent(BaseAgent):
                 "project_name": project_context.get("project_name", "VeriFlowCC"),
                 "sprint_number": project_context.get("sprint_number", "Current Sprint"),
                 "tech_stack": project_context.get("tech_stack", "Python, FastAPI, SQLAlchemy"),
-                "design_spec": json.dumps(design_spec, indent=2)
-                if design_spec
-                else "No design specification provided",
-                "context": json.dumps(project_context, indent=2) if project_context else "",
+                "design_spec": (
+                    json.dumps(design_spec, indent=2)
+                    if design_spec
+                    else "No design specification provided"
+                ),
+                "context": (json.dumps(project_context, indent=2) if project_context else ""),
             }
 
             # Load template and create prompt
@@ -156,7 +164,11 @@ class DeveloperAgent(BaseAgent):
                     "version": "Python 3.10+",
                     "files": [],
                 },
-                "tests": {"framework": "pytest", "coverage_target": "90%", "test_files": []},
+                "tests": {
+                    "framework": "pytest",
+                    "coverage_target": "90%",
+                    "test_files": [],
+                },
                 "documentation": {
                     "api_docs": {"format": "markdown", "content": "", "examples": ""},
                     "code_documentation": [],
@@ -337,7 +349,10 @@ class DeveloperAgent(BaseAgent):
             }
 
     async def _save_implementation_artifacts(
-        self, story_id: str, implementation_data: dict[str, Any], created_files: list[str]
+        self,
+        story_id: str,
+        implementation_data: dict[str, Any],
+        created_files: list[str],
     ) -> None:
         """Save implementation artifacts.
 

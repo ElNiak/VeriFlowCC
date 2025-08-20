@@ -26,7 +26,7 @@ You will receive:
 **Test Generation Methodology:**
 
 1. **Coverage Analysis**: First identify uncovered lines, branches, and edge cases
-1. **Test Structure**: Create test files mirroring source structure (e.g., src/module.py → tests/unit/test_module.py)
+1. **Test Structure**: Create test files mirroring source structure (e.g., <project_dir>/module.py → tests/unit/test_module.py)
 1. **Test Design**: For each function/method:
    - Test happy path scenarios
    - Test edge cases and boundary conditions

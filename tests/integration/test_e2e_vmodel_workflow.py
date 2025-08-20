@@ -18,7 +18,12 @@ from verifflowcc.core.path_config import PathConfig
 from verifflowcc.core.sdk_config import SDKConfig
 
 # Test markers for organization
-pytestmark = [pytest.mark.e2e, pytest.mark.integration, pytest.mark.workflow, pytest.mark.asyncio]
+pytestmark = [
+    pytest.mark.e2e,
+    pytest.mark.integration,
+    pytest.mark.workflow,
+    pytest.mark.asyncio,
+]
 
 
 class MockSDKAgent:
@@ -108,7 +113,10 @@ class MockSDKAgent:
                     {
                         "name": "AuthenticationService",
                         "type": "microservice",
-                        "responsibilities": ["User authentication", "Session management"],
+                        "responsibilities": [
+                            "User authentication",
+                            "Session management",
+                        ],
                         "interfaces": ["REST API", "Database"],
                     },
                     {
@@ -119,14 +127,22 @@ class MockSDKAgent:
                     },
                 ],
                 "data_flows": [
-                    {"from": "Client", "to": "AuthenticationService", "data": "Login credentials"}
+                    {
+                        "from": "Client",
+                        "to": "AuthenticationService",
+                        "data": "Login credentials",
+                    }
                 ],
                 "interface_specifications": [
                     {
                         "name": "AuthAPI",
                         "type": "REST",
                         "endpoints": [
-                            {"method": "POST", "path": "/login", "description": "User login"}
+                            {
+                                "method": "POST",
+                                "path": "/login",
+                                "description": "User login",
+                            }
                         ],
                     }
                 ],
@@ -163,8 +179,16 @@ class MockSDKAgent:
             "implementation_data": {
                 "code_generation": {
                     "files_created": [
-                        {"path": "src/auth/service.py", "type": "python", "lines": 150},
-                        {"path": "src/auth/models.py", "type": "python", "lines": 45},
+                        {
+                            "path": "<project_dir>/auth/service.py",
+                            "type": "python",
+                            "lines": 150,
+                        },
+                        {
+                            "path": "<project_dir>/auth/models.py",
+                            "type": "python",
+                            "lines": 45,
+                        },
                         {"path": "tests/test_auth.py", "type": "python", "lines": 85},
                     ],
                     "total_lines": 280,
@@ -306,7 +330,9 @@ class MockSDKAgent:
 def mock_agent_factory() -> Callable[[str, dict[str, Any] | None], MockSDKAgent]:
     """Factory for creating mock agents."""
 
-    def _create_mock_agent(agent_type: str, responses: dict[str, Any] | None = None):
+    def _create_mock_agent(
+        agent_type: str, responses: dict[str, Any] | None = None
+    ) -> MockSDKAgent:
         return MockSDKAgent(agent_type, responses)
 
     return _create_mock_agent
@@ -335,12 +361,15 @@ class TestCompleteVModelWorkflowExecution:
 
     @pytest.mark.asyncio
     async def test_complete_workflow_execution_success(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory, sample_user_story
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
+        sample_user_story: dict[str, Any],
     ) -> None:
         """Test successful execution of complete V-Model workflow."""
         # Setup orchestrator with mocked agents
         with patch.object(AgentFactory, "create_agent") as mock_create_agent:
-            mock_create_agent.side_effect = lambda name: mock_agent_factory(name)
+            mock_create_agent.side_effect = lambda name: mock_agent_factory(name, None)
 
             orchestrator = Orchestrator(
                 path_config=isolated_agilevv_dir,
@@ -382,14 +411,17 @@ class TestCompleteVModelWorkflowExecution:
 
     @pytest.mark.asyncio
     async def test_workflow_with_sdk_session_management(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory, sample_user_story
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
+        sample_user_story: dict[str, Any],
     ) -> None:
         """Test workflow execution with proper SDK session management."""
         with patch.object(AgentFactory, "create_agent") as mock_create_agent:
             mock_agents = {}
 
             def create_agent_with_session(name: str) -> MockSDKAgent:
-                agent = mock_agent_factory(name)
+                agent = mock_agent_factory(name, None)
                 mock_agents[name] = agent
                 return agent
 
@@ -421,11 +453,14 @@ class TestCompleteVModelWorkflowExecution:
 
     @pytest.mark.asyncio
     async def test_workflow_performance_metrics(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory, sample_user_story
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
+        sample_user_story: dict[str, Any],
     ) -> None:
         """Test workflow execution performance tracking."""
         with patch.object(AgentFactory, "create_agent") as mock_create_agent:
-            mock_create_agent.side_effect = lambda name: mock_agent_factory(name)
+            mock_create_agent.side_effect = lambda name: mock_agent_factory(name, None)
 
             orchestrator = Orchestrator(
                 path_config=isolated_agilevv_dir,
@@ -451,11 +486,14 @@ class TestCompleteVModelWorkflowExecution:
 
     @pytest.mark.asyncio
     async def test_workflow_artifact_generation(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory, sample_user_story
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
+        sample_user_story: dict[str, Any],
     ) -> None:
         """Test artifact generation and persistence during workflow."""
         with patch.object(AgentFactory, "create_agent") as mock_create_agent:
-            mock_create_agent.side_effect = lambda name: mock_agent_factory(name)
+            mock_create_agent.side_effect = lambda name: mock_agent_factory(name, None)
 
             orchestrator = Orchestrator(
                 path_config=isolated_agilevv_dir,
@@ -473,7 +511,11 @@ class TestCompleteVModelWorkflowExecution:
                 "design": ["architecture_diagram", "interface_spec", "design_doc"],
                 "coding": ["source_code", "unit_tests", "documentation"],
                 "unit_testing": ["test_report", "coverage_report", "test_cases"],
-                "validation": ["deployment_checklist", "release_notes", "validation_report"],
+                "validation": [
+                    "deployment_checklist",
+                    "release_notes",
+                    "validation_report",
+                ],
             }
 
             for stage, expected_artifacts in expected_artifact_types.items():
@@ -486,12 +528,22 @@ class TestCompleteVModelWorkflowExecution:
 
     @pytest.mark.asyncio
     async def test_concurrent_workflow_execution(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
     ) -> None:
         """Test concurrent workflow execution isolation."""
         stories = [
-            {"id": "US-001", "title": "Auth System", "description": "User authentication"},
-            {"id": "US-002", "title": "User Profile", "description": "User profile management"},
+            {
+                "id": "US-001",
+                "title": "Auth System",
+                "description": "User authentication",
+            },
+            {
+                "id": "US-002",
+                "title": "User Profile",
+                "description": "User profile management",
+            },
             {"id": "US-003", "title": "Data Export", "description": "Export user data"},
         ]
 
@@ -499,7 +551,7 @@ class TestCompleteVModelWorkflowExecution:
             story: dict[str, Any], path_config: PathConfig
         ) -> dict[str, Any]:
             with patch.object(AgentFactory, "create_agent") as mock_create_agent:
-                mock_create_agent.side_effect = lambda name: mock_agent_factory(name)
+                mock_create_agent.side_effect = lambda name: mock_agent_factory(name, None)
 
                 orchestrator = Orchestrator(
                     path_config=path_config,
@@ -537,13 +589,16 @@ class TestOrchestratorCoordination:
 
     @pytest.mark.asyncio
     async def test_agent_coordination_sequence(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory, sample_user_story
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
+        sample_user_story: dict[str, Any],
     ) -> None:
         """Test proper sequencing and coordination of V-Model agents."""
         call_sequence = []
 
         def tracking_agent_factory(agent_type: str) -> MockSDKAgent:
-            agent = mock_agent_factory(agent_type)
+            agent = mock_agent_factory(agent_type, None)
             original_process = agent.process
 
             async def tracked_process(input_data: dict[str, Any]) -> dict[str, Any]:
@@ -556,7 +611,8 @@ class TestOrchestratorCoordination:
                 )
                 return await original_process(input_data)
 
-            agent.process = tracked_process
+            # Replace the process method directly with typing compatibility
+            agent.process = tracked_process  # type: ignore[method-assign]
             return agent
 
         with patch.object(AgentFactory, "create_agent") as mock_create_agent:
@@ -588,12 +644,15 @@ class TestOrchestratorCoordination:
 
     @pytest.mark.asyncio
     async def test_agent_failure_handling(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory, sample_user_story
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
+        sample_user_story: dict[str, Any],
     ) -> None:
         """Test orchestrator handling of agent failures."""
 
         def failing_agent_factory(agent_type: str) -> MockSDKAgent:
-            agent = mock_agent_factory(agent_type)
+            agent = mock_agent_factory(agent_type, None)
 
             # Make architect agent fail
             if agent_type == "architect":
@@ -601,7 +660,8 @@ class TestOrchestratorCoordination:
                 async def failing_process(input_data: dict[str, Any]) -> dict[str, Any]:
                     raise Exception("Mock architect failure")
 
-                agent.process = failing_process
+                # Replace the process method directly
+                agent.process = failing_process  # type: ignore[method-assign]
 
             return agent
 
@@ -627,16 +687,21 @@ class TestOrchestratorCoordination:
 
     @pytest.mark.asyncio
     async def test_agent_context_passing(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory, sample_user_story
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
+        sample_user_story: dict[str, Any],
     ) -> None:
         """Test proper context passing between agents."""
         context_chain = []
 
         def context_tracking_factory(agent_type: str) -> MockSDKAgent:
-            agent = mock_agent_factory(agent_type)
+            agent = mock_agent_factory(agent_type, None)
             original_process = agent.process
 
-            async def context_tracked_process(input_data: dict[str, Any]) -> dict[str, Any]:
+            async def context_tracked_process(
+                input_data: dict[str, Any],
+            ) -> dict[str, Any]:
                 context_chain.append(
                     {
                         "agent": agent_type,
@@ -649,7 +714,8 @@ class TestOrchestratorCoordination:
                 )
                 return await original_process(input_data)
 
-            agent.process = context_tracked_process
+            # Replace the process method directly
+            agent.process = context_tracked_process  # type: ignore[method-assign]
             return agent
 
         with patch.object(AgentFactory, "create_agent") as mock_create_agent:
@@ -686,11 +752,14 @@ class TestOrchestratorCoordination:
 
     @pytest.mark.asyncio
     async def test_agent_performance_tracking(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory, sample_user_story
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
+        sample_user_story: dict[str, Any],
     ) -> None:
         """Test orchestrator tracking of agent performance metrics."""
         with patch.object(AgentFactory, "create_agent") as mock_create_agent:
-            mock_create_agent.side_effect = lambda name: mock_agent_factory(name)
+            mock_create_agent.side_effect = lambda name: mock_agent_factory(name, None)
 
             orchestrator = Orchestrator(
                 path_config=isolated_agilevv_dir,
@@ -712,7 +781,13 @@ class TestOrchestratorCoordination:
 
             # Verify performance data for each stage
             stage_performance = performance_summary["stage_performance"]
-            for stage in ["requirements", "design", "coding", "unit_testing", "validation"]:
+            for stage in [
+                "requirements",
+                "design",
+                "coding",
+                "unit_testing",
+                "validation",
+            ]:
                 if stage in stage_performance:
                     stage_metrics = stage_performance[stage]
                     assert (
@@ -728,25 +803,31 @@ class TestQualityGateEnforcement:
 
     @pytest.mark.asyncio
     async def test_hard_gate_enforcement(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory, sample_user_story
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
+        sample_user_story: dict[str, Any],
     ) -> None:
         """Test hard quality gate enforcement stops workflow on failure."""
 
         def low_quality_agent_factory(agent_type: str) -> MockSDKAgent:
-            agent = mock_agent_factory(agent_type)
+            agent = mock_agent_factory(agent_type, None)
 
             # Make requirements agent return low quality score
             if agent_type == "requirements_analyst":
                 original_process = agent.process
 
-                async def low_quality_process(input_data: dict[str, Any]) -> dict[str, Any]:
+                async def low_quality_process(
+                    input_data: dict[str, Any],
+                ) -> dict[str, Any]:
                     result = await original_process(input_data)
                     # Set validation score below threshold
                     result["requirements_data"]["validation_score"] = 60  # Below 80% threshold
                     result["requirements_data"]["acceptance_criteria"] = []  # Missing criteria
                     return result
 
-                agent.process = low_quality_process
+                # Replace the process method directly
+                agent.process = low_quality_process  # type: ignore[method-assign]
 
             return agent
 
@@ -779,18 +860,23 @@ class TestQualityGateEnforcement:
 
     @pytest.mark.asyncio
     async def test_soft_gate_warnings(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory, sample_user_story
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
+        sample_user_story: dict[str, Any],
     ) -> None:
         """Test soft quality gate allows continuation with warnings."""
 
         def warning_agent_factory(agent_type: str) -> MockSDKAgent:
-            agent = mock_agent_factory(agent_type)
+            agent = mock_agent_factory(agent_type, None)
 
             # Make coding agent return medium quality score
             if agent_type == "developer":
                 original_process = agent.process
 
-                async def warning_quality_process(input_data: dict[str, Any]) -> dict[str, Any]:
+                async def warning_quality_process(
+                    input_data: dict[str, Any],
+                ) -> dict[str, Any]:
                     result = await original_process(input_data)
                     # Set quality score slightly below threshold
                     result["implementation_data"]["quality_metrics"]["overall_score"] = (
@@ -799,7 +885,8 @@ class TestQualityGateEnforcement:
                     result["metrics"]["overall_quality_score"] = 65
                     return result
 
-                agent.process = warning_quality_process
+                # Replace the process method directly
+                agent.process = warning_quality_process  # type: ignore[method-assign]
 
             return agent
 
@@ -833,11 +920,14 @@ class TestQualityGateEnforcement:
 
     @pytest.mark.asyncio
     async def test_quality_threshold_configuration(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory, sample_user_story
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
+        sample_user_story: dict[str, Any],
     ) -> None:
         """Test configurable quality thresholds for different stages."""
         with patch.object(AgentFactory, "create_agent") as mock_create_agent:
-            mock_create_agent.side_effect = lambda name: mock_agent_factory(name)
+            mock_create_agent.side_effect = lambda name: mock_agent_factory(name, None)
 
             orchestrator = Orchestrator(
                 path_config=isolated_agilevv_dir,
@@ -870,25 +960,31 @@ class TestQualityGateEnforcement:
 
     @pytest.mark.asyncio
     async def test_stage_dependency_validation(
-        self, isolated_agilevv_dir: PathConfig, mock_agent_factory, sample_user_story
+        self,
+        isolated_agilevv_dir: PathConfig,
+        mock_agent_factory: Callable[[str, dict[str, Any] | None], MockSDKAgent],
+        sample_user_story: dict[str, Any],
     ) -> None:
         """Test validation of stage dependencies and prerequisites."""
 
         def incomplete_agent_factory(agent_type: str) -> MockSDKAgent:
-            agent = mock_agent_factory(agent_type)
+            agent = mock_agent_factory(agent_type, None)
 
             # Make requirements agent return incomplete data
             if agent_type == "requirements_analyst":
                 original_process = agent.process
 
-                async def incomplete_process(input_data: dict[str, Any]) -> dict[str, Any]:
+                async def incomplete_process(
+                    input_data: dict[str, Any],
+                ) -> dict[str, Any]:
                     result = await original_process(input_data)
                     # Remove acceptance criteria to make it incomplete
                     result["requirements_data"]["acceptance_criteria"] = []
                     result["requirements_data"]["validated_requirements"] = []
                     return result
 
-                agent.process = incomplete_process
+                # Replace the process method directly
+                agent.process = incomplete_process  # type: ignore[method-assign]
 
             return agent
 

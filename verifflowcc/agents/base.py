@@ -18,14 +18,17 @@ except ImportError:
     from typing import Any
 
     class MockSDKClient:
-        def __init__(self, options: Any | None = None) -> None:
+        def __init__(self, options: Any = None) -> None:
             self.options = options
 
         async def __aenter__(self) -> "MockSDKClient":
             return self
 
         async def __aexit__(
-            self, exc_type: type | None, exc_val: BaseException | None, exc_tb: Any | None
+            self,
+            exc_type: type | None = None,
+            exc_val: BaseException | None = None,
+            exc_tb: Any | None = None,
         ) -> None:
             pass
 
@@ -118,10 +121,27 @@ class BaseAgent(ABC):
             )
 
         try:
-            # Create SDK-compatible options
+            # Create SDK-compatible options by filtering unsupported parameters
             sdk_options: Any = None
             if SDK_AVAILABLE:
-                sdk_options = SDKClaudeCodeOptions(**self.client_options.__dict__)
+                # TODO: Full SDK parameter integration with real Claude Code SDK
+                # Several parameters are critical for production but currently incompatible:
+                # - max_tokens: Essential for cost control and response predictability
+                # - temperature: Controls response randomness/creativity
+                # - max_turns: Conversation turn limits
+                # - model: Specific Claude model selection
+                # - stream: Streaming response control
+                # - tools_enabled: Tool usage permissions
+                # Future integration should map these to SDK equivalents
+
+                # Currently use minimal SDK options until full integration
+                # Only pass parameters that we know the real SDK accepts
+                try:
+                    # Try with minimal configuration first
+                    sdk_options = SDKClaudeCodeOptions()
+                except TypeError:
+                    # Fallback to no options if constructor doesn't accept any
+                    sdk_options = None
 
             async with ClaudeSDKClient(options=sdk_options) as client:
                 await client.query(prompt)
@@ -197,14 +217,26 @@ class BaseAgent(ABC):
             "qa": {
                 "test_strategy": "Risk-based testing focusing on authentication flow",
                 "test_cases": [
-                    {"id": "TC-001", "description": "Valid login test", "priority": "high"},
-                    {"id": "TC-002", "description": "Invalid login test", "priority": "high"},
+                    {
+                        "id": "TC-001",
+                        "description": "Valid login test",
+                        "priority": "high",
+                    },
+                    {
+                        "id": "TC-002",
+                        "description": "Invalid login test",
+                        "priority": "high",
+                    },
                 ],
                 "test_execution_results": [
                     {"test_case": "TC-001", "status": "pass", "execution_time": "0.5s"},
                     {"test_case": "TC-002", "status": "pass", "execution_time": "0.3s"},
                 ],
-                "quality_assessment": {"coverage": "85%", "pass_rate": "100%", "risk_level": "low"},
+                "quality_assessment": {
+                    "coverage": "85%",
+                    "pass_rate": "100%",
+                    "risk_level": "low",
+                },
             },
             "integration": {
                 "integration_results": {
@@ -387,7 +419,11 @@ Please provide your response in structured JSON format appropriate for a {self.a
             Streaming updates from the agent processing
         """
         try:
-            yield {"status": "started", "agent": self.name, "agent_type": self.agent_type}
+            yield {
+                "status": "started",
+                "agent": self.name,
+                "agent_type": self.agent_type,
+            }
 
             # Load session state
             self.load_session_state()
@@ -461,9 +497,9 @@ Please provide your response in structured JSON format appropriate for a {self.a
                 "response_text": response,
                 "agent_type": self.agent_type,
                 "processed_at": self.context.get("timestamp", "unknown"),
-                "input_summary": str(input_data)[:200] + "..."
-                if len(str(input_data)) > 200
-                else str(input_data),
+                "input_summary": (
+                    str(input_data)[:200] + "..." if len(str(input_data)) > 200 else str(input_data)
+                ),
             }
             return structured_response
 

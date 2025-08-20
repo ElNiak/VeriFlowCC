@@ -57,7 +57,10 @@ class MockClaudeCodeClient:
         if not self.session_active:
             raise RuntimeError("Session not active")
 
-        return {"content": "This is a single completion response.", "usage": {"tokens": 10}}
+        return {
+            "content": "This is a single completion response.",
+            "usage": {"tokens": 10},
+        }
 
 
 @pytest.mark.integration

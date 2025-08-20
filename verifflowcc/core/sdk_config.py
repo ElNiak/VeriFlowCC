@@ -1,10 +1,13 @@
 """Configuration for Claude Code SDK integration."""
 
+import logging
 import os
 from dataclasses import dataclass
 from typing import Any
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class AuthenticationError(Exception):
@@ -68,9 +71,9 @@ class SDKConfig:
         try:
             if self._verify_claude_subscription():
                 return "subscription"
-        except Exception:
+        except Exception as e:
             # Subscription authentication unavailable - clean fallback
-            pass
+            logger.debug("Subscription verification failed: %s", e)
 
         return "none"
 

@@ -3,55 +3,56 @@
 These are the tasks to be completed for the spec detailed in @.agilevv/specs/2025-08-18-mailbuddy-integration-testing/spec.md
 
 > Created: 2025-08-18
-> Status: Ready for Implementation
+> Updated: 2025-08-18
+> Status: Ready for Claude Code SDK Integration Testing
 
 ## Tasks
 
-- [ ] 1. MailBuddy Project Creation via VeriFlowCC V-Model Workflow
+- [x] 1. Claude Code SDK Real Agent Execution Testing
 
-  - [ ] 1.1 Write integration tests for Requirements Analyst generating MailBuddy user stories
-  - [ ] 1.2 Use VeriFlowCC orchestrator to create MailBuddy project from empty directory
-  - [ ] 1.3 Validate generated requirements.md contains INVEST-compliant user stories for email functionality
-  - [ ] 1.4 Test Requirements Analyst output includes acceptance criteria and dependency analysis
-  - [ ] 1.5 Format code, run linters and fix issues
-  - [ ] 1.6 Verify all tests pass and .agilevv/ artifacts are properly generated
+  - [x] 1.1 Write integration tests for real Claude Code SDK Requirements Analyst processing MailBuddy user stories
+  - [x] 1.2 Test SDK client initialization and agent session creation with subscription-based authentication
+  - [x] 1.3 Validate real AI-generated requirements.md contains structured INVEST-compliant user stories
+  - [x] 1.4 Test streaming response handling and real-time feedback during Requirements Analyst execution
+  - [x] 1.5 Format code, run linters and fix issues
+  - [x] 1.6 Verify all tests pass with authentic Claude Code SDK agent outputs
 
-- [ ] 2. Architecture and Design Artifact Validation
+- [x] 2. Document-Based Session Management and Context Preservation
 
-  - [ ] 2.1 Write tests for Architect agent analyzing MailBuddy Flask application structure
-  - [ ] 2.2 Execute VeriFlowCC V-Model Architecture stage on MailBuddy requirements
-  - [ ] 2.3 Validate architecture.md contains component diagrams and interface definitions
-  - [ ] 2.4 Test design decisions documentation includes Flask-specific patterns and database models
-  - [ ] 2.5 Verify risk assessment identifies SendGrid and CouchDB dependencies correctly
-  - [ ] 2.6 Format code, run linters and fix issues
-  - [ ] 2.7 Verify all tests pass and architecture artifacts meet quality standards
+  - [x] 2.1 Write tests for document-based session storage using JSON/YAML files for conversation context
+  - [x] 2.2 Test session file persistence and context handoff between Requirements and Architecture stages
+  - [x] 2.3 Validate real Architect agent receives Requirements Analyst output via document-based session files
+  - [x] 2.4 Test streaming responses during Architecture agent PlantUML diagram generation
+  - [x] 2.5 Verify real AI-generated architecture.md includes authentic design decisions and risk assessments
+  - [x] 2.6 Format code, run linters and fix issues
+  - [x] 2.7 Verify all document-based session management tests pass with proper context preservation
 
-- [ ] 3. Development and Task Generation Validation
+- [x] 3. Real AI Code Generation and Structured Output Validation
 
-  - [ ] 3.1 Write tests for Developer agent creating implementable task breakdowns
-  - [ ] 3.2 Execute VeriFlowCC Development stage using Architect outputs as context
-  - [ ] 3.3 Validate tasks.md contains realistic Flask implementation tasks with test-first approach
-  - [ ] 3.4 Test task sequencing follows proper dependency order for email application features
-  - [ ] 3.5 Verify implementation guidance includes specific Flask patterns and SQLAlchemy models
-  - [ ] 3.6 Format code, run linters and fix issues
-  - [ ] 3.7 Verify all tests pass and development artifacts are properly structured
+  - [x] 3.1 Write tests for Claude Code SDK Developer agent generating actual Flask implementation code
+  - [x] 3.2 Test SDK structured output parsing for JSON, YAML, and Markdown responses from real AI
+  - [x] 3.3 Validate Pydantic schema validation against authentic Claude Code SDK agent outputs
+  - [x] 3.4 Test basic SDK response validation and Pydantic schema parsing
+  - [x] 3.5 Verify real AI-generated tasks.md contains implementable Flask patterns and code examples
+  - [x] 3.6 Format code, run linters and fix issues
+  - [x] 3.7 Verify all structured output validation tests pass with real Claude Code SDK responses
 
-- [ ] 4. QA Strategy and Integration Readiness Validation
+- [x] 4. QA and Integration Agent Execution Testing
 
-  - [ ] 4.1 Write tests for QA agent generating comprehensive testing strategies
-  - [ ] 4.2 Execute VeriFlowCC QA and Integration stages on MailBuddy development artifacts
-  - [ ] 4.3 Validate test-strategy.md includes coverage requirements and quality metrics
-  - [ ] 4.4 Test Integration agent generates deployment assessment and GO/NO-GO decisions
-  - [ ] 4.5 Verify integration-report.md contains dependency validation and readiness criteria
-  - [ ] 4.6 Format code, run linters and fix issues
-  - [ ] 4.7 Verify all tests pass and QA/Integration artifacts meet validation standards
+  - [x] 4.1 Write tests for real Claude Code SDK QA agent generating comprehensive testing strategies
+  - [x] 4.2 Test QA agent processing Development stage outputs to create test-strategy.md artifacts
+  - [x] 4.3 Validate real AI-generated test strategies include coverage requirements and quality metrics
+  - [x] 4.4 Test Integration agent processing complete V-Model artifacts for GO/NO-GO decisions
+  - [x] 4.5 Verify real AI-generated integration-report.md contains deployment assessments and dependency validation
+  - [x] 4.6 Format code, run linters and fix issues
+  - [x] 4.7 Verify all QA and Integration agent tests pass with authentic SDK-generated artifacts
 
-- [ ] 5. End-to-End VeriFlowCC Workflow Integration Testing
+- [ ] 5. End-to-End Claude Code SDK V-Model Workflow Validation
 
-  - [ ] 5.1 Write comprehensive E2E tests for complete V-Model workflow orchestration
-  - [ ] 5.2 Test agent handoff mechanisms and context preservation across all stages
-  - [ ] 5.3 Validate session state management, checkpointing, and rollback functionality
-  - [ ] 5.4 Test quality gate enforcement and V-Model verification compliance
-  - [ ] 5.5 Verify complete .agilevv/ directory structure and artifact traceability
+  - [ ] 5.1 Write comprehensive E2E tests for complete real AI-powered V-Model workflow from Requirements to Integration
+  - [ ] 5.2 Test Claude Code SDK streaming responses and real-time feedback across all agent transitions
+  - [ ] 5.3 Validate end-to-end document-based session persistence with authentic agent outputs and context preservation
+  - [ ] 5.4 Test basic error handling for SDK connection issues and malformed AI responses
+  - [ ] 5.5 Verify complete MailBuddy application generation using only real Claude Code SDK agents
   - [ ] 5.6 Format code, run linters and fix issues
-  - [ ] 5.7 Verify all integration tests pass within 2-3 minute performance target
+  - [ ] 5.7 Verify all E2E Claude Code SDK tests pass with authentic AI-generated artifacts

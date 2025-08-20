@@ -13,8 +13,8 @@ Project Directory Structure: When a project is initialized, a structured layout 
 
    CLAUDE.md           # Project memory for Claude (ingested on start)
    .claude/agents/     # Subagent definitions (Markdown files with persona configs)
-   src/                # Source code directory (could have subfolders per component)
-   tests/              # Test code directory mirroring src/ structure
+   <project_dir>/                # Source code directory (could have subfolders per component)
+   tests/              # Test code directory mirroring <project_dir>/ structure
    .mcp.json           # (optional) MCP server config (e.g., for GitHub integration)
    ... (other aux files like README, etc.)
 ```
@@ -25,7 +25,7 @@ The backlog.md and architecture.md files are the core living artifacts that corr
 
 - architecture.md contains the evolving design: high-level system context, and sections per component/feature. We might include UML-like descriptions in Markdown, or bullet lists of design decisions. It should also capture any non-functional requirements and how they are addressed (for compliance, etc.).
 
-These artifacts are supplemented by code and test files in src/ and tests/, which are the outputs of the implementation and verification phases (the right side of the V). The CLI ensures that for each story, there is at least one corresponding test file or test case in tests/. We could even enforce naming conventions (e.g. story “Share To-Do” is requirement R5, then test file test_R5_share_todo.py is generated). This consistent naming aids in mapping tests to requirements, both for humans and if we implement any automated coverage checks.
+These artifacts are supplemented by code and test files in \<project_dir>/ and tests/, which are the outputs of the implementation and verification phases (the right side of the V). The CLI ensures that for each story, there is at least one corresponding test file or test case in tests/. We could even enforce naming conventions (e.g. story “Share To-Do” is requirement R5, then test file test_R5_share_todo.py is generated). This consistent naming aids in mapping tests to requirements, both for humans and if we implement any automated coverage checks.
 
 Persistent Memory (CLAUDE.md): Claude-Code provides a mechanism for persistent project memory via CLAUDE.md in the repo ￼ ￼. We leverage this heavily. On project load, Claude automatically reads this file (and any imported files) into its system context.
 
@@ -37,14 +37,16 @@ Our strategy:
 Project: Agile To-Do List app
 Domain: Web application for task management.
 
-@backlog.md  <!-- import the backlog so Claude always “knows” current requirements -->
-@architecture.md  <!-- import architecture for system context -->
+@backlog.md <!-- import the backlog so Claude always “knows” current requirements -->
+@architecture.md <!-- import architecture for system context -->
 
 # Coding Standards
+
 - Follow PEP8 (for Python) or Airbnb style (for JS) as relevant.
 - Use descriptive variable and function names.
 
 # Definition of Done
+
 - All acceptance criteria met and tests passed for each story.
 - Documentation updated (backlog & architecture).
 ```

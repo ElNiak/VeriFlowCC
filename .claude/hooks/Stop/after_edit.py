@@ -1,31 +1,81 @@
-# Purpose: Format & lint only updated files; emit actionable diagnostics for Claude-code.
-# Notes:
-# - Returns 0 when clean (or only auto-fixes applied), 2 if lint errors remain, 1 on tool failure.
-# - Prints a JSON summary between BEGIN_HOOK_REPORT/END_HOOK_REPORT for programmatic use.
+# .claude/hooks/PostToolUse/after_edit.py
+# Purpose: Format & lint only files actually touched by this tool call, falling back to git-detected changes.
+# Behavior: Exit 0 (clean or only auto-fixes), Exit 2 (action needed: lint/tool issues). Always prints BEGIN/END report.
 
 from __future__ import annotations
+
 import argparse
+import fnmatch
 import json
 import shlex
 import subprocess
 import sys
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from shutil import which
-from typing import Iterable, List, Dict, Tuple, Callable, Set, Any
+from typing import Any
+
+# ---------- envelope parsing (so we see freshly Written files) ----------
+
+def _read_envelope() -> dict[str, Any]:
+    try:
+        data = sys.stdin.read()
+        if not data.strip():
+            return {}
+        return json.loads(data)
+    except Exception:
+        return {}
+
+def _walk_paths(x: Any, out: list[str]) -> None:
+    if isinstance(x, dict):
+        # common Write/Edit shapes: {"path": "...", "content": "..."} or nested lists
+        if "path" in x and isinstance(x["path"], str):
+            out.append(x["path"])
+        for v in x.values():
+            _walk_paths(v, out)
+    elif isinstance(x, list):
+        for it in x:
+            _walk_paths(it, out)
+
+def extract_paths_from_envelope(env: dict[str, Any]) -> list[str]:
+    tool = env.get("tool_name")
+    if tool not in ("Write", "Edit", "MultiEdit"):
+        return []
+    ti = env.get("tool_input")
+    paths: list[str] = []
+    _walk_paths(ti, paths)
+    # Preserve order but dedupe
+    seen = set(); dedup = []
+    for p in paths:
+        if p not in seen:
+            dedup.append(p); seen.add(p)
+    return dedup
 
 # ---------- helpers ----------
 
 def _cmd_exists(cmd: str) -> bool:
     return which(cmd) is not None
 
-def _batch(files: List[str], base: List[str], max_args: int = 200) -> List[List[str]]:
-    chunks: List[List[str]] = []
-    cur: List[str] = []
+def _python_module_cmd(module: str, args: list[str]) -> list[str] | None:
+    py = which("python3") or which("python")
+    return [py, "-m", module, *args] if py else None
+
+def _node_tool_cmd(bin_name: str, args: list[str]) -> list[str] | None:
+    if _cmd_exists(bin_name):
+        return [bin_name, *args]
+    if _cmd_exists("npx"):
+        return ["npx", "--yes", bin_name, *args]
+    return None
+
+def _batch(files: list[str], base: list[str] | None, max_args: int = 200) -> list[list[str]]:
+    if not base:
+        return []
+    chunks: list[list[str]] = []
+    cur: list[str] = []
     for f in files:
         cur.append(f)
         if len(cur) >= max_args:
-            chunks.append(base + cur)
-            cur = []
+            chunks.append(base + cur); cur = []
     if cur:
         chunks.append(base + cur)
     return chunks
@@ -33,131 +83,140 @@ def _batch(files: List[str], base: List[str], max_args: int = 200) -> List[List[
 def _ext(p: Path) -> str:
     return p.suffix.lstrip(".").lower()
 
-def _capture_run(cmd: List[str]) -> Tuple[int, str, str]:
+def _capture_run(cmd: list[str]) -> tuple[int, str, str]:
     try:
         proc = subprocess.run(cmd, text=True, capture_output=True)
-        return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
+        return proc.returncode, (proc.stdout or "").strip(), (proc.stderr or "").strip()
     except FileNotFoundError:
         return 127, "", f"Command not found: {cmd[0]}"
     except Exception as e:
         return 1, "", f"{type(e).__name__}: {e}"
 
-# ---------- discovery ----------
+# ---------- discovery (git + untracked) ----------
 
-def git_staged_files() -> List[str]:
+def git_staged_files() -> list[str]:
     try:
-        out = subprocess.check_output(
-            ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"],
-            text=True,
-        )
+        out = subprocess.check_output(["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"], text=True)
         return [ln for ln in out.splitlines() if ln.strip()]
     except subprocess.CalledProcessError:
         return []
 
-def git_updated_vs_head() -> List[str]:
+def git_updated_vs_head() -> list[str]:
     try:
-        out = subprocess.check_output(
-            ["git", "diff", "HEAD", "--name-only", "--diff-filter=ACM"],
-            text=True,
-        )
+        out = subprocess.check_output(["git", "diff", "HEAD", "--name-only", "--diff-filter=ACM"], text=True)
         return [ln for ln in out.splitlines() if ln.strip()]
     except subprocess.CalledProcessError:
         return []
 
-def filter_supported(files: Iterable[str], tracked_exts: Set[str]) -> List[str]:
-    res: List[str] = []
+def git_untracked() -> list[str]:
+    # freshly Written files will appear here
+    try:
+        out = subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], text=True)
+        return [ln for ln in out.splitlines() if ln.strip()]
+    except subprocess.CalledProcessError:
+        return []
+
+def filter_supported(files: Iterable[str], exts: set[str], exclude_globs: list[str]) -> list[str]:
+    res: list[str] = []
     for f in files:
         p = Path(f)
-        if p.is_file() and _ext(p) in tracked_exts:
+        if not p.is_file():
+            continue
+        if any(fnmatch.fnmatchcase(str(p), g) for g in exclude_globs):
+            continue
+        if _ext(p) in exts:
             res.append(str(p))
     return res
 
-def group_by_ext(files: List[str]) -> Dict[str, List[str]]:
-    g: Dict[str, List[str]] = {}
+def group_by_ext(files: list[str]) -> dict[str, list[str]]:
+    g: dict[str, list[str]] = {}
     for f in files:
         g.setdefault(_ext(Path(f)), []).append(f)
     return g
 
 # ---------- command maps ----------
 
-def make_formatters() -> Dict[str, Callable[[List[str]], List[List[str]]]]:
-    fmts: Dict[str, Callable[[List[str]], List[List[str]]]] = {
-        "py": lambda fs: (
-            ([] if not _cmd_exists("black") else _batch(fs, ["black", "--quiet"])) +
-            ([] if not _cmd_exists("isort") else _batch(fs, ["isort", "--quiet"]))
-        ),
-        "js": lambda fs: ([] if not _cmd_exists("prettier") else _batch(fs, ["prettier", "--loglevel", "warn", "--write"])),
-        "jsx": lambda fs: fmts["js"](fs),
-        "ts": lambda fs: fmts["js"](fs),
-        "tsx": lambda fs: fmts["js"](fs),
-        "json": lambda fs: fmts["js"](fs),
-        "css": lambda fs: fmts["js"](fs),
-        "scss": lambda fs: fmts["js"](fs),
-        "md": lambda fs: fmts["js"](fs),
-        "html": lambda fs: fmts["js"](fs),
-        "yml": lambda fs: fmts["js"](fs),
-        "yaml": lambda fs: fmts["js"](fs),
-        "c": lambda fs: ([] if not _cmd_exists("clang-format") else _batch(fs, ["clang-format", "-i"])),
-        "h": lambda fs: fmts["c"](fs),
-        "cc": lambda fs: fmts["c"](fs),
-        "cpp": lambda fs: fmts["c"](fs),
-        "hpp": lambda fs: fmts["c"](fs),
-        "sh": lambda fs: ([] if not _cmd_exists("shfmt") else _batch(fs, ["shfmt", "-w"])),
-        "bash": lambda fs: fmts["sh"](fs),
-        "zsh": lambda fs: fmts["sh"](fs),
-        "rs": lambda fs: ([] if not _cmd_exists("rustfmt") else _batch(fs, ["rustfmt"])),
-        "go": lambda fs: ([] if not _cmd_exists("gofmt") else _batch(fs, ["gofmt", "-w"])),
+def make_formatters() -> dict[str, Callable[[list[str]], list[list[str]]]]:
+    def py_fmt(fs: list[str]) -> list[list[str]]:
+        batches: list[list[str]] = []
+        cmd = (["black", "--quiet"] if _cmd_exists("black") else _python_module_cmd("black", ["--quiet"]))
+        batches += _batch(fs, cmd)
+        cmd = (["isort", "--quiet"] if _cmd_exists("isort") else _python_module_cmd("isort", ["--quiet"]))
+        batches += _batch(fs, cmd)
+        return batches
+
+    def js_like_fmt(fs: list[str]) -> list[list[str]]:
+        # fix flag name: --log-level
+        cmd = _node_tool_cmd("prettier", ["--log-level", "warn", "--write"])
+        return _batch(fs, cmd)
+
+    def c_like_fmt(fs: list[str]) -> list[list[str]]:
+        return _batch(fs, ["clang-format", "-i"]) if _cmd_exists("clang-format") else []
+
+    def sh_fmt(fs: list[str]) -> list[list[str]]:
+        return _batch(fs, ["shfmt", "-w"]) if _cmd_exists("shfmt") else []
+
+    def rs_fmt(fs: list[str]) -> list[list[str]]:
+        return _batch(fs, ["rustfmt"]) if _cmd_exists("rustfmt") else []
+
+    def go_fmt(fs: list[str]) -> list[list[str]]:
+        return _batch(fs, ["gofmt", "-w"]) if _cmd_exists("gofmt") else []
+
+    return {
+        "py": py_fmt,
+        "js": js_like_fmt, "jsx": js_like_fmt, "ts": js_like_fmt, "tsx": js_like_fmt,
+        "json": js_like_fmt, "css": js_like_fmt, "scss": js_like_fmt,
+        "md": js_like_fmt, "html": js_like_fmt, "yml": js_like_fmt, "yaml": js_like_fmt,
+        "c": c_like_fmt, "h": c_like_fmt, "cc": c_like_fmt, "cpp": c_like_fmt, "hpp": c_like_fmt,
+        "sh": sh_fmt, "bash": sh_fmt, "zsh": sh_fmt,
+        "rs": rs_fmt,
+        "go": go_fmt,
     }
-    return fmts
 
-def make_linters(autofix: bool) -> Dict[str, Callable[[List[str]], List[List[str]]]]:
-    def js_lint(fs: List[str]) -> List[List[str]]:
-        if not _cmd_exists("eslint"):
-            return []
-        base = ["eslint"]
-        if autofix:
-            base.append("--fix")
-        return _batch(fs, base)
+def make_linters(autofix: bool) -> dict[str, Callable[[list[str]], list[list[str]]]]:
+    def js_lint(fs: list[str]) -> list[list[str]]:
+        cmd = _node_tool_cmd("eslint", ["--max-warnings=0"] + (["--fix"] if autofix else []))
+        return _batch(fs, cmd)
 
-    def py_lint(fs: List[str]) -> List[List[str]]:
-        if not _cmd_exists("ruff"):
-            return []
-        base = ["ruff", "check"]
-        if autofix:
-            base.append("--fix")
-        return _batch(fs, base)
+    def py_lint(fs: list[str]) -> list[list[str]]:
+        cmd = (["ruff", "check"] + (["--fix"] if autofix else [])
+               if _cmd_exists("ruff") else _python_module_cmd("ruff", ["check"] + (["--fix"] if autofix else [])))
+        return _batch(fs, cmd)
 
-    lints: Dict[str, Callable[[List[str]], List[List[str]]]] = {
+    def sh_lint(fs: list[str]) -> list[list[str]]:
+        return _batch(fs, ["shellcheck", "-x"]) if _cmd_exists("shellcheck") else []
+
+    def yml_lint(fs: list[str]) -> list[list[str]]:
+        return _batch(fs, ["yamllint", "-s"]) if _cmd_exists("yamllint") else []
+
+    def md_lint(fs: list[str]) -> list[list[str]]:
+        if _cmd_exists("markdownlint-cli2"):
+            return _batch(fs, ["markdownlint-cli2"] + (["--fix"] if autofix else []))
+        if _cmd_exists("markdownlint"):
+            return _batch(fs, ["markdownlint"] + (["--fix"] if autofix else []))
+        return []
+
+    def rs_lint(_: list[str]) -> list[list[str]]:
+        return [["cargo", "clippy", "--quiet", "--", "-D", "warnings"]] if _cmd_exists("cargo") else []
+
+    def go_lint(_: list[str]) -> list[list[str]]:
+        return [["golangci-lint", "run", "--out-format=tab"]] if _cmd_exists("golangci-lint") else []
+
+    return {
         "py": py_lint,
-        "js": js_lint,
-        "jsx": js_lint,
-        "ts": js_lint,
-        "tsx": js_lint,
-        "sh": lambda fs: ([] if not _cmd_exists("shellcheck") else _batch(fs, ["shellcheck", "-x"])),
-        "bash": lambda fs: lints["sh"](fs),
-        "zsh": lambda fs: lints["sh"](fs),
-        "yml": lambda fs: ([] if not _cmd_exists("yamllint") else _batch(fs, ["yamllint", "-s"])),
-        "yaml": lambda fs: lints["yml"](fs),
-        "md": lambda fs: (
-            _batch(fs, ["markdownlint-cli2", "--fix"]) if _cmd_exists("markdownlint-cli2") and autofix
-            else (_batch(fs, ["markdownlint-cli2"]) if _cmd_exists("markdownlint-cli2")
-                  else (_batch(fs, ["markdownlint", "--fix"]) if _cmd_exists("markdownlint") and autofix
-                        else (_batch(fs, ["markdownlint"]) if _cmd_exists("markdownlint") else [])))
-        ),
-        "rs": lambda fs: ([] if not _cmd_exists("cargo") else [["cargo", "clippy", "--quiet", "--", "-D", "warnings"]]),
-        "go": lambda fs: ([] if not _cmd_exists("golangci-lint") else _batch(fs, ["golangci-lint", "run", "--out-format=tab"])),
-        "c": lambda fs: [],
-        "h": lambda fs: [],
-        "cc": lambda fs: [],
-        "cpp": lambda fs: [],
-        "hpp": lambda fs: [],
+        "js": js_lint, "jsx": js_lint, "ts": js_lint, "tsx": js_lint,
+        "sh": sh_lint, "bash": sh_lint, "zsh": sh_lint,
+        "yml": yml_lint, "yaml": yml_lint,
+        "md": md_lint,
+        "rs": rs_lint,
+        "go": go_lint,
+        "c": lambda _fs: [], "h": lambda _fs: [], "cc": lambda _fs: [], "cpp": lambda _fs: [], "hpp": lambda _fs: [],
     }
-    return lints
 
 # ---------- orchestration ----------
 
-def run_batches(batches: List[List[str]], verbose: bool) -> Tuple[int, List[Dict[str, Any]]]:
-    results: List[Dict[str, Any]] = []
+def run_batches(batches: list[list[str]], verbose: bool) -> tuple[int, list[dict[str, Any]]]:
+    results: list[dict[str, Any]] = []
     worst_rc = 0
     for cmd in batches:
         if not cmd:
@@ -165,86 +224,93 @@ def run_batches(batches: List[List[str]], verbose: bool) -> Tuple[int, List[Dict
         rc, out, err = _capture_run(cmd)
         if verbose:
             print("$ " + " ".join(shlex.quote(x) for x in cmd))
-            if out:
-                print(out)
-            if err:
-                print(err, file=sys.stderr)
+            if out: print(out)
+            if err: print(err, file=sys.stderr)
         results.append({"cmd": cmd, "rc": rc, "stdout": out, "stderr": err})
         if rc != 0 and worst_rc == 0:
             worst_rc = rc
-        elif rc != 0:
-            # keep first nonzero as representative; still record each
-            pass
     return worst_rc, results
 
-def do_format(files: List[str], verbose: bool) -> Tuple[int, List[Dict[str, Any]]]:
+def do_format(files: list[str], verbose: bool) -> tuple[int, list[dict[str, Any]]]:
     fmts = make_formatters()
     grouped = group_by_ext(files)
-    batches: List[List[str]] = []
-    covered: Set[str] = set()
+    batches: list[list[str]] = []
+    covered: set[str] = set()
     for ext, fs in grouped.items():
         if ext in fmts:
             batches += fmts[ext](fs)
             covered.update(fs)
-    # Fallback to dprint for remaining texty files
     remaining = [f for f in files if f not in covered]
     if remaining and _cmd_exists("dprint"):
         batches += _batch(remaining, ["dprint", "fmt"])
     return run_batches(batches, verbose)
 
-def do_lint(files: List[str], verbose: bool, autofix: bool) -> Tuple[int, List[Dict[str, Any]]]:
+def do_lint(files: list[str], verbose: bool, autofix: bool) -> tuple[int, list[dict[str, Any]]]:
     lints = make_linters(autofix=autofix)
     grouped = group_by_ext(files)
-    batches: List[List[str]] = []
+    batches: list[list[str]] = []
     for ext, fs in grouped.items():
         if ext in lints:
             batches += lints[ext](fs)
     return run_batches(batches, verbose)
 
-def print_report(status: str, files: List[str], fmt_res: List[Dict[str, Any]], lint_res: List[Dict[str, Any]], note: str = "") -> None:
+def print_report(status: str, files: list[str], fmt_res: list[dict[str, Any]], lint_res: list[dict[str, Any]], note: str = "") -> None:
     report = {
-        "status": status,                   # "ok" | "tool_error" | "lint_errors"
+        "status": status,  # "ok" | "tool_error" | "lint_errors"
         "files": files,
         "formatting": fmt_res,
         "linting": lint_res,
         "note": note,
         "suggestion": (
-            "Non-auto-fixable diagnostics remain. Ask Claude to reason about the errors, propose a patch, and re-run the hook."
-            if status == "lint_errors" else ""
+            "Non-auto-fixable diagnostics remain. Ask Claude to reason about them, propose a patch, and re-run."
+            if status == "lint_errors" else
+            ("Some tools are missing. Install/pin them or adjust settings." if status == "tool_error" else "")
         ),
     }
-    # Machine-readable block for Claude-code or scripts
-    print("BEGIN_HOOK_REPORT")
-    print(json.dumps(report, indent=2))
-    print("END_HOOK_REPORT")
+    print("BEGIN_HOOK_REPORT"); print(json.dumps(report, indent=2)); print("END_HOOK_REPORT")
 
-def main(argv: List[str]) -> int:
-    ap = argparse.ArgumentParser(description="Format/lint only updated files; emit diagnostics for Claude.")
-    ap.add_argument("--mode", choices=["staged", "updated"], default="staged",
-                    help="If no files are passed, choose discovery mode.")
-    ap.add_argument("--action", choices=["format", "lint", "fix"], default="fix",
-                    help="'fix' = format then lint (default).")
-    ap.add_argument("--no-autofix-lint", dest="autofix_lint", action="store_false",
-                    help="Do not attempt automatic lint fixes.")
+# ---------- entrypoint ----------
+
+def main(argv: list[str]) -> int:
+    ap = argparse.ArgumentParser(description="Format/lint updated files; envelope-aware.")
+    ap.add_argument("--mode", choices=["staged", "updated"], default="updated")
+    ap.add_argument("--action", choices=["format", "lint", "fix"], default="fix")
+    ap.add_argument("--no-autofix-lint", dest="autofix_lint", action="store_false")
     ap.add_argument("-v", "--verbose", action="store_true")
     ap.add_argument("files", nargs="*")
     args = ap.parse_args(argv)
 
-    # discover files
-    files = args.files or (git_staged_files() if args.mode == "staged" else git_updated_vs_head())
-    tracked_exts = set(make_formatters()) | set(make_linters(True))
-    files = filter_supported(files, tracked_exts)
+    env = _read_envelope()
+    env_paths = extract_paths_from_envelope(env)
+
+    # Fallback discovery
+    discovered = args.files or (git_staged_files() if args.mode == "staged" else git_updated_vs_head())
+    # Include untracked so new Writes are seen
+    discovered += git_untracked()
+
+    # Merge (preserve order, dedupe)
+    merged: list[str] = []
+    seen: set[str] = set()
+    for p in env_paths + discovered:
+        if p and p not in seen:
+            merged.append(p); seen.add(p)
+
+    # Exclude internal hook logs/noisy paths
+    EXCLUDE = [
+        ".claude/hooks/*.json",
+        ".claude/hooks/**/*.json",
+    ]
+
+    tracked_exts = set(make_formatters().keys()) | set(make_linters(True).keys())
+    files = filter_supported(merged, tracked_exts, EXCLUDE)
 
     if not files:
-        if args.verbose:
-            print("No supported updated files.")
-        print_report(status="ok", files=[], fmt_res=[], lint_res=[], note="No files")
+        if args.verbose: print("No supported files to process.")
+        print_report("ok", [], [], [], note="No files")
         return 0
 
-    fmt_rc = 0
-    fmt_res: List[Dict[str, Any]] = []
-    lint_rc = 0
-    lint_res: List[Dict[str, Any]] = []
+    fmt_rc, fmt_res = (0, [])
+    lint_rc, lint_res = (0, [])
 
     if args.action in ("format", "fix"):
         fmt_rc, fmt_res = do_format(files, args.verbose)
@@ -252,14 +318,16 @@ def main(argv: List[str]) -> int:
     if args.action in ("lint", "fix"):
         lint_rc, lint_res = do_lint(files, args.verbose, autofix=args.autofix_lint)
 
-    # Decide outcome:
-    # - tool failure (rc >= 126 typical for missing tool) → exit 1
-    # - lint errors (nonzero) → exit 2
-    # - ok → exit 0
-    any_tool_fail = any(r["rc"] in (127, 126, 1) and ("not found" in (r["stderr"] or "").lower()) for r in (fmt_res + lint_res))
+    # Outcome: treat missing tools as action required → exit 2 (agent can install them)
+    def _tool_missing(r: dict[str, Any]) -> bool:
+        s = (r.get("stderr") or "").lower()
+        return r.get("rc") in (127, 126) or "command not found" in s or "not found:" in s
+
+    any_tool_fail = any(_tool_missing(r) for r in (fmt_res + lint_res))
     if any_tool_fail:
         print_report("tool_error", files, fmt_res, lint_res, note="Some tools are missing or failed.")
-        return 1
+        print("after_edit.py: tool error — see BEGIN_HOOK_REPORT.", file=sys.stderr)
+        return 2
 
     if lint_rc != 0:
         print_report("lint_errors", files, fmt_res, lint_res)

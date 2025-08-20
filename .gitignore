@@ -72,3 +72,6 @@ temp/
 .ruff_cache
 .serena
 .benchmarks
+.coverage.*
+.codacy/
+.claude/hooks/tool_logs/

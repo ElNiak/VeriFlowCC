@@ -139,8 +139,8 @@ class TestAgentFactoryRegistration:
             factory = AgentFactory(path_config=isolated_agilevv_dir)
 
             # First registration
-            factory.register_agent("requirements", MockAgent)
-            assert factory._agent_registry["requirements"] == MockAgent
+            factory.register_agent("requirements_analyst", MockAgent)
+            assert factory._agent_registry["requirements_analyst"] == MockAgent
 
             # Override with different class
             class NewMockAgent(BaseAgent):
@@ -160,7 +160,7 @@ class TestAgentFactoryCreation:
         factory = AgentFactory(sdk_config=sdk_config, path_config=isolated_agilevv_dir)
 
         # Register mock agent for valid type
-        factory.register_agent("requirements", MockAgent)
+        factory.register_agent("requirements_analyst", MockAgent)
 
         # Create agent
         agent = factory.create_agent("requirements", name="test_agent")
@@ -176,7 +176,7 @@ class TestAgentFactoryCreation:
         sdk_config = SDKConfig(api_key="test-key")
         factory = AgentFactory(sdk_config=sdk_config, path_config=isolated_agilevv_dir)
 
-        factory.register_agent("requirements", MockAgent)
+        factory.register_agent("requirements_analyst", MockAgent)
         agent = factory.create_agent("requirements")
 
         assert agent.name == "requirements_agent"
@@ -248,7 +248,13 @@ class TestAgentFactoryBulkOperations:
         factory = AgentFactory(sdk_config=sdk_config, path_config=isolated_agilevv_dir)
 
         # Register all agent types
-        for agent_type in ["requirements", "architect", "developer", "qa", "integration"]:
+        for agent_type in [
+            "requirements_analyst",
+            "architect",
+            "developer",
+            "qa_tester",
+            "integration",
+        ]:
             factory.register_agent(agent_type, MockAgent)
 
         agents = factory.create_all_agents()
@@ -256,7 +262,13 @@ class TestAgentFactoryBulkOperations:
         assert len(agents) == 5
         assert all(
             agent_type in agents
-            for agent_type in ["requirements", "architect", "developer", "qa", "integration"]
+            for agent_type in [
+                "requirements_analyst",
+                "architect",
+                "developer",
+                "qa_tester",
+                "integration",
+            ]
         )
         assert all(isinstance(agent, MockAgent) for agent in agents.values())
 
@@ -266,7 +278,7 @@ class TestAgentFactoryBulkOperations:
         factory = AgentFactory(sdk_config=sdk_config, path_config=isolated_agilevv_dir)
 
         # Register only some agent types
-        factory.register_agent("requirements", MockAgent)
+        factory.register_agent("requirements_analyst", MockAgent)
         factory.register_agent("developer", MockAgent)
         # Leave others unregistered to force fallback
 
@@ -274,7 +286,7 @@ class TestAgentFactoryBulkOperations:
 
         # Should still get 5 agents (some fallback)
         assert len(agents) <= 5  # May be fewer if creation fails
-        assert "requirements" in agents
+        assert "requirements_analyst" in agents
         assert "developer" in agents
 
     def test_create_all_agents_empty_registry(self, isolated_agilevv_dir: TestPathConfig) -> None:
@@ -299,7 +311,13 @@ class TestAgentFactoryBulkOperations:
 
             available_agents = factory.list_available_agents()
 
-            expected_types = ["requirements", "architect", "developer", "qa", "integration"]
+            expected_types = [
+                "requirements_analyst",
+                "architect",
+                "developer",
+                "qa_tester",
+                "integration",
+            ]
             assert all(agent_type in available_agents for agent_type in expected_types)
             assert all(isinstance(desc, str) for desc in available_agents.values())
             assert len(available_agents) == 5
@@ -313,10 +331,10 @@ class TestAgentFactoryBulkOperations:
             available_agents = factory.list_available_agents()
 
             # Check that descriptions contain relevant keywords
-            assert "Requirements" in available_agents["requirements"]
+            assert "Requirements" in available_agents["requirements_analyst"]
             assert "Architect" in available_agents["architect"]
             assert "Developer" in available_agents["developer"]
-            assert "QA" in available_agents["qa"]
+            assert "QA" in available_agents["qa_tester"]
             assert "Integration" in available_agents["integration"]
 
 
@@ -374,7 +392,9 @@ class TestAgentFactoryConfiguration:
             mock_mode = mock_mode_str.lower() == "true"
 
             factory = AgentFactory(
-                sdk_config=sdk_config, path_config=isolated_agilevv_dir, mock_mode=mock_mode
+                sdk_config=sdk_config,
+                path_config=isolated_agilevv_dir,
+                mock_mode=mock_mode,
             )
 
             assert factory.mock_mode is True
@@ -406,7 +426,7 @@ class TestAgentFactoryErrorHandling:
             mock_mode=True,  # Mock mode should handle invalid config
         )
 
-        factory.register_agent("requirements", MockAgent)
+        factory.register_agent("requirements_analyst", MockAgent)
         agent = factory.create_agent("requirements")
 
         assert isinstance(agent, MockAgent)
@@ -451,7 +471,7 @@ class TestAgentFactoryErrorHandling:
                 return {}
 
         # Register mix of working and problematic agents
-        factory.register_agent("requirements", MockAgent)
+        factory.register_agent("requirements_analyst", MockAgent)
         factory.register_agent("architect", ProblematicAgent)
         factory.register_agent("developer", MockAgent)
 
@@ -460,8 +480,8 @@ class TestAgentFactoryErrorHandling:
         # Should have some successful agents despite failures
         assert len(agents) <= 5
         # Working agents should be present
-        if "requirements" in agents:
-            assert isinstance(agents["requirements"], MockAgent)
+        if "requirements_analyst" in agents:
+            assert isinstance(agents["requirements_analyst"], MockAgent)
         if "developer" in agents:
             assert isinstance(agents["developer"], MockAgent)
 
@@ -477,7 +497,7 @@ class TestAgentFactoryMockMode:
             sdk_config=sdk_config, path_config=isolated_agilevv_dir, mock_mode=True
         )
 
-        factory.register_agent("requirements", MockAgent)
+        factory.register_agent("requirements_analyst", MockAgent)
         agent = factory.create_agent("requirements")
 
         # Test agent processing
