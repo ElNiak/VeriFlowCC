@@ -41,7 +41,7 @@ def main():
         now = datetime.now().isoformat().replace(":", "-")
         rand = "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
         tool = input_data.get("tool_name", "tool")
-        filename = f"{tool}_{now}_{rand}.json"
+        filename = f"{now}_{tool}_{rand}.json"
         log_path = logs_dir / filename
 
         # Write log entry atomically

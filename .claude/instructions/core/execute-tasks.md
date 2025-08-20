@@ -22,7 +22,7 @@ EXECUTE: @.claude/instructions/meta/pre-flight.md
 
 ### Step 1: Task Assignment
 
-Identify which tasks to execute from the spec (using spec_srd_reference file path and optional specific_tasks array), defaulting to the next uncompleted parent task if not specified.
+Identify which tasks to execute from the .agilevv/specs (using spec_srd_reference file path and optional specific_tasks array), defaulting to the next uncompleted parent task if not specified.
 
 <task_selection>
 <explicit>user specifies exact task(s)</explicit>
