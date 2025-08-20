@@ -13,11 +13,11 @@ encoding: UTF-8
 Install AgileVerifFlowCC into an existing codebase, analyze current product state and progress.
 Builds on @.claude/instructions/core/plan-product.md
 
-\<pre_flight_check>
+<pre_flight_check>
 EXECUTE: @.claude/instructions/meta/pre-flight.md
-\</pre_flight_check>
+</pre_flight_check>
 
-\<process_flow>
+<process_flow>
 
 <step number="1" name="analyze_existing_codebase">
 
@@ -25,33 +25,34 @@ EXECUTE: @.claude/instructions/meta/pre-flight.md
 
 Perform a deep codebase analysis of the current codebase to understand current state before documentation purposes.
 
-\<analysis_areas>
-\<project_structure>
-\- Directory organization
-\- File naming patterns
-\- Module structure
-\- Build configuration
-\</project_structure>
-\<technology_stack>
-\- Frameworks in use
-\- Dependencies (package.json, Gemfile, requirements.txt, etc.)
-\- Database systems
-\- Infrastructure configuration
-\</technology_stack>
-\<implementation_progress>
-\- Completed features
-\- Work in progress
-\- Authentication/authorization state
-\- API endpoints
-\- Database schema
-\</implementation_progress>
-\<code_patterns>
-\- Coding style in use
-\- Naming conventions
-\- File organization patterns
-\- Testing approach
-\</code_patterns>
-\</analysis_areas>
+<analysis_areas>
+<project_structure>
+
+- Directory organization
+- File naming patterns
+- Module structure
+- Build configuration
+</project_structure>
+<technology_stack>
+- Frameworks in use
+- Dependencies (package.json, Gemfile, requirements.txt, etc.)
+- Database systems
+- Infrastructure configuration
+</technology_stack>
+<implementation_progress>
+- Completed features
+- Work in progress
+- Authentication/authorization state
+- API endpoints
+- Database schema
+</implementation_progress>
+<code_patterns>
+- Coding style in use
+- Naming conventions
+- File organization patterns
+- Testing approach
+</code_patterns>
+</analysis_areas>
 
 <instructions>
   ACTION: Thoroughly analyze the existing codebase
@@ -68,7 +69,7 @@ Perform a deep codebase analysis of the current codebase to understand current s
 
 Use the context-fetcher subagent to supplement codebase analysis with business context and future plans.
 
-\<context_questions>
+<context_questions>
 Based on my analysis of your codebase, I can see you're building [OBSERVED_PRODUCT_TYPE].
 
 To properly set up AgileVerifFlowCC, I need to understand:
@@ -82,7 +83,7 @@ To properly set up AgileVerifFlowCC, I need to understand:
 1. **Decisions**: Are there important technical or product decisions I should document?
 
 1. **Team Preferences**: Any coding standards or practices the team follows that I should capture?
-   \</context_questions>
+   </context_questions>
 
 <instructions>
   ACTION: Ask user for product context
@@ -98,14 +99,14 @@ To properly set up AgileVerifFlowCC, I need to understand:
 
 Execute our standard flow for installing AgileVerifFlowCC in existing products
 
-\<execution_parameters>
-\<main_idea>[DERIVED_FROM_ANALYSIS_AND_USER_INPUT]\</main_idea>
-\<key_features>[IDENTIFIED_IMPLEMENTED_AND_PLANNED_FEATURES]\</key_features>
-\<target_users>[FROM_USER_CONTEXT]\</target_users>
-\<tech_stack>[DETECTED_FROM_CODEBASE]\</tech_stack>
-\</execution_parameters>
+<execution_parameters>
+<main_idea>[DERIVED_FROM_ANALYSIS_AND_USER_INPUT]</main_idea>
+<key_features>[IDENTIFIED_IMPLEMENTED_AND_PLANNED_FEATURES]</key_features>
+<target_users>[FROM_USER_CONTEXT]</target_users>
+<tech_stack>[DETECTED_FROM_CODEBASE]</tech_stack>
+</execution_parameters>
 
-\<execution_prompt>
+<execution_prompt>
 @.claude/instructions/core/plan-product.md
 
 I'm installing AgileVerifFlowCC into an existing product. Here's what I've gathered:
@@ -121,7 +122,7 @@ I'm installing AgileVerifFlowCC into an existing product. Here's what I've gathe
   **Target Users**: [FROM_USER_RESPONSE]
 
   **Tech Stack**: [DETECTED_STACK_WITH_VERSIONS]
-  \</execution_prompt>
+  </execution_prompt>
 
 <instructions>
   ACTION: Execute plan-product.md with gathered information
@@ -137,25 +138,26 @@ I'm installing AgileVerifFlowCC into an existing product. Here's what I've gathe
 
 Refine the generated documentation to ensure accuracy for the existing product by updating roadmap, tech stack, and decisions based on actual implementation.
 
-\<customization_tasks>
-\<roadmap_adjustment>
-\- Mark completed features as done
-\- Move implemented items to "Phase 0: Already Completed"
-\- Adjust future phases based on actual progress
-\</roadmap_adjustment>
-\<tech_stack_verification>
-\- Verify detected versions are correct
-\- Add any missing infrastructure details
-\- Document actual deployment setup
-\</tech_stack_verification>
-\<decisions_documentation>
-\- Add historical decisions that shaped current architecture
-\- Document why certain technologies were chosen
-\- Capture any pivots or major changes
-\</decisions_documentation>
-\</customization_tasks>
+<customization_tasks>
+<roadmap_adjustment>
 
-\<roadmap_template>
+- Mark completed features as done
+- Move implemented items to "Phase 0: Already Completed"
+- Adjust future phases based on actual progress
+</roadmap_adjustment>
+<tech_stack_verification>
+- Verify detected versions are correct
+- Add any missing infrastructure details
+- Document actual deployment setup
+</tech_stack_verification>
+<decisions_documentation>
+- Add historical decisions that shaped current architecture
+- Document why certain technologies were chosen
+- Capture any pivots or major changes
+</decisions_documentation>
+</customization_tasks>
+
+<roadmap_template>
 
 ## Phase 0: Already Completed
 
@@ -170,7 +172,7 @@ The following features have been implemented:
 - [ ] [IN_PROGRESS_FEATURE] - [DESCRIPTION]
 
   [CONTINUE_WITH_STANDARD_PHASES]
-  \</roadmap_template>
+  </roadmap_template>
 
 </step>
 
@@ -180,15 +182,15 @@ The following features have been implemented:
 
 Verify installation completeness and provide clear next steps for the user to start using AgileVerifFlowCC with their existing codebase.
 
-\<verification_checklist>
+<verification_checklist>
 
 - [ ] .agilevv/product/ directory created
 - [ ] All product documentation reflects actual codebase
 - [ ] Roadmap shows completed and planned features accurately
 - [ ] Tech stack matches installed dependencies
-      \</verification_checklist>
+      </verification_checklist>
 
-\<summary_template>
+<summary_template>
 
 ## ✅ AgileVerifFlowCC Successfully Installed
 
@@ -224,15 +226,15 @@ I've analyzed your [PRODUCT_TYPE] codebase and set up AgileVerifFlowCC with docu
    ```
 
 Your codebase is now AgileVerifFlowCC-enabled! 🚀
-\</summary_template>
+</summary_template>
 
 </step>
 
-\</process_flow>
+</process_flow>
 
 ## Error Handling
 
-\<error_scenarios>
+<error_scenarios>
 <scenario name="no_clear_structure">
 <condition>Cannot determine project type or structure</condition>
 <action>Ask user for clarification about project</action>
@@ -245,16 +247,22 @@ Your codebase is now AgileVerifFlowCC-enabled! 🚀
 <condition>Cannot determine full tech stack</condition>
 <action>List detected technologies and ask for missing pieces</action>
 </scenario>
-\</error_scenarios>
+</error_scenarios>
 
 ## Execution Summary
 
-\<final_checklist>
+<final_checklist>
 <verify>
-\- [ ] Codebase analyzed thoroughly
-\- [ ] User context gathered
-\- [ ] plan-product.md executed with proper context
-\- [ ] Documentation customized for existing product
-\- [ ] Team can adopt AgileVerifFlowCC workflow
+
+- [ ] Codebase analyzed thoroughly
+- [ ] User context gathered
+- [ ] plan-product.md executed with proper context
+- [ ] Documentation customized for existing product
+- [ ] Team can adopt AgileVerifFlowCC workflow
 </verify>
-\</final_checklist>
+
+</final_checklist>
+
+<post_flight_check>
+  EXECUTE: @.claude/instructions/meta/post-flight.md
+</post_flight_check>

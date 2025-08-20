@@ -13,7 +13,7 @@ encoding: UTF-8
 After all tasks in the current spec have been completed, follow these steps to mark your progress updates, create a recap, and deliver the final report to the user.
 
 <pre_flight_check>
-EXECUTE: @.agent-os/instructions/meta/pre-flight.md
+EXECUTE: @.claude/instructions/meta/pre-flight.md
 </pre_flight_check>
 
 <process_flow>
@@ -45,11 +45,27 @@ Use the test-runner subagent to run the ALL tests in the application's test suit
 
 </step>
 
-<step number="2" subagent="git-workflow" name="git_workflow">
 
-### Step 2: Git Workflow
 
-Use the git-workflow subagent to create git commit, push to GitHub, and create pull request for the implemented features.
+<step number="2" subagent="precommit-error-analyzer" name="precommit_error_analysis">
+
+### Step 2: Pre-commit Error Analysis
+
+Use the precommit-error-analyzer subagent to analyze any errors reported by the pre-commit hooks.
+
+<instructions>
+  ACTION: Use precommit-error-analyzer subagent
+  REQUEST: "Analyze pre-commit errors"
+  WAIT: For analysis completion
+</instructions>
+
+</step>
+
+<step number="3" subagent="git-workflow" name="git_workflow">
+
+### Step 3: Git Workflow
+
+Use the git-workflow subagent to create git commit, push to GitHub, and create/edit pull request for the implemented features.
 
 <instructions>
   ACTION: Use git-workflow subagent
@@ -80,9 +96,9 @@ Use the git-workflow subagent to create git commit, push to GitHub, and create p
 
 </step>
 
-<step number="3" subagent="project-manager" name="tasks_list_check">
+<step number="4" subagent="project-manager" name="tasks_list_check">
 
-### Step 3: Tasks Completion Verification
+### Step 4: Tasks Completion Verification
 
 Use the project-manager subagent to read the current spec's tasks.md file and verify that all tasks have been properly marked as complete with [x] or documented with blockers.
 
@@ -122,11 +138,11 @@ Use the project-manager subagent to read the current spec's tasks.md file and ve
 
 </step>
 
-<step number="4" subagent="project-manager" name="roadmap_progress_check">
+<step number="5" subagent="project-manager" name="roadmap_progress_check">
 
-### Step 4: Roadmap Progress Update (conditional)
+### Step 5: Roadmap Progress Update (conditional)
 
-Use the project-manager subagent to read @.agent-os/product/roadmap.md and mark roadmap items as complete with [x] ONLY IF the executed tasks have completed any roadmap item(s) and the spec completes that item.
+Use the project-manager subagent to read @.claude/product/roadmap.md and mark roadmap items as complete with [x] ONLY IF the executed tasks have completed any roadmap item(s) and the spec completes that item.
 
 <conditional_execution>
 <preliminary_check>
@@ -154,16 +170,16 @@ CONTINUE with roadmap check
 
 </step>
 
-<step number="5" subagent="project-manager" name="document_recap">
+<step number="6" subagent="project-manager" name="document_recap">
 
-### Step 5: Create Recap Document
+### Step 6: Create Recap Document
 
-Use the project-manager subagent to create a recap document in .agent-os/recaps/ folder that summarizes what was built for this spec.
+Use the project-manager subagent to create a recap document in .claude/recaps/ folder that summarizes what was built for this spec.
 
 <instructions>
   ACTION: Use project-manager subagent
   REQUEST: "Create recap document for current spec:
-            - Create file: .agent-os/recaps/[SPEC_FOLDER_NAME].md
+            - Create file: .claude/recaps/[SPEC_FOLDER_NAME].md
             - Use template format with completed features summary
             - Include context from spec-lite.md
             - Document: [SPEC_FOLDER_PATH]"
@@ -175,7 +191,7 @@ Use the project-manager subagent to create a recap document in .agent-os/recaps/
 
 # [yyyy-mm-dd] Recap: Feature Name
 
-This recaps what was built for the spec documented at .agent-os/specs/[spec-folder-name]/spec.md.
+This recaps what was built for the spec documented at .claude/specs/[spec-folder-name]/spec.md.
 
 ## Recap
 
@@ -187,7 +203,7 @@ This recaps what was built for the spec documented at .agent-os/specs/[spec-fold
 </recap_template>
 
 <file_creation>
-<location>.agent-os/recaps/</location>
+<location>.claude/recaps/</location>
 <naming>[SPEC_FOLDER_NAME].md</naming>
 <format>markdown with yaml frontmatter if needed</format>
 </file_creation>
@@ -268,5 +284,5 @@ afplay /System/Library/Sounds/Glass.aiff
 </process_flow>
 
 <post_flight_check>
-EXECUTE: @.agent-os/instructions/meta/post-flight.md
+EXECUTE: @.claude/instructions/meta/post-flight.md
 </post_flight_check>

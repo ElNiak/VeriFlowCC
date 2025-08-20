@@ -73,3 +73,5 @@ temp/
 .serena
 .benchmarks
 .coverage.*
+.codacy/
+.claude/hooks/tool_logs/

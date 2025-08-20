@@ -246,10 +246,10 @@ Returning control to primary agent.
 If git operations fail:
 
 1. Check for uncommitted changes
-1. Verify branch state
-1. Ensure no merge conflicts
-1. Report specific error to primary agent
-1. Suggest resolution steps
+2. Verify branch state
+3. Ensure no merge conflicts
+4. Report specific error to primary agent
+5. Suggest resolution steps
 
 ## Integration Points
 
