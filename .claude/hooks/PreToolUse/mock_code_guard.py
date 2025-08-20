@@ -4,32 +4,40 @@
 #           and deny according to policy. Encourage DI, factories, Testcontainers, property-based tests instead.
 
 from __future__ import annotations
+
 import ast
+import fnmatch
 import json
 import os
 import re
-import shlex
 import sys
-import fnmatch
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 POLICY_FILE = Path(".claude/code_policy.json")
 
-DEFAULT_POLICY: Dict[str, Any] = {
+DEFAULT_POLICY: dict[str, Any] = {
     # Where this policy applies
-    "blockInTests": True,      # deny mock usage under tests/**
-    "blockInSrc": True,        # deny mock usage under src/** and other code dirs
+    "blockInTests": True,  # deny mock usage under tests/**
+    "blockInSrc": True,  # deny mock usage under <project_dir>/** and other code dirs
     # Allowed directories (overrides blocks)
     "allowDirs": [],
     # Allowed filename patterns (overrides blocks)
     "allowNameGlobs": [],
     # Language detection by file extension
     "langByExt": {
-        ".py": "python", ".pyi": "python",
-        ".js": "javascript", ".jsx": "javascript", ".ts": "javascript", ".tsx": "javascript",
-        ".java": "java", ".kt": "kotlin", ".kts": "kotlin",
-        ".cs": "csharp", ".go": "go", ".rs": "rust"
+        ".py": "python",
+        ".pyi": "python",
+        ".js": "javascript",
+        ".jsx": "javascript",
+        ".ts": "javascript",
+        ".tsx": "javascript",
+        ".java": "java",
+        ".kt": "kotlin",
+        ".kts": "kotlin",
+        ".cs": "csharp",
+        ".go": "go",
+        ".rs": "rust",
     },
     # Mock/test-double indicators (case-insensitive regex, per language)
     "mockApiPatterns": {
@@ -40,45 +48,69 @@ DEFAULT_POLICY: Dict[str, Any] = {
             r"\b(MagicMock|Mock|AsyncMock|create_autospec)\s*\(",
             r"\b@patch\(",
             r"\bpatch\(",
-            r"\bmocker\.",            # pytest-mock fixture
-            r"\bfaker\.", r"\bFaker\(" # data fakers
+            r"\bmocker\.",  # pytest-mock fixture
+            r"\bfaker\.",
+            r"\bFaker\(",  # data fakers
         ],
         "javascript": [
-            r"\bjest\.mock\(", r"\bvi\.mock\(", r"\bjest\.fn\(", r"\bvi\.fn\(",
-            r"\bsinon\.(stub|fake|mock)\(", r"\bnock\(", r"\bmsw\b", r"\bproxyquire\b", r"\brewiremock\b",
+            r"\bjest\.mock\(",
+            r"\bvi\.mock\(",
+            r"\bjest\.fn\(",
+            r"\bvi\.fn\(",
+            r"\bsinon\.(stub|fake|mock)\(",
+            r"\bnock\(",
+            r"\bmsw\b",
+            r"\bproxyquire\b",
+            r"\brewiremock\b",
             r"\btd\.(replace|when|verify)\(",  # testdouble
-            r"\bfaker\.", r"\@faker-js\/faker"
+            r"\bfaker\.",
+            r"\@faker-js\/faker",
         ],
         "java": [
-            r"\borg\.mockito\b", r"\bMockito\.", r"\b@Mock\b", r"\bwhen\(", r"\bgiven\(", r"\bBDDMockito\b",
-            r"\bwiremock\b"
+            r"\borg\.mockito\b",
+            r"\bMockito\.",
+            r"\b@Mock\b",
+            r"\bwhen\(",
+            r"\bgiven\(",
+            r"\bBDDMockito\b",
+            r"\bwiremock\b",
         ],
-        "kotlin": [
-            r"\bio\.mockk\b", r"\bmockk<", r"\bevery\s*\{", r"\bverify\s*\{"
-        ],
+        "kotlin": [r"\bio\.mockk\b", r"\bmockk<", r"\bevery\s*\{", r"\bverify\s*\{"],
         "csharp": [
-            r"\busing\s+Moq;", r"\bnew\s+Mock<", r"\bSubstitute\.For<", r"\bNSubstitute\b", r"\bFakeItEasy\b"
+            r"\busing\s+Moq;",
+            r"\bnew\s+Mock<",
+            r"\bSubstitute\.For<",
+            r"\bNSubstitute\b",
+            r"\bFakeItEasy\b",
         ],
         "go": [
-            r"\bgithub\.com/golang/mock/gomock\b", r"\bgomock\.NewController\(", r"\bgithub\.com/stretchr/testify/mock\b"
+            r"\bgithub\.com/golang/mock/gomock\b",
+            r"\bgomock\.NewController\(",
+            r"\bgithub\.com/stretchr/testify/mock\b",
         ],
-        "rust": [
-            r"\bmockall(::|::prelude::)", r"\bmockito::", r"#\[automock\]"
-        ]
+        "rust": [r"\bmockall(::|::prelude::)", r"\bmockito::", r"#\[automock\]"],
     },
     # Treat these directories as tests (deny if blockInTests)
     "testsDirs": ["tests/**", "test/**", "spec/**"],
     # Treat these directories as code (deny if blockInSrc)
-    "srcDirs": ["src/**", "lib/**", "app/**", "cmd/**", "internal/**", "pkg/**"],
+    "srcDirs": [
+        "<project_dir>/**",
+        "lib/**",
+        "app/**",
+        "cmd/**",
+        "internal/**",
+        "pkg/**",
+    ],
     # Emergency bypass env
     "bypassEnv": "CLAUDE_ALLOW_MOCK_CODE",
     # Include brief human suggestion in denies
-    "includeSuggestion": True
+    "includeSuggestion": True,
 }
 
 # ---------- config helpers ----------
 
-def _read_json(path: Path) -> Dict[str, Any]:
+
+def _read_json(path: Path) -> dict[str, Any]:
     try:
         if path.is_file():
             return json.loads(path.read_text())
@@ -86,13 +118,15 @@ def _read_json(path: Path) -> Dict[str, Any]:
         pass
     return {}
 
-def _env_list(name: str) -> Optional[List[str]]:
+
+def _env_list(name: str) -> list[str] | None:
     v = os.getenv(name)
     if not v:
         return None
     return [x.strip() for x in v.split(",") if x.strip()]
 
-def load_policy() -> Dict[str, Any]:
+
+def load_policy() -> dict[str, Any]:
     p = dict(DEFAULT_POLICY)
     p.update(_read_json(POLICY_FILE))
     # env overrides
@@ -105,14 +139,21 @@ def load_policy() -> Dict[str, Any]:
         lst = _env_list(envn)
         if lst is not None:
             p[key] = lst
-    e = os.getenv("CLAUDE_CODE_BLOCK_IN_TESTS");  p["blockInTests"] = p["blockInTests"] if e is None else e not in ("0","false","False")
-    e = os.getenv("CLAUDE_CODE_BLOCK_IN_SRC");    p["blockInSrc"]   = p["blockInSrc"] if e is None else e not in ("0","false","False")
+    e = os.getenv("CLAUDE_CODE_BLOCK_IN_TESTS")
+    p["blockInTests"] = (
+        p["blockInTests"] if e is None else e not in ("0", "false", "False")
+    )
+    e = os.getenv("CLAUDE_CODE_BLOCK_IN_SRC")
+    p["blockInSrc"] = p["blockInSrc"] if e is None else e not in ("0", "false", "False")
     return p
+
 
 # ---------- path & env utils ----------
 
+
 def project_root() -> Path:
     return Path(os.getenv("CLAUDE_PROJECT_DIR") or Path.cwd()).resolve()
+
 
 def norm_path(p: str) -> Path:
     root = project_root()
@@ -121,46 +162,68 @@ def norm_path(p: str) -> Path:
         raise ValueError(f"path escapes project root: {p}")
     return abs_p
 
+
 def relpath(p: Path) -> str:
     return p.relative_to(project_root()).as_posix()
 
-def any_glob_ci(s: str, globs: List[str]) -> bool:
+
+def any_glob_ci(s: str, globs: list[str]) -> bool:
     ss = s.lower()
     return any(fnmatch.fnmatchcase(ss, g.lower()) for g in globs or [])
 
-def in_any(rel: str, globs: List[str]) -> bool:
+
+def in_any(rel: str, globs: list[str]) -> bool:
     return any_glob_ci(rel, globs)
 
-def language_of(path: Path, lang_by_ext: Dict[str,str]) -> Optional[str]:
+
+def language_of(path: Path, lang_by_ext: dict[str, str]) -> str | None:
     return lang_by_ext.get(path.suffix.lower())
+
 
 # ---------- extract content from tools ----------
 
-def extract_write_pairs(payload: Any) -> List[Tuple[str, str]]:
-    pairs: List[Tuple[str, str]] = []
+
+def extract_write_pairs(payload: Any) -> list[tuple[str, str]]:
+    pairs: list[tuple[str, str]] = []
+
     def walk(x: Any):
         if isinstance(x, dict):
-            if "path" in x and isinstance(x["path"], str) and "content" in x and isinstance(x["content"], str):
+            if (
+                "path" in x
+                and isinstance(x["path"], str)
+                and "content" in x
+                and isinstance(x["content"], str)
+            ):
                 pairs.append((x["path"], x["content"]))
             for v in x.values():
                 walk(v)
         elif isinstance(x, list):
             for it in x:
                 walk(it)
+
     walk(payload)
     # Keep last per path
-    seen: Set[str] = set(); out: List[Tuple[str, str]] = []
+    seen: set[str] = set()
+    out: list[tuple[str, str]] = []
     for path, content in pairs[::-1]:
         if path not in seen:
-            out.append((path, content)); seen.add(path)
+            out.append((path, content))
+            seen.add(path)
     return list(reversed(out))
 
-HEREDOC_RE = re.compile(r"<<-?\s*(['\"]?)(?P<eof>\w+)\1\s*(?P<body>.*?)(?:\n)(?P=eof)\b", re.DOTALL)
-ECHO_REDIRECT_RE = re.compile(r"""(?:^|\s)(?:echo|printf)\s+(?P<q>['"])(?P<body>.*?)(?<!\\)(?P=q)\s*(?:>>?|>\|)\s*(?P<target>[^;&|]+)""", re.DOTALL)
+
+HEREDOC_RE = re.compile(
+    r"<<-?\s*(['\"]?)(?P<eof>\w+)\1\s*(?P<body>.*?)(?:\n)(?P=eof)\b", re.DOTALL
+)
+ECHO_REDIRECT_RE = re.compile(
+    r"""(?:^|\s)(?:echo|printf)\s+(?P<q>['"])(?P<body>.*?)(?<!\\)(?P=q)\s*(?:>>?|>\|)\s*(?P<target>[^;&|]+)""",
+    re.DOTALL,
+)
 TEE_RE = re.compile(r"""(?:^|\s)tee\s+(?P<target>[^-\s][^\s;|&]*)""")
 
-def extract_bash_pairs(command: str) -> List[Tuple[str, Optional[str]]]:
-    res: List[Tuple[str, Optional[str]]] = []
+
+def extract_bash_pairs(command: str) -> list[tuple[str, str | None]]:
+    res: list[tuple[str, str | None]] = []
     for m in ECHO_REDIRECT_RE.finditer(command):
         res.append((m.group("target").strip(), m.group("body")))
     for m in HEREDOC_RE.finditer(command):
@@ -169,11 +232,13 @@ def extract_bash_pairs(command: str) -> List[Tuple[str, Optional[str]]]:
         res.append((m.group("target").strip(), None))
     return [(t, b) for (t, b) in res if t or b]
 
+
 # ---------- detectors ----------
 
-def py_ast_indicators(src: str) -> List[str]:
+
+def py_ast_indicators(src: str) -> list[str]:
     """Parse minimal Python AST to catch unittest.mock imports and decorators."""
-    found: List[str] = []
+    found: list[str] = []
     try:
         tree = ast.parse(src)
     except Exception:
@@ -187,15 +252,25 @@ def py_ast_indicators(src: str) -> List[str]:
             mod = node.module or ""
             if mod in ("unittest.mock", "unittest"):
                 for n in node.names:
-                    if n.name.lower() in {"mock","magicmock","patch","asyncmock","create_autospec"}:
+                    if n.name.lower() in {
+                        "mock",
+                        "magicmock",
+                        "patch",
+                        "asyncmock",
+                        "create_autospec",
+                    }:
                         found.append(f"from {mod} import {n.name}")
         if isinstance(node, ast.Call):
             # decorators @patch(...) appear as ast.Call in FunctionDef.decorator_list; walk covers them
-            func = getattr(node.func, "id", None) or getattr(getattr(node.func, "attr", None), "__str__", lambda: None)()
+            func = (
+                getattr(node.func, "id", None)
+                or getattr(getattr(node.func, "attr", None), "__str__", lambda: None)()
+            )
     return list(set(found))
 
-def regex_hits(patterns: List[str], text: str) -> List[str]:
-    hits: List[str] = []
+
+def regex_hits(patterns: list[str], text: str) -> list[str]:
+    hits: list[str] = []
     for rx in patterns or []:
         try:
             if re.search(rx, text, re.IGNORECASE):
@@ -205,12 +280,17 @@ def regex_hits(patterns: List[str], text: str) -> List[str]:
             pass
     return hits
 
-def evaluate_pair(path_str: str, content: str, policy: Dict[str, Any]) -> Tuple[bool, str, Dict[str, Any]]:
+
+def evaluate_pair(
+    path_str: str, content: str, policy: dict[str, Any]
+) -> tuple[bool, str, dict[str, Any]]:
     abs_p = norm_path(path_str)
     rel = relpath(abs_p)
 
     # Allow-lists first
-    if in_any(rel, policy.get("allowDirs", [])) or any_glob_ci(rel, policy.get("allowNameGlobs", [])):
+    if in_any(rel, policy.get("allowDirs", [])) or any_glob_ci(
+        rel, policy.get("allowNameGlobs", [])
+    ):
         return (False, "allowlist", {"path": rel})
 
     lang = language_of(abs_p, policy.get("langByExt", {}))
@@ -219,8 +299,11 @@ def evaluate_pair(path_str: str, content: str, policy: Dict[str, Any]) -> Tuple[
 
     # Scope rules
     is_test = in_any(rel, policy.get("testsDirs", []))
-    is_src  = in_any(rel, policy.get("srcDirs", []))
-    if not ((is_test and policy.get("blockInTests", True)) or (is_src and policy.get("blockInSrc", True))):
+    is_src = in_any(rel, policy.get("srcDirs", []))
+    if not (
+        (is_test and policy.get("blockInTests", True))
+        or (is_src and policy.get("blockInSrc", True))
+    ):
         return (False, "out-of-scope", {"path": rel})
 
     patterns = (policy.get("mockApiPatterns", {}) or {}).get(lang, [])
@@ -235,7 +318,7 @@ def evaluate_pair(path_str: str, content: str, policy: Dict[str, Any]) -> Tuple[
         return (False, "no-mock-detected", {"path": rel})
 
     # Provide evidence (first N matching lines)
-    evidence: List[str] = []
+    evidence: list[str] = []
     lines = content.splitlines()
     for idx, line in enumerate(lines, 1):
         if len(evidence) >= 5:
@@ -252,30 +335,41 @@ def evaluate_pair(path_str: str, content: str, policy: Dict[str, Any]) -> Tuple[
         "(2) Testcontainers or ephemeral services for integration tests, "
         "(3) property-based tests (e.g., Hypothesis/fast-check), "
         "(4) small golden tests only for stable public outputs."
-        if policy.get("includeSuggestion", True) else ""
+        if policy.get("includeSuggestion", True)
+        else ""
     )
 
-    return (True, "mock-api-detected", {
-        "path": rel,
-        "language": lang,
-        "hits": hits[:10],
-        "evidence": evidence,
-        "suggestion": suggestion
-    })
+    return (
+        True,
+        "mock-api-detected",
+        {
+            "path": rel,
+            "language": lang,
+            "hits": hits[:10],
+            "evidence": evidence,
+            "suggestion": suggestion,
+        },
+    )
+
 
 # ---------- report & entry ----------
 
-def deny(reason: str, message: str, data: Dict[str, Any]) -> int:
+
+def deny(reason: str, message: str, data: dict[str, Any]) -> int:
     payload = {"decision": "deny", "reason": reason, "message": message, "data": data}
     print("BEGIN_HOOK_REPORT", file=sys.stderr)
     print(json.dumps(payload, indent=2), file=sys.stderr)
     print("END_HOOK_REPORT", file=sys.stderr)
     return 2
 
-def allow(reason: str, data: Dict[str, Any]) -> int:
+
+def allow(reason: str, data: dict[str, Any]) -> int:
     payload = {"decision": "allow", "reason": reason, "data": data}
-    print("BEGIN_HOOK_REPORT"); print(json.dumps(payload, indent=2)); print("END_HOOK_REPORT")
+    print("BEGIN_HOOK_REPORT")
+    print(json.dumps(payload, indent=2))
+    print("END_HOOK_REPORT")
     return 0
+
 
 def main() -> int:
     policy = load_policy()
@@ -291,8 +385,8 @@ def main() -> int:
         return 0
 
     tool = env.get("tool_name")
-    blocked: List[Dict[str, Any]] = []
-    checked: List[str] = []
+    blocked: list[dict[str, Any]] = []
+    checked: list[str] = []
 
     if tool in ("Write", "Edit", "MultiEdit"):
         for path, content in extract_write_pairs(env.get("tool_input")):
@@ -308,7 +402,8 @@ def main() -> int:
                 if not target or body is None:
                     continue
                 # Only evaluate if extension maps to a language
-                abs_tgt = norm_path(target); rel_tgt = relpath(abs_tgt)
+                abs_tgt = norm_path(target)
+                rel_tgt = relpath(abs_tgt)
                 lang = language_of(abs_tgt, policy.get("langByExt", {}))
                 if not lang:
                     continue
@@ -318,11 +413,18 @@ def main() -> int:
                     blocked.append({"reason": reason, **details})
 
     if blocked:
-        msg = ("Mock/test-double usage is blocked by policy. Update tests to use DI, real lightweight adapters, "
-               "ephemeral services (Testcontainers), or property-based tests. See .claude/code_policy.json for overrides.")
-        return deny("mock-code-denied", msg, {"blocked": blocked, "checked": checked, "tool": tool})
+        msg = (
+            "Mock/test-double usage is blocked by policy. Update tests to use DI, real lightweight adapters, "
+            "ephemeral services (Testcontainers), or property-based tests. See .claude/code_policy.json for overrides."
+        )
+        return deny(
+            "mock-code-denied",
+            msg,
+            {"blocked": blocked, "checked": checked, "tool": tool},
+        )
 
     return allow("ok", {"checked": checked, "tool": tool})
+
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -148,4 +148,5 @@ exclude_lines = [
 [dependency-groups]
 dev = [
     "pytest-benchmark>=5.1.0",
+    "pytest-xdist>=3.8.0",
 ]

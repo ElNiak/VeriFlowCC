@@ -90,7 +90,7 @@ git tag sprint-S01-design-PASS
 ### Coding Gate Pass
 
 ```bash
-git add src/* tests/*
+git add <project_dir>/* tests/*
 git commit -m "[CODING] Implementation complete
 
 - Feature X implemented

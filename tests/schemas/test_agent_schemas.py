@@ -43,7 +43,11 @@ class TestBaseAgentSchemas:
 
     def test_agent_input_minimal_data(self) -> None:
         """Test AgentInput with minimal required data."""
-        data: dict[str, Any] = {"story_id": "US-002", "stage": VModelStage.DESIGN, "context": {}}
+        data: dict[str, Any] = {
+            "story_id": "US-002",
+            "stage": VModelStage.DESIGN,
+            "context": {},
+        }
 
         agent_input = AgentInput(**data)
 
@@ -191,7 +195,7 @@ class TestImplementationSchemas:
         data: dict[str, Any] = {
             "status": "success",
             "artifacts": {"code": "implementation"},
-            "source_files": ["src/module.py", "src/utils.py"],
+            "source_files": ["<project_dir>/module.py", "<project_dir>/utils.py"],
             "code_metrics": {"lines": 100, "complexity": 5},
             "implementation_report": {"features": ["login", "logout"]},
         }
@@ -199,7 +203,10 @@ class TestImplementationSchemas:
         impl_output = ImplementationOutput(**data)
 
         assert impl_output.status == "success"
-        assert impl_output.source_files == ["src/module.py", "src/utils.py"]
+        assert impl_output.source_files == [
+            "<project_dir>/module.py",
+            "<project_dir>/utils.py",
+        ]
         assert impl_output.code_metrics == {"lines": 100, "complexity": 5}
         assert impl_output.implementation_report == {"features": ["login", "logout"]}
 
@@ -277,12 +284,19 @@ class TestIntegrationSchemas:
         integration_output = IntegrationOutput(**data)
 
         assert integration_output.status == "success"
-        assert integration_output.integration_results == {"status": "healthy", "services": 3}
+        assert integration_output.integration_results == {
+            "status": "healthy",
+            "services": 3,
+        }
         assert integration_output.deployment_validation == {
             "environment": "staging",
             "health_checks": True,
         }
-        assert integration_output.system_health == {"cpu": 25, "memory": 60, "uptime": "99.9%"}
+        assert integration_output.system_health == {
+            "cpu": 25,
+            "memory": 60,
+            "uptime": "99.9%",
+        }
 
 
 class TestSchemaInheritance:

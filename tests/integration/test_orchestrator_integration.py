@@ -99,7 +99,7 @@ class TestFullVModelWorkflow:
             "status": "success",
             "next_stage_ready": True,
             "artifacts": {"implementation": "impl.json"},
-            "source_files": ["src/user_service.py"],
+            "source_files": ["<project_dir>/user_service.py"],
             "code_metrics": {"lines": 100, "complexity": 5},
             "implementation_report": {"features": ["user_management"]},
         }
@@ -180,7 +180,7 @@ class TestFullVModelWorkflow:
             "status": "partial",
             "next_stage_ready": False,
             "artifacts": {"implementation": "partial_impl.json"},
-            "source_files": ["src/incomplete.py"],
+            "source_files": ["<project_dir>/incomplete.py"],
             "errors": ["Code quality validation failed"],
         }
 
@@ -203,7 +203,10 @@ class TestOrchestratorArtifactPassing:
     @patch("verifflowcc.agents.architect.ArchitectAgent.process")
     @patch("verifflowcc.agents.developer.DeveloperAgent.process")
     async def test_artifact_passing_design_to_coding(
-        self, mock_developer_process: Any, mock_architect_process: Any, isolated_agilevv_dir: Any
+        self,
+        mock_developer_process: Any,
+        mock_architect_process: Any,
+        isolated_agilevv_dir: Any,
     ) -> None:
         """Test that artifacts flow correctly from design to coding stage."""
 
@@ -227,7 +230,7 @@ class TestOrchestratorArtifactPassing:
             "status": "success",
             "next_stage_ready": True,
             "artifacts": {"implementation": "impl.json"},
-            "source_files": ["src/user_service.py"],
+            "source_files": ["<project_dir>/user_service.py"],
         }
 
         orchestrator = Orchestrator(path_config=isolated_agilevv_dir)

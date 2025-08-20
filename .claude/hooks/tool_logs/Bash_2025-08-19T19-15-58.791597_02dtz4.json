@@ -1,0 +1,7 @@
+{
+  "timestamp": "2025-08-19T19:15:58.791549",
+  "session_id": "0db89026-481b-4386-a2ae-65d42e222b16",
+  "tool_name": "Bash",
+  "command": "uv run pytest --log-cli-level=DEBUG --cov=verifflowcc --cov-report=term-missing --cov-report=json -v",
+  "description": "Run full test suite with coverage and verbose output"
+}

@@ -179,8 +179,16 @@ class MockSDKAgent:
             "implementation_data": {
                 "code_generation": {
                     "files_created": [
-                        {"path": "src/auth/service.py", "type": "python", "lines": 150},
-                        {"path": "src/auth/models.py", "type": "python", "lines": 45},
+                        {
+                            "path": "<project_dir>/auth/service.py",
+                            "type": "python",
+                            "lines": 150,
+                        },
+                        {
+                            "path": "<project_dir>/auth/models.py",
+                            "type": "python",
+                            "lines": 45,
+                        },
                         {"path": "tests/test_auth.py", "type": "python", "lines": 85},
                     ],
                     "total_lines": 280,

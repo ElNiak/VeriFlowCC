@@ -185,7 +185,7 @@ on:
   workflow_dispatch:
     inputs:
       story:
-        description: 'User story to implement'
+        description: "User story to implement"
         required: true
 
 jobs:
@@ -197,7 +197,7 @@ jobs:
       - name: Setup Python with UV
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install UV
         run: pip install uv
@@ -339,9 +339,9 @@ cat > .agilevv/custom_validate.sh << 'EOF'
 #!/bin/bash
 echo "Running custom validations..."
 python -m pytest tests/ --cov=src --cov-report=term-missing
-python -m mypy src/
-python -m black --check src/
-python -m flake8 src/
+python -m mypy <project_dir>/
+python -m black --check <project_dir>/
+python -m flake8 <project_dir>/
 EOF
 
 chmod +x .agilevv/custom_validate.sh
