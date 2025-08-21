@@ -55,7 +55,7 @@ class SDKConfig:
             raise ValueError("Retry delay must be non-negative")
 
         # Handle empty string as None for proper authentication detection (all environments)
-        if self.api_key == "":
+        if not self.api_key:
             self.api_key = None
 
         # Allow tests to run without API key when in test mode
