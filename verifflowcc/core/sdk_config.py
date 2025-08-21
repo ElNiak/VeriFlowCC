@@ -355,7 +355,7 @@ deployment status, performance metrics, and recommendations."""
         }
 
         # Define permissions for each agent type
-        requirements_permissions = {
+        requirements_analyst_permissions = {
             **base_permissions,
             "write": True,  # Can create requirement documents
         }
