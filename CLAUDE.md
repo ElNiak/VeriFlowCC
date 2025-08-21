@@ -99,16 +99,16 @@ uv pip install -e .
 
 VeriFlowCC uses the Claude Code SDK for real AI-powered V-Model execution. All agents are now integrated with the SDK for production-ready functionality.
 
-### API Key Configuration
+### Authentication Configuration
 
-Set your Anthropic API key for SDK access:
+VeriFlowCC requires Claude Code authentication to function properly. Users must configure their authentication method through VeriFlow's guidelines before using this tool:
 
 ```bash
-# Option 1: Environment variable (recommended)
-export ANTHROPIC_API_KEY="your-api-key-here"
-
-# Option 2: Claude CLI configuration (if using Claude CLI)
-claude auth login
+# Authentication is handled through Claude Code SDK
+# Users should configure their preferred authentication method:
+# - Claude Code subscription (recommended)
+# - API key configuration (if using direct API access)
+# Please refer to VeriFlow documentation for setup instructions
 ```
 
 ### SDK Configuration
@@ -117,7 +117,7 @@ The SDK is configured through the `SDKConfig` class in `verifflowcc/core/sdk_con
 
 ```python
 class SDKConfig:
-    api_key: Optional[str] = None  # Auto-detected from environment
+    api_key: Optional[str] = None  # Optional, uses configured authentication
     base_url: Optional[str] = None  # Uses Claude Code SDK default
     timeout: int = 30  # Request timeout in seconds
     max_retries: int = 3  # Retry attempts on failure
@@ -255,12 +255,16 @@ All agents now use the Claude Code SDK for real AI-powered execution with:
 - Never use bare `except:` - specify exception types
 - Structure agent communication with Pydantic models
 
-### Testing Requirements
+### Real Testing Requirements (No Mock Dependencies)
 
-- Minimum 80% code coverage (enforced by pytest)
-- Write tests for all new features
-- Use markers to categorize tests (unit, integration, e2e)
-- Follow AAA pattern (Arrange, Act, Assert)
+**VeriFlowCC enforces a 100% real integration testing approach with zero mock dependencies:**
+
+- **No unittest.mock usage**: All tests use real Claude Code SDK integration
+- **Minimum 80% code coverage** (enforced by pytest)
+- **Environment variable management**: Use `temp_env_vars()` context manager instead of `@patch.dict`
+- **Real API authentication**: Tests use configured authentication (subscription or API key)
+- **Test markers for categorization**: unit, integration, e2e, real_sdk, sequential
+- **AAA pattern**: Arrange, Act, Assert with real service calls
 
 ### Test Isolation Framework
 

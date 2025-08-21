@@ -1,6 +1,6 @@
 ---
 name: python-pro
-description: Write idiomatic Python code with advanced features like decorators, generators, and async/await. Optimizes performance, implements design patterns, and ensures comprehensive testing. MUST BE USED proactively for Python refactoring, optimization, or complex Python features.
+description: Write idiomatic Python code with advanced features like decorators, generators, and async/await. Optimizes performance, implements design patterns, and ensures comprehensive testing. MUST BE USED PROACTIVELY when writing or modifying any Python code, including refactoring, optimization, or complex Python features.
 model: sonnet
 ---
 

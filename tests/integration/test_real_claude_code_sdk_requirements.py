@@ -40,16 +40,11 @@ def _can_authenticate_with_sdk() -> bool:
 
 
 # Skip all tests if SDK authentication is not available
-skip_if_no_auth = pytest.mark.skipif(
-    not _can_authenticate_with_sdk(),
-    reason="No Claude Code SDK authentication available (API key or subscription)",
-)
 
 
 class TestRealSDKClientInitialization:
     """Test real Claude Code SDK client initialization and authentication."""
 
-    @skip_if_no_auth
     def test_sdk_client_initialization_with_api_key_auth(self) -> None:
         """Test SDK client initializes with API key authentication."""
         api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -63,7 +58,6 @@ class TestRealSDKClientInitialization:
         else:
             pytest.skip("API key not available, testing subscription auth instead")
 
-    @skip_if_no_auth
     def test_sdk_client_initialization_with_subscription_auth(self) -> None:
         """Test SDK client initializes with subscription-based authentication."""
         # Test subscription auth when no API key is provided
@@ -86,7 +80,6 @@ class TestRealSDKClientInitialization:
         assert sdk_config.max_retries == 3
         assert sdk_config.base_url is None  # Uses SDK default
 
-    @skip_if_no_auth
     def test_requirements_analyst_real_sdk_initialization(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -109,7 +102,6 @@ class TestRealSDKClientInitialization:
 class TestRealSDKSessionCreation:
     """Test real Claude Code SDK agent session creation and management."""
 
-    @skip_if_no_auth
     @pytest.mark.asyncio
     async def test_sdk_agent_session_creation_with_context(
         self, isolated_agilevv_dir: TestPathConfig
@@ -167,7 +159,6 @@ class TestRealSDKSessionCreation:
             else:
                 raise
 
-    @skip_if_no_auth
     @pytest.mark.asyncio
     async def test_session_persistence_across_calls(
         self, isolated_agilevv_dir: TestPathConfig
@@ -222,7 +213,6 @@ class TestRealSDKSessionCreation:
 class TestRealAIGeneratedRequirements:
     """Test validation of real AI-generated requirements.md with INVEST compliance."""
 
-    @skip_if_no_auth
     @pytest.mark.asyncio
     async def test_real_ai_generated_invest_compliant_stories(
         self, isolated_agilevv_dir: TestPathConfig
@@ -297,7 +287,6 @@ class TestRealAIGeneratedRequirements:
             else:
                 raise
 
-    @skip_if_no_auth
     @pytest.mark.asyncio
     async def test_real_ai_requirements_artifact_generation(
         self, isolated_agilevv_dir: TestPathConfig
@@ -362,7 +351,6 @@ class TestRealAIGeneratedRequirements:
 class TestRealStreamingResponseHandling:
     """Test real-time streaming response handling during Requirements Analyst execution."""
 
-    @skip_if_no_auth
     @pytest.mark.asyncio
     async def test_real_streaming_response_collection(
         self, isolated_agilevv_dir: TestPathConfig
@@ -409,7 +397,6 @@ class TestRealStreamingResponseHandling:
             else:
                 raise
 
-    @skip_if_no_auth
     @pytest.mark.asyncio
     async def test_real_time_feedback_mechanisms(
         self, isolated_agilevv_dir: TestPathConfig
@@ -457,7 +444,6 @@ class TestRealStreamingResponseHandling:
 class TestAuthenticSDKOutputValidation:
     """Test validation of authentic Claude Code SDK agent outputs."""
 
-    @skip_if_no_auth
     @pytest.mark.asyncio
     async def test_authentic_sdk_response_structure_validation(
         self, isolated_agilevv_dir: TestPathConfig
@@ -499,7 +485,6 @@ class TestAuthenticSDKOutputValidation:
             else:
                 raise
 
-    @skip_if_no_auth
     @pytest.mark.asyncio
     async def test_real_ai_output_content_quality(
         self, isolated_agilevv_dir: TestPathConfig

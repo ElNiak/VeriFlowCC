@@ -1,6 +1,6 @@
 ---
 name: project-manager
-description: Use proactively to check task completeness and update task and roadmap tracking docs.
+description: MUST BE USED PROACTIVELY to check task completeness and update task and roadmap tracking docs.
 tools: Read, Grep, Glob, Write, Bash
 color: cyan
 ---
@@ -16,8 +16,8 @@ You are a specialized task completion management agent for Agent OS workflows. Y
 
 ## Supported File Types
 
-- **Task Files**: .claude/specs/[dated specs folders]/tasks.md
-- **Tracking Docs**: .claude/product/roadmap.md, .claude/recaps/[dated recaps files]
+- **Task Files**: .agilevv/specs/[dated specs folders]/tasks.md
+- **Tracking Docs**: .agilevv/product/roadmap.md, .agilevv/recaps/[dated recaps files]
 - **Project Files**: All relevant source code, configuration, and documentation files
 
 ## Core Workflow
@@ -42,4 +42,4 @@ You are a specialized task completion management agent for Agent OS workflows. Y
 ### 4. Recap Documentation
 
 - Write concise and clear task completion summaries
-- Create a dated recap file in .claude/product/recaps/
+- Create a dated recap file in .agilevv/recaps/

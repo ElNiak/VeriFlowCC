@@ -13,18 +13,22 @@ import pytest
 from verifflowcc.agents.base import BaseAgent
 from verifflowcc.core.sdk_config import SDKConfig
 
-pytestmark = [pytest.mark.unit, pytest.mark.streaming, pytest.mark.timeout, pytest.mark.retry]
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.streaming,
+    pytest.mark.timeout,
+    pytest.mark.retry,
+]
 
 
 class MockTimeoutAgent(BaseAgent):
     """Mock agent for testing timeout and retry scenarios."""
 
-    def __init__(self, sdk_config: SDKConfig, mock_mode: bool = True):
+    def __init__(self, sdk_config: SDKConfig):
         super().__init__(
             name="test_timeout_agent",
             agent_type="timeout_test",
             sdk_config=sdk_config,
-            mock_mode=mock_mode,
         )
         self.timeout_count = 0
         self.retry_count = 0
@@ -64,7 +68,7 @@ class MockTimeoutAgent(BaseAgent):
             yield {
                 "type": "timeout",
                 "error": str(e),
-                "chunks_delivered": fail_after_chunk if fail_after_chunk is not None else i,
+                "chunks_delivered": (fail_after_chunk if fail_after_chunk is not None else i),
                 "timeout_count": self.timeout_count,
             }
             raise
@@ -77,7 +81,7 @@ class TestStreamingTimeoutDetection:
     def timeout_agent(self) -> MockTimeoutAgent:
         """Provide mock timeout agent."""
         config = SDKConfig(api_key="test-timeout-key", timeout=30)
-        return MockTimeoutAgent(config, mock_mode=True)
+        return MockTimeoutAgent(config)
 
     @pytest.mark.asyncio
     async def test_basic_timeout_detection(self, timeout_agent: MockTimeoutAgent) -> None:

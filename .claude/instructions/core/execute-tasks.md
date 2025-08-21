@@ -12,10 +12,6 @@ encoding: UTF-8
 
 Initiate execution of one or more tasks for a given spec.
 
-<pre_flight_check>
-EXECUTE: @.claude/instructions/meta/pre-flight.md
-</pre_flight_check>
-
 <process_flow>
 
 <step number="1" name="task_assignment">
@@ -55,13 +51,13 @@ Use the context-fetcher subagent to gather minimal context for task understandin
 <essential_docs>
 
 - tasks.md for task breakdown
-</essential_docs>
-<conditional_docs>
+  </essential_docs>
+  <conditional_docs>
 - mission-lite.md for product alignment
 - spec-lite.md for feature summary
 - technical-spec.md for implementation details
-</conditional_docs>
-</context_gathering>
+  </conditional_docs>
+  </context_gathering>
 
 </step>
 
@@ -135,23 +131,23 @@ EXECUTE instructions from execute-task.md with:
 
 - parent_task_number
 - all associated subtasks
-WAIT for task completion
-UPDATE tasks.md status
-END FOR
-</execution_flow>
+  WAIT for task completion
+  UPDATE tasks.md status
+  END FOR
+  </execution_flow>
 
 <loop_logic>
 <continue_conditions>
 
 - More unfinished parent tasks exist
 - User has not requested stop
-</continue_conditions>
-<exit_conditions>
+  </continue_conditions>
+  <exit_conditions>
 - All assigned tasks marked complete
 - User requests early termination
 - Blocking issue prevents continuation
-</exit_conditions>
-</loop_logic>
+  </exit_conditions>
+  </loop_logic>
 
 <task_status_check>
 AFTER each task execution:
@@ -185,7 +181,3 @@ After all tasks in tasks.md have been implemented, use @.claude/instructions/cor
 </instructions>
 
 </step>
-
-<post_flight_check>
-  EXECUTE: @.claude/instructions/meta/post-flight.md
-</post_flight_check>

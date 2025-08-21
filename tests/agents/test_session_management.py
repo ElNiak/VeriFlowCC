@@ -19,12 +19,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.session]
 class MockSessionAwareAgent(BaseAgent):
     """Mock agent with session management capabilities."""
 
-    def __init__(self, sdk_config: SDKConfig, mock_mode: bool = True):
+    def __init__(self, sdk_config: SDKConfig):
         super().__init__(
             name="test_session_agent",
             agent_type="session_test",
             sdk_config=sdk_config,
-            mock_mode=mock_mode,
         )
         self.session_data: dict[str, Any] = {}
         self.session_active = False
@@ -102,7 +101,7 @@ class TestSessionInitialization:
     def session_agent(self) -> MockSessionAwareAgent:
         """Provide mock session-aware agent."""
         config = SDKConfig(api_key="test-session-key")
-        return MockSessionAwareAgent(config, mock_mode=True)
+        return MockSessionAwareAgent(config)
 
     @pytest.mark.asyncio
     async def test_session_initialization(self, session_agent: MockSessionAwareAgent) -> None:
@@ -162,7 +161,7 @@ class TestSessionPersistence:
     def session_agent(self) -> MockSessionAwareAgent:
         """Provide mock session-aware agent."""
         config = SDKConfig(api_key="test-persistence-key")
-        return MockSessionAwareAgent(config, mock_mode=True)
+        return MockSessionAwareAgent(config)
 
     @pytest.mark.asyncio
     async def test_session_state_saving(
@@ -248,7 +247,7 @@ class TestSessionPersistence:
         await session_agent.save_session_state_to_file(session_file)
 
         # Create new agent and restore
-        new_agent = MockSessionAwareAgent(SDKConfig(api_key="test-restore-key"), mock_mode=True)
+        new_agent = MockSessionAwareAgent(SDKConfig(api_key="test-restore-key"))
         await new_agent.restore_session_state(session_file)
 
         # Verify complex data restoration
@@ -265,7 +264,7 @@ class TestSessionContextPreservation:
     def session_agent(self) -> MockSessionAwareAgent:
         """Provide mock session-aware agent."""
         config = SDKConfig(api_key="test-context-key")
-        return MockSessionAwareAgent(config, mock_mode=True)
+        return MockSessionAwareAgent(config)
 
     @pytest.mark.asyncio
     async def test_context_preservation_across_calls(
@@ -339,7 +338,7 @@ class TestSessionContextPreservation:
         """Test session isolation between different agent instances."""
         # Create second agent
         config2 = SDKConfig(api_key="test-isolation-key")
-        agent2 = MockSessionAwareAgent(config2, mock_mode=True)
+        agent2 = MockSessionAwareAgent(config2)
 
         # Start sessions on both agents
         session1_id = await session_agent.start_session()
@@ -363,7 +362,7 @@ class TestSessionCleanup:
     def session_agent(self) -> MockSessionAwareAgent:
         """Provide mock session-aware agent."""
         config = SDKConfig(api_key="test-cleanup-key")
-        return MockSessionAwareAgent(config, mock_mode=True)
+        return MockSessionAwareAgent(config)
 
     @pytest.mark.asyncio
     async def test_session_cleanup_on_end(self, session_agent: MockSessionAwareAgent) -> None:
@@ -431,7 +430,7 @@ class TestSessionErrorHandling:
     def session_agent(self) -> MockSessionAwareAgent:
         """Provide mock session-aware agent."""
         config = SDKConfig(api_key="test-error-key")
-        return MockSessionAwareAgent(config, mock_mode=True)
+        return MockSessionAwareAgent(config)
 
     @pytest.mark.asyncio
     async def test_session_error_recovery(self, session_agent: MockSessionAwareAgent) -> None:

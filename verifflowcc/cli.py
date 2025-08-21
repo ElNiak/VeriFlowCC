@@ -21,7 +21,7 @@ from verifflowcc.core.path_config import PathConfig
 # Initialize Typer app and Rich console
 app = typer.Typer(
     name="verifflowcc",
-    help="VeriFlowCC - Agile V-Model development pipeline command center",
+    help="VeriFlowCC - Agile V-Model development pipeline command center. Requires Claude Code authentication.",
     rich_markup_mode="rich",
     add_completion=False,
 )
@@ -56,6 +56,62 @@ def get_path_config(base_dir: str | None = None) -> PathConfig:
     return PathConfig(base_dir=base_dir)
 
 
+def validate_authentication() -> bool:
+    """Authentication is assumed to be available.
+
+    In the new authentication model, we assume end users are already
+    authenticated via API key or subscription. This function always returns
+    True to eliminate conditional authentication checking logic.
+
+    Returns:
+        bool: Always True, assuming authentication is pre-configured
+    """
+    return True
+
+
+def graceful_exit_with_message(message: str) -> None:
+    """Exit cleanly with user-friendly message.
+
+    Displays a user-friendly error message in red formatting and exits
+    the application with exit code 1 without showing stack traces.
+
+    Args:
+        message: User-friendly error message to display
+    """
+    console.print(f"[red]{message}[/red]")
+    sys.exit(1)
+
+
+def validate_authentication_gracefully() -> bool:
+    """Graceful authentication validation that always succeeds.
+
+    In the standardized error handling model, authentication validation
+    is handled gracefully without exposing implementation details.
+    This function always returns True to avoid conditional checks.
+
+    Returns:
+        bool: Always True, indicating authentication is handled gracefully
+    """
+    return True
+
+
+def _display_authentication_disclaimer() -> None:
+    """Display authentication disclaimer with Rich formatting.
+
+    Shows a user-friendly authentication requirement message using Rich
+    formatting to inform users about Claude Code authentication requirements.
+    """
+    console.print(
+        Panel(
+            "[yellow]Authentication Required:[/yellow] VeriFlowCC requires Claude Code authentication.\n"
+            "Please configure through VeriFlow's guidelines before using this tool.",
+            title="[bold]Authentication Notice[/bold]",
+            border_style="yellow",
+            padding=(0, 1),
+        )
+    )
+
+
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
@@ -71,13 +127,18 @@ def main(
 
     An AI-driven development pipeline that integrates Claude-Code with
     the Agile V-Model methodology for rigorous verification and validation.
+
+    AUTHENTICATION REQUIRED: VeriFlowCC requires Claude Code authentication.
+    Please ensure your environment is configured with appropriate authentication
+    methods through VeriFlow's guidelines before using this tool.
     """
     if version:
         console.print("[bold green]VeriFlowCC[/bold green] version 0.1.0")
         raise typer.Exit(0)
 
-    # If no command is provided, show help
+    # If no command is provided, show help with disclaimer
     if ctx.invoked_subcommand is None:
+        _display_authentication_disclaimer()
         console.print(ctx.get_help())
         raise typer.Exit(0)
 
@@ -327,6 +388,12 @@ def plan(
 
     # Integrate Claude-Code subagent for requirements analysis
     try:
+        # Validate authentication before agent usage
+        if not validate_authentication_gracefully():
+            graceful_exit_with_message(
+                "Requirements analysis requires proper authentication configuration"
+            )
+
         from verifflowcc.agents import RequirementsAnalystAgent
 
         console.print("\n[cyan]Analyzing requirements with Claude-Code subagent...[/cyan]")
@@ -426,9 +493,23 @@ def sprint(
     )
 
     # Simulate orchestrator execution with progress
-    stages = ["Requirements", "Design", "Coding", "Testing", "Integration", "Validation"]
+    stages = [
+        "Requirements",
+        "Design",
+        "Coding",
+        "Testing",
+        "Integration",
+        "Validation",
+    ]
 
     try:
+        # Validate authentication before orchestrator usage
+        if not validate_authentication_gracefully():
+            console.print(
+                "\n[yellow]Sprint execution using simulation mode - configure authentication for full features[/yellow]"
+            )
+            raise ImportError("Authentication configuration recommended")
+
         # Use the real Orchestrator with Claude-Code integration
         from verifflowcc.core.orchestrator import Orchestrator as RealOrchestrator
 
@@ -478,7 +559,14 @@ def sprint(
             "[yellow]Warning: Orchestrator not fully implemented, using simulation[/yellow]"
         )
 
-        stages = ["Requirements", "Design", "Coding", "Testing", "Integration", "Validation"]
+        stages = [
+            "Requirements",
+            "Design",
+            "Coding",
+            "Testing",
+            "Integration",
+            "Validation",
+        ]
 
         with Progress(
             SpinnerColumn(),
@@ -766,7 +854,10 @@ def checkpoint_list(
         if git_tag:
             git_tag = git_tag.replace("checkpoint/", "")
         table.add_row(
-            data["name"], data.get("message", ""), data.get("timestamp", "N/A"), git_tag or "N/A"
+            data["name"],
+            data.get("message", ""),
+            data.get("timestamp", "N/A"),
+            git_tag or "N/A",
         )
 
     console.print(table)

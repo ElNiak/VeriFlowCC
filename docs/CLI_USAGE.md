@@ -4,6 +4,10 @@
 
 VeriFlowCC provides a command-line interface for orchestrating Agile V-Model development workflows with Claude-Code AI integration.
 
+## Authentication Requirements
+
+VeriFlowCC requires Claude Code authentication to function properly. Users must configure their authentication method through VeriFlow's guidelines before using this tool. The system supports flexible authentication approaches without requiring specific setup steps in this documentation.
+
 ## Installation
 
 ```bash
@@ -193,7 +197,7 @@ Edit `.agilevv/config.yaml`:
 
 ```yaml
 v_model:
-  gating_mode: soft  # hard, soft, or off
+  gating_mode: soft # hard, soft, or off
   stages:
     requirements:
       enabled: true
@@ -295,9 +299,9 @@ Real-time progress visualization:
 
 ## Environment Variables
 
-- `CLAUDE_API_KEY`: API key for Claude-Code integration
 - `VERIFFLOWCC_CONFIG`: Custom config path
 - `VERIFFLOWCC_DEBUG`: Enable debug logging
+- `AGILEVV_BASE_DIR`: Custom base directory for project structure
 
 ## Exit Codes
 

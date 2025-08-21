@@ -13,10 +13,6 @@ encoding: UTF-8
 Install AgileVerifFlowCC into an existing codebase, analyze current product state and progress.
 Builds on @.claude/instructions/core/plan-product.md
 
-<pre_flight_check>
-EXECUTE: @.claude/instructions/meta/pre-flight.md
-</pre_flight_check>
-
 <process_flow>
 
 <step number="1" name="analyze_existing_codebase">
@@ -32,27 +28,27 @@ Perform a deep codebase analysis of the current codebase to understand current s
 - File naming patterns
 - Module structure
 - Build configuration
-</project_structure>
-<technology_stack>
+  </project_structure>
+  <technology_stack>
 - Frameworks in use
 - Dependencies (package.json, Gemfile, requirements.txt, etc.)
 - Database systems
 - Infrastructure configuration
-</technology_stack>
-<implementation_progress>
+  </technology_stack>
+  <implementation_progress>
 - Completed features
 - Work in progress
 - Authentication/authorization state
 - API endpoints
 - Database schema
-</implementation_progress>
-<code_patterns>
+  </implementation_progress>
+  <code_patterns>
 - Coding style in use
 - Naming conventions
 - File organization patterns
 - Testing approach
-</code_patterns>
-</analysis_areas>
+  </code_patterns>
+  </analysis_areas>
 
 <instructions>
   ACTION: Thoroughly analyze the existing codebase
@@ -144,18 +140,18 @@ Refine the generated documentation to ensure accuracy for the existing product b
 - Mark completed features as done
 - Move implemented items to "Phase 0: Already Completed"
 - Adjust future phases based on actual progress
-</roadmap_adjustment>
-<tech_stack_verification>
+  </roadmap_adjustment>
+  <tech_stack_verification>
 - Verify detected versions are correct
 - Add any missing infrastructure details
 - Document actual deployment setup
-</tech_stack_verification>
-<decisions_documentation>
+  </tech_stack_verification>
+  <decisions_documentation>
 - Add historical decisions that shaped current architecture
 - Document why certain technologies were chosen
 - Capture any pivots or major changes
-</decisions_documentation>
-</customization_tasks>
+  </decisions_documentation>
+  </customization_tasks>
 
 <roadmap_template>
 
@@ -259,10 +255,6 @@ Your codebase is now AgileVerifFlowCC-enabled! 🚀
 - [ ] plan-product.md executed with proper context
 - [ ] Documentation customized for existing product
 - [ ] Team can adopt AgileVerifFlowCC workflow
-</verify>
+      </verify>
 
 </final_checklist>
-
-<post_flight_check>
-  EXECUTE: @.claude/instructions/meta/post-flight.md
-</post_flight_check>

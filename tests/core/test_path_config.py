@@ -2,7 +2,6 @@
 
 import os
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 from verifflowcc.core.path_config import PathConfig
@@ -44,29 +43,57 @@ class TestEnvironmentVariable:
     def test_env_var_override(self, tmp_path: Path) -> None:
         """Test AGILEVV_BASE_DIR environment variable overrides default."""
         env_path = str(tmp_path / "env-agilevv")
-        with patch.dict(os.environ, {"AGILEVV_BASE_DIR": env_path}):
+        old_value = os.environ.get("AGILEVV_BASE_DIR")
+        try:
+            os.environ["AGILEVV_BASE_DIR"] = env_path
             config = PathConfig()
             assert config.base_dir == Path(env_path)
+        finally:
+            if old_value is None:
+                os.environ.pop("AGILEVV_BASE_DIR", None)
+            else:
+                os.environ["AGILEVV_BASE_DIR"] = old_value
 
     def test_env_var_with_explicit_base_dir(self, tmp_path: Path) -> None:
         """Test explicit base_dir takes precedence over environment variable."""
         env_path = str(tmp_path / "env-agilevv")
         explicit_path = str(tmp_path / "explicit-agilevv")
-        with patch.dict(os.environ, {"AGILEVV_BASE_DIR": env_path}):
+        old_value = os.environ.get("AGILEVV_BASE_DIR")
+        try:
+            os.environ["AGILEVV_BASE_DIR"] = env_path
             config = PathConfig(base_dir=explicit_path)
             assert config.base_dir == Path(explicit_path)
+        finally:
+            if old_value is None:
+                os.environ.pop("AGILEVV_BASE_DIR", None)
+            else:
+                os.environ["AGILEVV_BASE_DIR"] = old_value
 
     def test_env_var_empty_string(self) -> None:
         """Test empty AGILEVV_BASE_DIR falls back to default."""
-        with patch.dict(os.environ, {"AGILEVV_BASE_DIR": ""}):
+        old_value = os.environ.get("AGILEVV_BASE_DIR")
+        try:
+            os.environ["AGILEVV_BASE_DIR"] = ""
             config = PathConfig()
             assert config.base_dir == Path.cwd() / ".agilevv"
+        finally:
+            if old_value is None:
+                os.environ.pop("AGILEVV_BASE_DIR", None)
+            else:
+                os.environ["AGILEVV_BASE_DIR"] = old_value
 
     def test_env_var_with_home_expansion(self) -> None:
         """Test environment variable with ~ expands to home directory."""
-        with patch.dict(os.environ, {"AGILEVV_BASE_DIR": "~/.agilevv-test"}):
+        old_value = os.environ.get("AGILEVV_BASE_DIR")
+        try:
+            os.environ["AGILEVV_BASE_DIR"] = "~/.agilevv-test"
             config = PathConfig()
             assert config.base_dir == Path.home() / ".agilevv-test"
+        finally:
+            if old_value is None:
+                os.environ.pop("AGILEVV_BASE_DIR", None)
+            else:
+                os.environ["AGILEVV_BASE_DIR"] = old_value
 
 
 class TestPathResolution:
@@ -241,10 +268,17 @@ class TestPathValidation:
         assert config.is_test_environment() is True
 
         # Simulate non-test environment
-        with patch.dict(os.environ, {"PYTEST_CURRENT_TEST": ""}):
+        old_value = os.environ.get("PYTEST_CURRENT_TEST")
+        try:
+            os.environ["PYTEST_CURRENT_TEST"] = ""
             config = PathConfig()
             # Still true because we're running under pytest
-            assert config.is_test_environment() is True
+            assert config.is_test_environment()
+        finally:
+            if old_value is None:
+                os.environ.pop("PYTEST_CURRENT_TEST", None)
+            else:
+                os.environ["PYTEST_CURRENT_TEST"] = str(old_value) if old_value is not None else ""
 
 
 class TestPathConfigEquality:

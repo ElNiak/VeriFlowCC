@@ -29,7 +29,6 @@ class QATesterAgent(BaseAgent):
         agent_type: str = "qa",
         path_config: PathConfig | None = None,
         sdk_config: SDKConfig | None = None,
-        mock_mode: bool = False,
     ):
         """Initialize the QATesterAgent.
 
@@ -38,14 +37,12 @@ class QATesterAgent(BaseAgent):
             agent_type: Agent type (qa)
             path_config: PathConfig instance for managing project paths
             sdk_config: SDK configuration instance
-            mock_mode: Whether to use mock responses
         """
         super().__init__(
             name=name,
             agent_type=agent_type,
             path_config=path_config,
             sdk_config=sdk_config,
-            mock_mode=mock_mode,
         )
 
     async def process(self, input_data: dict[str, Any]) -> dict[str, Any]:
@@ -73,17 +70,17 @@ class QATesterAgent(BaseAgent):
                 "project_name": project_context.get("project_name", "VeriFlowCC"),
                 "sprint_number": project_context.get("sprint_number", "Current Sprint"),
                 "testing_phase": testing_phase.title(),
-                "requirements": json.dumps(
-                    implementation_data.get("design_reference", {}), indent=2
-                )
-                if implementation_data.get("design_reference")
-                else "No requirements provided",
-                "implementation": json.dumps(
-                    implementation_data.get("implementation", {}), indent=2
-                )
-                if implementation_data.get("implementation")
-                else "No implementation provided",
-                "context": json.dumps(project_context, indent=2) if project_context else "",
+                "requirements": (
+                    json.dumps(implementation_data.get("design_reference", {}), indent=2)
+                    if implementation_data.get("design_reference")
+                    else "No requirements provided"
+                ),
+                "implementation": (
+                    json.dumps(implementation_data.get("implementation", {}), indent=2)
+                    if implementation_data.get("implementation")
+                    else "No implementation provided"
+                ),
+                "context": (json.dumps(project_context, indent=2) if project_context else ""),
             }
 
             # Load template and create prompt
@@ -239,7 +236,10 @@ class QATesterAgent(BaseAgent):
                 "agent_type": self.agent_type,
                 "response_text": response,
                 "parse_error": str(e),
-                "test_strategy": {"approach": "fallback", "scope": "Parse error occurred"},
+                "test_strategy": {
+                    "approach": "fallback",
+                    "scope": "Parse error occurred",
+                },
                 "test_cases": [],
                 "quality_metrics": {"coverage_analysis": {"requirements_coverage": "0%"}},
             }
@@ -309,7 +309,10 @@ class QATesterAgent(BaseAgent):
                 "execution_time": f"{total_cases * 3} minutes",
             }
 
-            return {"execution_summary": execution_summary, "test_results": execution_results}
+            return {
+                "execution_summary": execution_summary,
+                "test_results": execution_results,
+            }
 
         except Exception as e:
             logger.error(f"Error coordinating test execution: {e}")
@@ -476,7 +479,10 @@ class QATesterAgent(BaseAgent):
             logger.error(f"Error saving testing artifacts: {e}")
 
     async def _generate_traceability_reports(
-        self, story_id: str, testing_data: dict[str, Any], implementation_data: dict[str, Any]
+        self,
+        story_id: str,
+        testing_data: dict[str, Any],
+        implementation_data: dict[str, Any],
     ) -> None:
         """Generate traceability reports linking tests to requirements.
 
@@ -512,11 +518,13 @@ class QATesterAgent(BaseAgent):
                 traceability_matrix.append(
                     {
                         "requirement_id": req_id,
-                        "requirement_description": req.get("description", "No description")
-                        if isinstance(req, dict)
-                        else str(req),
+                        "requirement_description": (
+                            req.get("description", "No description")
+                            if isinstance(req, dict)
+                            else str(req)
+                        ),
                         "covering_tests": covering_tests,
-                        "coverage_status": "covered" if covering_tests else "not_covered",
+                        "coverage_status": ("covered" if covering_tests else "not_covered"),
                     }
                 )
 
@@ -532,9 +540,11 @@ class QATesterAgent(BaseAgent):
                         "covered_requirements": len(
                             [t for t in traceability_matrix if t["coverage_status"] == "covered"]
                         ),
-                        "coverage_percentage": f"{(len([t for t in traceability_matrix if t['coverage_status'] == 'covered']) / len(requirements) * 100):.1f}%"
-                        if requirements
-                        else "0%",
+                        "coverage_percentage": (
+                            f"{(len([t for t in traceability_matrix if t['coverage_status'] == 'covered']) / len(requirements) * 100):.1f}%"
+                            if requirements
+                            else "0%"
+                        ),
                     },
                 },
             )
