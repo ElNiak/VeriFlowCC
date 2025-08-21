@@ -94,7 +94,7 @@ def validate_authentication_gracefully() -> bool:
     """
     return True
 
-
+# (Removed duplicate validate_authentication_gracefully function)
 def _display_authentication_disclaimer() -> None:
     """Display authentication disclaimer with Rich formatting.
 
