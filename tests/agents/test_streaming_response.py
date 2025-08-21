@@ -20,12 +20,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.streaming]
 class MockStreamingAgent(BaseAgent):
     """Mock agent for testing streaming responses."""
 
-    def __init__(self, sdk_config: SDKConfig, mock_mode: bool = True):
+    def __init__(self, sdk_config: SDKConfig):
         super().__init__(
             name="test_streaming_agent",
             agent_type="streaming_test",
             sdk_config=sdk_config,
-            mock_mode=mock_mode,
         )
         self.stream_calls = 0
         self.last_prompt: str | None = None
@@ -61,7 +60,7 @@ class TestStreamingResponseParsing:
     def streaming_agent(self) -> MockStreamingAgent:
         """Provide mock streaming agent."""
         config = SDKConfig(api_key="test-streaming-key")
-        return MockStreamingAgent(config, mock_mode=True)
+        return MockStreamingAgent(config)
 
     @pytest.mark.asyncio
     async def test_basic_streaming_response_parsing(
@@ -125,7 +124,7 @@ class TestStreamingEventHandling:
     def streaming_agent(self) -> MockStreamingAgent:
         """Provide mock streaming agent."""
         config = SDKConfig(api_key="test-event-key")
-        return MockStreamingAgent(config, mock_mode=True)
+        return MockStreamingAgent(config)
 
     @pytest.mark.asyncio
     async def test_event_handler_registration(self, streaming_agent: MockStreamingAgent) -> None:
@@ -189,7 +188,11 @@ class TestStreamingEventHandling:
             return chunks
 
         # Run multiple streams concurrently
-        tasks = [collect_stream("Stream 1"), collect_stream("Stream 2"), collect_stream("Stream 3")]
+        tasks = [
+            collect_stream("Stream 1"),
+            collect_stream("Stream 2"),
+            collect_stream("Stream 3"),
+        ]
 
         results = await asyncio.gather(*tasks)
 
@@ -207,10 +210,12 @@ class TestStreamingInterruption:
     def streaming_agent(self) -> MockStreamingAgent:
         """Provide mock streaming agent."""
         config = SDKConfig(api_key="test-interruption-key")
-        return MockStreamingAgent(config, mock_mode=True)
+        return MockStreamingAgent(config)
 
     async def _collect_stream_chunks(
-        self, stream: AsyncGenerator[dict[str, Any], None], chunks_list: list[dict[str, Any]]
+        self,
+        stream: AsyncGenerator[dict[str, Any], None],
+        chunks_list: list[dict[str, Any]],
     ) -> None:
         """Helper method to collect stream chunks."""
         async for chunk in stream:
@@ -255,7 +260,8 @@ class TestStreamingInterruption:
 
         try:
             await asyncio.wait_for(
-                self._collect_stream_chunks(_slow_stream(), chunks_received), timeout=0.5
+                self._collect_stream_chunks(_slow_stream(), chunks_received),
+                timeout=0.5,
             )
         except asyncio.TimeoutError:
             pass  # Expected timeout
@@ -318,7 +324,7 @@ class TestStreamingPerformance:
     def streaming_agent(self) -> MockStreamingAgent:
         """Provide mock streaming agent."""
         config = SDKConfig(api_key="test-performance-key")
-        return MockStreamingAgent(config, mock_mode=True)
+        return MockStreamingAgent(config)
 
     @pytest.mark.asyncio
     async def test_streaming_latency(self, streaming_agent: MockStreamingAgent) -> None:
@@ -374,7 +380,11 @@ class TestStreamingPerformance:
         async def _large_stream() -> AsyncGenerator[dict[str, Any], None]:
             """Stream with many small chunks to test memory usage."""
             for i in range(100):
-                yield {"type": "content", "content": f"Chunk {i} with some content", "chunk_id": i}
+                yield {
+                    "type": "content",
+                    "content": f"Chunk {i} with some content",
+                    "chunk_id": i,
+                }
             yield {"type": "complete", "finished": True}
 
         chunks_processed = 0

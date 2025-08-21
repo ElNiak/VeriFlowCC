@@ -24,8 +24,8 @@ Use --keep-test-dirs for debugging test directories.
 
 import json
 import os
+from contextlib import contextmanager
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 import yaml
@@ -39,6 +39,27 @@ pytestmark = [
     pytest.mark.integration,
     pytest.mark.real_sdk,
 ]
+
+
+@contextmanager
+def temp_env_vars(**env_vars: str):
+    """Context manager to temporarily set environment variables without mocking."""
+    original_values: dict[str, str | None] = {}
+
+    # Store original values and set new ones
+    for key, value in env_vars.items():
+        original_values[key] = os.environ.get(key)
+        os.environ[key] = value
+
+    try:
+        yield
+    finally:
+        # Restore original values
+        for key, original_value in original_values.items():
+            if original_value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = original_value
 
 
 def _can_authenticate_with_sdk() -> bool:
@@ -101,7 +122,7 @@ class TestRealCLIInitialization:
                 shutil.rmtree(isolated_agilevv_dir.base_dir)
 
             # Set environment variable to use test directory
-            with patch.dict(os.environ, {"AGILEVV_BASE_DIR": str(isolated_agilevv_dir.base_dir)}):
+            with temp_env_vars(AGILEVV_BASE_DIR=str(isolated_agilevv_dir.base_dir)):
                 result = runner.invoke(app, ["init"])
 
             # Verify command succeeded
@@ -155,7 +176,7 @@ class TestRealCLIInitialization:
 
                 shutil.rmtree(isolated_agilevv_dir.base_dir)
 
-            with patch.dict(os.environ, {"AGILEVV_BASE_DIR": str(isolated_agilevv_dir.base_dir)}):
+            with temp_env_vars(AGILEVV_BASE_DIR=str(isolated_agilevv_dir.base_dir)):
                 # First initialization
                 result1 = runner.invoke(app, ["init"])
                 assert result1.exit_code == 0
@@ -223,7 +244,7 @@ class TestRealCLIStatusAndValidation:
 
             # Use a non-existent directory for testing
             non_existent_dir = tmp_path / "non_existent_agilevv"
-            with patch.dict(os.environ, {"AGILEVV_BASE_DIR": str(non_existent_dir)}):
+            with temp_env_vars(AGILEVV_BASE_DIR=str(non_existent_dir)):
                 result = runner.invoke(app, ["status"])
 
             # Should fail with appropriate error message
@@ -247,7 +268,7 @@ class TestRealCLIStatusAndValidation:
         try:
             os.chdir(str(test_cwd))
 
-            with patch.dict(os.environ, {"AGILEVV_BASE_DIR": str(isolated_agilevv_dir.base_dir)}):
+            with temp_env_vars(AGILEVV_BASE_DIR=str(isolated_agilevv_dir.base_dir)):
                 # Initialize project first
                 init_result = runner.invoke(app, ["init"])
                 assert init_result.exit_code == 0
@@ -276,7 +297,7 @@ class TestRealCLIStatusAndValidation:
         try:
             os.chdir(str(test_cwd))
 
-            with patch.dict(os.environ, {"AGILEVV_BASE_DIR": str(isolated_agilevv_dir.base_dir)}):
+            with temp_env_vars(AGILEVV_BASE_DIR=str(isolated_agilevv_dir.base_dir)):
                 # Initialize project first
                 init_result = runner.invoke(app, ["init"])
                 assert init_result.exit_code == 0
@@ -310,7 +331,7 @@ class TestRealCLIStatusAndValidation:
         try:
             os.chdir(str(test_cwd))
 
-            with patch.dict(os.environ, {"AGILEVV_BASE_DIR": str(isolated_agilevv_dir.base_dir)}):
+            with temp_env_vars(AGILEVV_BASE_DIR=str(isolated_agilevv_dir.base_dir)):
                 # Initialize project first
                 init_result = runner.invoke(app, ["init"])
                 assert init_result.exit_code == 0
@@ -342,7 +363,7 @@ class TestRealCLISprintExecution:
         try:
             os.chdir(str(test_cwd))
 
-            with patch.dict(os.environ, {"AGILEVV_BASE_DIR": str(isolated_agilevv_dir.base_dir)}):
+            with temp_env_vars(AGILEVV_BASE_DIR=str(isolated_agilevv_dir.base_dir)):
                 # Initialize project first
                 init_result = runner.invoke(app, ["init"])
                 assert init_result.exit_code == 0
@@ -366,7 +387,7 @@ class TestRealCLISprintExecution:
 
             # Use a non-existent directory for testing
             non_existent_dir = tmp_path / "non_existent_agilevv"
-            with patch.dict(os.environ, {"AGILEVV_BASE_DIR": str(non_existent_dir)}):
+            with temp_env_vars(AGILEVV_BASE_DIR=str(non_existent_dir)):
                 result = runner.invoke(app, ["sprint", "--story", "Test user story"])
 
             # Should fail with project not initialized error
@@ -392,12 +413,9 @@ class TestRealCLISprintExecution:
             # Set API key for real execution
             api_key = os.getenv("ANTHROPIC_API_KEY", "test-api-key-for-structure-validation")
 
-            with patch.dict(
-                os.environ,
-                {
-                    "AGILEVV_BASE_DIR": str(isolated_agilevv_dir.base_dir),
-                    "ANTHROPIC_API_KEY": api_key,
-                },
+            with temp_env_vars(
+                AGILEVV_BASE_DIR=str(isolated_agilevv_dir.base_dir),
+                ANTHROPIC_API_KEY=api_key,
             ):
                 # Initialize project first
                 init_result = runner.invoke(app, ["init"])
@@ -437,7 +455,7 @@ class TestRealCLIPlanExecution:
 
             # Use a non-existent directory for testing
             non_existent_dir = tmp_path / "non_existent_agilevv"
-            with patch.dict(os.environ, {"AGILEVV_BASE_DIR": str(non_existent_dir)}):
+            with temp_env_vars(AGILEVV_BASE_DIR=str(non_existent_dir)):
                 result = runner.invoke(app, ["plan"])
 
             # Should fail with project not initialized error
@@ -459,7 +477,7 @@ class TestRealCLIPlanExecution:
         try:
             os.chdir(str(test_cwd))
 
-            with patch.dict(os.environ, {"AGILEVV_BASE_DIR": str(isolated_agilevv_dir.base_dir)}):
+            with temp_env_vars(AGILEVV_BASE_DIR=str(isolated_agilevv_dir.base_dir)):
                 # Initialize project first
                 init_result = runner.invoke(app, ["init"])
                 assert init_result.exit_code == 0
@@ -486,7 +504,7 @@ class TestRealCLIPlanExecution:
         try:
             os.chdir(str(test_cwd))
 
-            with patch.dict(os.environ, {"AGILEVV_BASE_DIR": str(isolated_agilevv_dir.base_dir)}):
+            with temp_env_vars(AGILEVV_BASE_DIR=str(isolated_agilevv_dir.base_dir)):
                 # Initialize project first
                 init_result = runner.invoke(app, ["init"])
                 assert init_result.exit_code == 0
@@ -517,7 +535,7 @@ class TestRealCLIEnvironmentHandling:
             os.chdir(str(tmp_path))
 
             # Test with AGILEVV_BASE_DIR environment variable
-            with patch.dict(os.environ, {"AGILEVV_BASE_DIR": str(custom_dir)}):
+            with temp_env_vars(AGILEVV_BASE_DIR=str(custom_dir)):
                 result = runner.invoke(app, ["init"])
 
                 assert result.exit_code == 0
@@ -526,9 +544,9 @@ class TestRealCLIEnvironmentHandling:
 
             # Test with ANTHROPIC_API_KEY environment variable
             api_key = os.getenv("ANTHROPIC_API_KEY", "test-api-key")
-            with patch.dict(
-                os.environ,
-                {"AGILEVV_BASE_DIR": str(custom_dir), "ANTHROPIC_API_KEY": api_key},
+            with temp_env_vars(
+                AGILEVV_BASE_DIR=str(custom_dir),
+                ANTHROPIC_API_KEY=api_key,
             ):
                 result = runner.invoke(app, ["status"])
 
@@ -549,7 +567,7 @@ class TestRealCLIEnvironmentHandling:
             os.chdir(str(tmp_path))
 
             # Set environment variable but use --dir parameter
-            with patch.dict(os.environ, {"AGILEVV_BASE_DIR": str(env_dir)}):
+            with temp_env_vars(AGILEVV_BASE_DIR=str(env_dir)):
                 result = runner.invoke(app, ["init", "--dir", str(param_dir)])
 
                 assert result.exit_code == 0
@@ -612,7 +630,7 @@ class TestRealCLIErrorHandling:
         try:
             os.chdir(str(test_cwd))
 
-            with patch.dict(os.environ, {"AGILEVV_BASE_DIR": str(isolated_agilevv_dir.base_dir)}):
+            with temp_env_vars(AGILEVV_BASE_DIR=str(isolated_agilevv_dir.base_dir)):
                 # Test that commands complete normally (interrupt handler is set up)
                 result = runner.invoke(app, ["init"])
                 assert result.exit_code == 0
@@ -639,12 +657,9 @@ class TestRealCLIIntegrationWorkflow:
 
             api_key = os.getenv("ANTHROPIC_API_KEY", "test-api-key-for-structure-validation")
 
-            with patch.dict(
-                os.environ,
-                {
-                    "AGILEVV_BASE_DIR": str(isolated_agilevv_dir.base_dir),
-                    "ANTHROPIC_API_KEY": api_key,
-                },
+            with temp_env_vars(
+                AGILEVV_BASE_DIR=str(isolated_agilevv_dir.base_dir),
+                ANTHROPIC_API_KEY=api_key,
             ):
                 # 1. Initialize project
                 init_result = runner.invoke(app, ["init"])
@@ -692,7 +707,7 @@ class TestRealCLIIntegrationWorkflow:
         try:
             os.chdir(str(test_cwd))
 
-            with patch.dict(os.environ, {"AGILEVV_BASE_DIR": str(isolated_agilevv_dir.base_dir)}):
+            with temp_env_vars(AGILEVV_BASE_DIR=str(isolated_agilevv_dir.base_dir)):
                 # Initialize project
                 init_result = runner.invoke(app, ["init"])
                 assert init_result.exit_code == 0

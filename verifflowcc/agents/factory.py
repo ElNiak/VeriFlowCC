@@ -188,21 +188,19 @@ _agent_factory: AgentFactory | None = None
 def get_agent_factory(
     sdk_config: SDKConfig | None = None,
     path_config: PathConfig | None = None,
-    mock_mode: bool = False,
 ) -> AgentFactory:
     """Get the global agent factory instance.
 
     Args:
         sdk_config: SDK configuration instance
         path_config: Path configuration instance
-        mock_mode: Whether to use mock mode
 
     Returns:
         AgentFactory instance
     """
     global _agent_factory
     if _agent_factory is None:
-        _agent_factory = AgentFactory(sdk_config, path_config, mock_mode)
+        _agent_factory = AgentFactory(sdk_config, path_config)
     return _agent_factory
 
 

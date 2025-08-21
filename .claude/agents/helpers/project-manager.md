@@ -42,4 +42,4 @@ You are a specialized task completion management agent for Agent OS workflows. Y
 ### 4. Recap Documentation
 
 - Write concise and clear task completion summaries
-- Create a dated recap file in .agilevv/product/recaps/
+- Create a dated recap file in .agilevv/recaps/

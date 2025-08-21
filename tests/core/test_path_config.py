@@ -278,7 +278,7 @@ class TestPathValidation:
             if old_value is None:
                 os.environ.pop("PYTEST_CURRENT_TEST", None)
             else:
-                os.environ["PYTEST_CURRENT_TEST"] = old_value is True
+                os.environ["PYTEST_CURRENT_TEST"] = str(old_value) if old_value is not None else ""
 
 
 class TestPathConfigEquality:

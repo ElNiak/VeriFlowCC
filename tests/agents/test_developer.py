@@ -61,7 +61,7 @@ class TestDeveloperAgentInitialization:
 
     def test_developer_agent_initialization_mock_mode(self, isolated_agilevv_dir: Any) -> None:
         """Test DeveloperAgent initialization in mock mode."""
-        agent = DeveloperAgent(path_config=isolated_agilevv_dir, mock_mode=True)
+        agent = DeveloperAgent(path_config=isolated_agilevv_dir)
 
         assert agent.mock_mode is True
         assert agent.agent_type == "developer"
@@ -109,7 +109,7 @@ class TestDeveloperAgentArtifactManagement:
 
     def test_save_implementation_artifacts(self, isolated_agilevv_dir: Any) -> None:
         """Test saving implementation artifacts to correct subdirectory."""
-        agent = DeveloperAgent(path_config=isolated_agilevv_dir, mock_mode=True)
+        agent = DeveloperAgent(path_config=isolated_agilevv_dir)
 
         # Create implementation artifacts directory
         impl_dir = isolated_agilevv_dir.base_dir / "implementation"
@@ -232,7 +232,7 @@ class TestCodeQualityAndMetrics:
 
     def test_calculate_code_metrics_high_quality(self, isolated_agilevv_dir: Any) -> None:
         """Test code metrics calculation for high-quality implementation."""
-        agent = DeveloperAgent(path_config=isolated_agilevv_dir, mock_mode=True)
+        agent = DeveloperAgent(path_config=isolated_agilevv_dir)
 
         # High-quality code sample
         high_quality_code = {
@@ -290,7 +290,7 @@ class TestDeveloperAgentErrorRecovery:
 
     async def test_validation_error_handling(self, isolated_agilevv_dir: Any) -> None:
         """Test handling of input validation errors."""
-        agent = DeveloperAgent(path_config=isolated_agilevv_dir, mock_mode=True)
+        agent = DeveloperAgent(path_config=isolated_agilevv_dir)
 
         # Invalid input that should trigger validation error
         invalid_input = {"story_id": "US-005", "stage": "INVALID_STAGE", "context": {}}
@@ -308,7 +308,7 @@ class TestDeveloperAgentPromptTemplates:
 
     def test_load_implementation_prompt_template(self, isolated_agilevv_dir: Any) -> None:
         """Test loading implementation prompt template."""
-        agent = DeveloperAgent(path_config=isolated_agilevv_dir, mock_mode=True)
+        agent = DeveloperAgent(path_config=isolated_agilevv_dir)
 
         # Create mock template
         template_dir = Path("verifflowcc/prompts")
@@ -336,7 +336,7 @@ class TestDeveloperAgentPromptTemplates:
 
     def test_template_context_building(self, isolated_agilevv_dir: Any) -> None:
         """Test building template context from implementation input."""
-        agent = DeveloperAgent(path_config=isolated_agilevv_dir, mock_mode=True)
+        agent = DeveloperAgent(path_config=isolated_agilevv_dir)
 
         impl_input = ImplementationInput(
             story_id="US-001",

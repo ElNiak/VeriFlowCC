@@ -17,10 +17,12 @@ import json
 import shlex
 import subprocess
 import sys
-from collections.abc import Callable, Iterable
 from pathlib import Path
 from shutil import which
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
 
 # ---------- envelope parsing (so we see freshly Written files) ----------
 
@@ -107,7 +109,8 @@ def _ext(p: Path) -> str:
 
 def _capture_run(cmd: list[str]) -> tuple[int, str, str]:
     try:
-        proc = subprocess.run(cmd, text=True, capture_output=True)
+        # S603: This subprocess call is safe - cmd is constructed from trusted, validated tool paths
+        proc = subprocess.run(cmd, text=True, capture_output=True)  # noqa: S603
         return proc.returncode, (proc.stdout or "").strip(), (proc.stderr or "").strip()
     except FileNotFoundError:
         return 127, "", f"Command not found: {cmd[0]}"
@@ -120,8 +123,16 @@ def _capture_run(cmd: list[str]) -> tuple[int, str, str]:
 
 def git_staged_files() -> list[str]:
     try:
+        # S607: git command is safe - using trusted git binary with safe arguments only
         out = subprocess.check_output(
-            ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"], text=True
+            [  # noqa: S607
+                "git",
+                "diff",
+                "--cached",
+                "--name-only",
+                "--diff-filter=ACM",
+            ],
+            text=True,
         )
         return [ln for ln in out.splitlines() if ln.strip()]
     except subprocess.CalledProcessError:
@@ -130,8 +141,10 @@ def git_staged_files() -> list[str]:
 
 def git_updated_vs_head() -> list[str]:
     try:
+        # S607: git command is safe - using trusted git binary with safe arguments only
         out = subprocess.check_output(
-            ["git", "diff", "HEAD", "--name-only", "--diff-filter=ACM"], text=True
+            ["git", "diff", "HEAD", "--name-only", "--diff-filter=ACM"],  # noqa: S607
+            text=True,
         )
         return [ln for ln in out.splitlines() if ln.strip()]
     except subprocess.CalledProcessError:
@@ -141,8 +154,10 @@ def git_updated_vs_head() -> list[str]:
 def git_untracked() -> list[str]:
     # freshly Written files will appear here
     try:
+        # S607: git command is safe - using trusted git binary with safe arguments only
         out = subprocess.check_output(
-            ["git", "ls-files", "--others", "--exclude-standard"], text=True
+            ["git", "ls-files", "--others", "--exclude-standard"],  # noqa: S607
+            text=True,
         )
         return [ln for ln in out.splitlines() if ln.strip()]
     except subprocess.CalledProcessError:
@@ -410,13 +425,13 @@ def main(argv: list[str]) -> int:
             seen.add(p)
 
     # Exclude internal hook logs/noisy paths
-    EXCLUDE = [
+    exclude = [
         ".claude/hooks/*.json",
         ".claude/hooks/**/*.json",
     ]
 
     tracked_exts = set(make_formatters().keys()) | set(make_linters(True).keys())
-    files = filter_supported(merged, tracked_exts, EXCLUDE)
+    files = filter_supported(merged, tracked_exts, exclude)
 
     if not files:
         if args.verbose:
@@ -456,7 +471,6 @@ def main(argv: list[str]) -> int:
         print_report("lint_errors", files, fmt_res, lint_res)
         return 2
 
-    print_report("ok", files, fmt_res, lint_res)
     return 0
 
 
