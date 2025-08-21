@@ -6,7 +6,7 @@ generic user-friendly error messages without exposing implementation details.
 """
 
 import os
-from unittest.mock import patch
+import pytest
 
 from verifflowcc.cli import graceful_exit_with_message, validate_authentication_gracefully
 from verifflowcc.core.sdk_config import AuthenticationError, SDKConfig
