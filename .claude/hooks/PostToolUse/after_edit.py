@@ -262,7 +262,7 @@ def print_report(status: str, files: list[str], fmt_res: list[dict[str, Any]], l
         "linting": lint_res,
         "note": note,
         "suggestion": (
-            "Non-auto-fixable diagnostics remain. Ask Claude to reason about them, propose a patch, and re-run."
+            "Non-auto-fixable linting diagnostics remain. Apply immediately command @.claude/commands/pre-commit.md."
             if status == "lint_errors" else
             ("Some tools are missing. Install/pin them or adjust settings." if status == "tool_error" else "")
         ),

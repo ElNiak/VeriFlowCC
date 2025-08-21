@@ -26,6 +26,11 @@ class ClaudeCodeOptions(BaseModel):
     model: str = Field(default="claude-3-5-sonnet-20241022", description="Claude model to use")
     stream: bool = Field(default=True, description="Enable streaming responses")
     tools_enabled: bool = Field(default=True, description="Enable tool usage")
+    streaming: bool = Field(default=True, description="Enable streaming responses")
+    session_persistence: bool = Field(default=True, description="Enable session persistence")
+    tool_permissions: dict | None = Field(
+        default=None, description="Tool permissions configuration"
+    )
 
 
 @dataclass
@@ -41,6 +46,14 @@ class SDKConfig:
 
     def __post_init__(self) -> None:
         """Initialize configuration after creation."""
+        # Validation first (applies to all environments)
+        if self.timeout <= 0:
+            raise ValueError("Timeout must be positive")
+        if self.max_retries < 0:
+            raise ValueError("Max retries must be non-negative")
+        if self.retry_delay < 0:
+            raise ValueError("Retry delay must be non-negative")
+
         # Allow tests to run without API key when in test mode
         if self._is_test_environment():
             # Running under pytest - use mock mode
@@ -284,7 +297,7 @@ deployment status, performance metrics, and recommendations."""
         }
 
         agent_permissions = {
-            "requirements": {
+            "requirements_analyst": {
                 **base_permissions,
                 "write": True,  # Can create requirement documents
             },
@@ -309,6 +322,24 @@ deployment status, performance metrics, and recommendations."""
         }
 
         return agent_permissions.get(agent_type, base_permissions)
+
+    def get_agent_timeout(self, agent_type: str) -> int:
+        """Get timeout for specific agent type.
+
+        Args:
+            agent_type: Type of agent
+
+        Returns:
+            Timeout in seconds
+        """
+        agent_timeouts = {
+            "requirements_analyst": 60,
+            "architect": 90,
+            "developer": 120,
+            "qa": 90,
+            "integration": 150,
+        }
+        return agent_timeouts.get(agent_type, self.timeout)
 
 
 # Global SDK configuration instance

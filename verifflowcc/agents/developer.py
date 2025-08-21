@@ -31,7 +31,6 @@ class DeveloperAgent(BaseAgent):
         agent_type: str = "developer",
         path_config: PathConfig | None = None,
         sdk_config: SDKConfig | None = None,
-        mock_mode: bool = False,
     ):
         """Initialize the DeveloperAgent.
 
@@ -40,14 +39,12 @@ class DeveloperAgent(BaseAgent):
             agent_type: Agent type (developer)
             path_config: PathConfig instance for managing project paths
             sdk_config: SDK configuration instance
-            mock_mode: Whether to use mock responses
         """
         super().__init__(
             name=name,
             agent_type=agent_type,
             path_config=path_config,
             sdk_config=sdk_config,
-            mock_mode=mock_mode,
         )
 
     async def process(self, input_data: dict[str, Any]) -> dict[str, Any]:

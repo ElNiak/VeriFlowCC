@@ -2,8 +2,11 @@
 # Purpose: Validate/shape user prompts before Claude processes them; inject guardrails & helpful context.
 
 from __future__ import annotations
-import json, os, re, sys
-from pathlib import Path
+
+import json
+import os
+import re
+import sys
 
 BYPASS_ENV = "CLAUDE_PROMPT_GATE_BYPASS"
 
@@ -16,16 +19,18 @@ BANNED_PATTERNS = [
 REQUIRE_TOKENS = [r"\bV\s*=\s*[1-3]\b"]  # your “verbosity” convention
 
 GUIDELINES = """\
-ALWAYS HARD THINK BEFORE ANY ACTION
+ALWAYS HARD THINK BEFORE AND THINK STEP BY STEP ANY ACTION.
 Project norms:
 - Use V=1/2/3 to set response verbosity.
 - Prefer updating existing files; no *_enhanced/*_unified duplicates.
 - Fix QA issues before committing.
 """
 
+
 def deny(msg: str) -> int:
     sys.stderr.write(f"❌ Prompt blocked by policy:\n{msg}\n")
     return 2  # blocks and clears the prompt
+
 
 def main() -> int:
     try:
@@ -54,6 +59,7 @@ def main() -> int:
     # Happy path: inject helpful context anyway
     print(GUIDELINES)
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

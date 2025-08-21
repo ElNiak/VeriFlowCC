@@ -20,12 +20,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.streaming, pytest.mark.interruption]
 class MockInterruptibleAgent(BaseAgent):
     """Mock agent that supports interruption scenarios."""
 
-    def __init__(self, sdk_config: SDKConfig, mock_mode: bool = True):
+    def __init__(self, sdk_config: SDKConfig):
         super().__init__(
             name="test_interruption_agent",
             agent_type="interruption_test",
             sdk_config=sdk_config,
-            mock_mode=mock_mode,
         )
         self.interruption_count = 0
         self.recovery_attempts = 0
@@ -45,7 +44,11 @@ class MockInterruptibleAgent(BaseAgent):
                     self.interruption_count += 1
                     raise asyncio.CancelledError(f"Interrupted at chunk {i}")
 
-                yield {"type": "content", "content": f"Chunk {i} content", "chunk_id": i}
+                yield {
+                    "type": "content",
+                    "content": f"Chunk {i} content",
+                    "chunk_id": i,
+                }
                 await asyncio.sleep(0.01)
 
             yield {"type": "complete", "finished": True}
@@ -66,7 +69,11 @@ class MockInterruptibleAgent(BaseAgent):
         """Mock stream with configurable delays for timeout testing."""
         for i in range(total_chunks):
             await asyncio.sleep(chunk_delay)
-            yield {"type": "content", "content": f"Delayed chunk {i}", "delay": chunk_delay}
+            yield {
+                "type": "content",
+                "content": f"Delayed chunk {i}",
+                "delay": chunk_delay,
+            }
 
         yield {"type": "complete", "finished": True}
 
@@ -117,7 +124,7 @@ class TestStreamingInterruption:
     def interruption_agent(self) -> MockInterruptibleAgent:
         """Provide mock interruptible agent."""
         config = SDKConfig(api_key="test-interruption-key")
-        return MockInterruptibleAgent(config, mock_mode=True)
+        return MockInterruptibleAgent(config)
 
     @pytest.mark.asyncio
     async def test_manual_stream_cancellation(
@@ -234,7 +241,7 @@ class TestStreamingTimeouts:
     def interruption_agent(self) -> MockInterruptibleAgent:
         """Provide mock interruptible agent."""
         config = SDKConfig(api_key="test-timeout-key", timeout=30)
-        return MockInterruptibleAgent(config, mock_mode=True)
+        return MockInterruptibleAgent(config)
 
     @pytest.mark.asyncio
     async def test_stream_timeout_detection(
@@ -293,7 +300,9 @@ class TestStreamingTimeouts:
                     # Progressively longer timeouts
                     timeout_duration = 0.1 * (attempt + 1)
 
-                    async def _collect_recovery_chunks(chunks_list: list[dict[str, Any]]) -> None:
+                    async def _collect_recovery_chunks(
+                        chunks_list: list[dict[str, Any]],
+                    ) -> None:
                         async for chunk in interruption_agent.stream_with_timeout(0.05, 3):
                             chunks_list.append(chunk)
 
@@ -353,7 +362,7 @@ class TestGracefulDegradation:
     def interruption_agent(self) -> MockInterruptibleAgent:
         """Provide mock interruptible agent."""
         config = SDKConfig(api_key="test-degradation-key")
-        return MockInterruptibleAgent(config, mock_mode=True)
+        return MockInterruptibleAgent(config)
 
     @pytest.mark.asyncio
     async def test_network_failure_graceful_handling(
@@ -531,7 +540,7 @@ class TestErrorRecovery:
     def interruption_agent(self) -> MockInterruptibleAgent:
         """Provide mock interruptible agent."""
         config = SDKConfig(api_key="test-recovery-key", max_retries=3)
-        return MockInterruptibleAgent(config, mock_mode=True)
+        return MockInterruptibleAgent(config)
 
     @pytest.mark.asyncio
     async def test_retry_mechanism_with_exponential_backoff(
@@ -554,7 +563,11 @@ class TestErrorRecovery:
                     async for chunk in interruption_agent.recover_from_failure(0):
                         chunks.append(chunk)
 
-                    return {"success": True, "attempts": attempt + 1, "chunks": len(chunks)}
+                    return {
+                        "success": True,
+                        "attempts": attempt + 1,
+                        "chunks": len(chunks),
+                    }
 
                 except ConnectionError:
                     if attempt == max_retries - 1:

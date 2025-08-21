@@ -2,7 +2,6 @@
 
 import os
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 from verifflowcc.core.path_config import PathConfig
@@ -51,10 +50,19 @@ class TestIsolatedAgileVVDirFixture:
         """Test that AGILEVV_BASE_DIR environment variable works in fixture."""
         custom_dir = tmp_path / "custom-test-dir"
 
-        with patch.dict(os.environ, {"AGILEVV_BASE_DIR": str(custom_dir)}):
+        # Set environment variable directly instead of using patch
+        old_value = os.environ.get("AGILEVV_BASE_DIR")
+        try:
+            os.environ["AGILEVV_BASE_DIR"] = str(custom_dir)
             config = PathConfig()
             assert config.base_dir == custom_dir
             assert config.is_test_environment()
+        finally:
+            # Restore original value
+            if old_value is None:
+                os.environ.pop("AGILEVV_BASE_DIR", None)
+            else:
+                os.environ["AGILEVV_BASE_DIR"] = old_value
 
     def test_fixture_with_keep_test_dirs_flag(self, tmp_path: Path) -> None:
         """Test that --keep-test-dirs flag prevents cleanup."""

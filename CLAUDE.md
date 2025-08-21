@@ -255,12 +255,16 @@ All agents now use the Claude Code SDK for real AI-powered execution with:
 - Never use bare `except:` - specify exception types
 - Structure agent communication with Pydantic models
 
-### Testing Requirements
+### Real Testing Requirements (No Mock Dependencies)
 
-- Minimum 80% code coverage (enforced by pytest)
-- Write tests for all new features
-- Use markers to categorize tests (unit, integration, e2e)
-- Follow AAA pattern (Arrange, Act, Assert)
+**VeriFlowCC enforces a 100% real integration testing approach with zero mock dependencies:**
+
+- **No unittest.mock usage**: All tests use real Claude Code SDK integration
+- **Minimum 80% code coverage** (enforced by pytest)
+- **Environment variable management**: Use `temp_env_vars()` context manager instead of `@patch.dict`
+- **Real API authentication**: Tests require `ANTHROPIC_API_KEY` environment variable
+- **Test markers for categorization**: unit, integration, e2e, real_sdk, sequential
+- **AAA pattern**: Arrange, Act, Assert with real service calls
 
 ### Test Isolation Framework
 

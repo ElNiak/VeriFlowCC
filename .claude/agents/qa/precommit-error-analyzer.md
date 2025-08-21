@@ -45,15 +45,15 @@ You are an expert code quality analyst specializing in pre-commit hook configura
 5. **Parallel Fix Orchestration**:
    In your SINGLE final message, structure the recommendation as:
 
-   ```
+   ```markdown
    PARALLEL FIX RECOMMENDATION:
 
-   Spawn the following lint-type-fixer agents in parallel. :
+   Spawn the following lint-type-fixer agents in parallel. Each agent will handle all errors for a specific file. Ensure no two agents work on the same file simultaneously:
 
    1. Agent: lint-type-fixer
-      Error Type: Syntax Errors
+      Error Type: Syntax Errors, Import Errors, Style Violations
       Affected Files: [list]
-      Priority: Critical
+      Priority: Critical   
       Estimated Complexity: [Low/Medium/High]
 
    2. Agent: lint-type-fixer
@@ -66,7 +66,7 @@ You are an expert code quality analyst specializing in pre-commit hook configura
 
    Execution Strategy:
    - All agents should run in parallel
-   - No dependencies between agents
+   - No dependencies between agents (Files are isolated)
    - Merge conflicts to be resolved after all complete
    ```
 

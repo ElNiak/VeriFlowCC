@@ -12,10 +12,6 @@ encoding: UTF-8
 
 Generate detailed feature specifications aligned with product roadmap and mission.
 
-<pre_flight_check>
-EXECUTE: @.claude/instructions/meta/pre-flight.md
-</pre_flight_check>
-
 <process_flow>
 
 <step number="1" subagent="context-fetcher" name="spec_initiation">
@@ -28,8 +24,8 @@ Use the context-fetcher subagent to identify spec initiation method by either fi
 <trigger_phrases>
 
 - "what's next?"
-</trigger_phrases>
-<actions>
+  </trigger_phrases>
+  <actions>
 
 1\. CHECK @.agilevv/product/roadmap.md
 2\. FIND next uncompleted item
@@ -61,8 +57,8 @@ READ only files not already in context:
 
 - mission-lite.md (if not in context)
 - tech-stack.md (if not in context)
-CONTINUE with context analysis
-</conditional_logic>
+  CONTINUE with context analysis
+  </conditional_logic>
 
 <context_analysis>
 <mission_lite>core product purpose and value</mission_lite>
@@ -82,7 +78,7 @@ Use the context-fetcher subagent to clarify scope boundaries and technical consi
 
 - in_scope: what is included
 - out_of_scope: what is excluded (optional)
-</scope>
+  </scope>
 
 <technical>
 - functionality specifics
@@ -129,8 +125,8 @@ Use kebab-case for spec name. Maximum 5 words in name.
 - max_words: 5
 - style: kebab-case
 - descriptive: true
-</name_constraints>
-</folder_naming>
+  </name_constraints>
+  </folder_naming>
 
 <example_names>
 
@@ -272,8 +268,8 @@ Use the file-creator subagent to create the file: .agilevv/specs/YYYY-MM-DD-spec
 - source: Step 6 spec.md overview section
 - length: 1-3 sentences
 - content: core goal and objective of the feature
-</spec_summary>
-</content_structure>
+  </spec_summary>
+  </content_structure>
 
 <content_template>
 [1-3_SENTENCES_SUMMARIZING_SPEC_GOAL_AND_OBJECTIVE]
@@ -310,14 +306,14 @@ This is the technical specification for the spec detailed in @.agilevv/specs/YYY
 - UI/UX specifications
 - integration requirements
 - performance criteria
-</technical_requirements>
-<external_dependencies_conditional>
+  </technical_requirements>
+  <external_dependencies_conditional>
 - only include if new dependencies needed
 - new libraries/packages
 - justification for each
 - version requirements
-</external_dependencies_conditional>
-</spec_sections>
+  </external_dependencies_conditional>
+  </spec_sections>
 
 <example_template>
 
@@ -375,7 +371,7 @@ This is the database schema implementation for the spec detailed in @.agilevv/sp
 - new columns
 - modifications
 - migrations
-</changes>
+  </changes>
 
 <specifications>
 - exact SQL or migration syntax
@@ -423,7 +419,7 @@ This is the API specification for the spec detailed in @.agilevv/specs/YYYY-MM-D
 - endpoint path
 - parameters
 - response format
-</routes>
+  </routes>
 
 <controllers>
 - action names
@@ -468,9 +464,5 @@ I've created the spec documentation:
 
 Please review and let me know if any changes are needed before I create the task breakdown.
 
-When you're ready, run the /create-tasks command to have me build the tasks checklist from this spec. 
+When you're ready, run the /create-tasks command to have me build the tasks checklist from this spec.
 </review_request>
-
-<post_flight_check>
-  EXECUTE: @.claude/instructions/meta/post-flight.md
-</post_flight_check>
