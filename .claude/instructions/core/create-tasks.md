@@ -81,11 +81,7 @@ Type 'yes' to proceed with Task 1, or let me know if you'd like to review or mod
 
 <execution_flow>
 IF user_confirms_yes:
-REFERENCE: @.claude/instructions/core/execute-tasks.md
-FOCUS: Only Task 1 and its subtasks
-CONSTRAINT: Do not proceed to additional tasks without explicit user request
-ELSE:
-WAIT: For user clarification or modifications
+Execute: @.claude/commands/execute-tasks.md
 </execution_flow>
 
 </step>

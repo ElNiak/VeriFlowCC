@@ -14,7 +14,11 @@ Focusing on sequential execution of subagents and tools since, context engineeri
 - context carry implicit and explicit decisions on actions
 - the shared context between agents and the non-shared context between agents
 
-_When “Verification flow” meets Claude’s intelligence for seamless V&V pipelines._
+_When "Verification flow" meets Claude's intelligence for seamless V&V pipelines._
+
+## Authentication Disclaimer
+
+VeriFlowCC requires Claude Code authentication to function properly. Users must ensure their environment is configured with appropriate authentication methods through VeriFlow's guidelines before using this tool. The system supports flexible authentication approaches without requiring specific setup steps in this documentation.
 
 ## Agile V-Model Overview
 
@@ -210,7 +214,7 @@ AgileVerifFlowCC/                   # Project root (could be a pip package)
 
 - **Git for Checkpointing:** The file_manager uses Git for version control. It will initialize a repo if not already (or integrate with an existing one). Before major stages (end of coding, after fixes), it commits changes with a message. For rollback, it uses `git reset --hard HEAD~1` or keeps a pointer to the last good commit and resets to it. This leverages a well-tested tool (git) for preserving and restoring state, instead of writing our own backup system. Additionally, using git means the developer can inspect diffs and history outside the tool, and it dovetails into their normal workflow (they can push the commits to remote, etc.).
 
-- **Configuration & Extensibility:** The CLI could use a config file (e.g. `verifflowcc.config.yml`) to specify settings: which model versions to use (Opus vs Sonnet), API keys, toggling auto-approval, etc. Tool integrations (like additional MCP servers for Jira, Figma, etc.) could also be configured here for future extension, but by default the tool focuses on the code/test scope.
+- **Configuration & Extensibility:** The CLI could use a config file (e.g. `verifflowcc.config.yml`) to specify settings: which model versions to use (Opus vs Sonnet), authentication preferences, toggling auto-approval, etc. Tool integrations (like additional MCP servers for Jira, Figma, etc.) could also be configured here for future extension, but by default the tool focuses on the code/test scope.
 
 **Dependencies:** Aside from the Claude SDK, Jinja2, Pydantic, and Git (which is external), we’d use standard libraries. If needed, we might use `rich` library to pretty-print things in the terminal (like coloring diffs or rendering the planning checklist with checkboxes for fun). The overall footprint should remain lightweight, as simplicity is a priority.
 

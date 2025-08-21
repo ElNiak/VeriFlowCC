@@ -58,16 +58,11 @@ def _can_authenticate_with_sdk() -> bool:
 
 
 # Skip all tests if SDK authentication is not available
-skip_if_no_auth = pytest.mark.skipif(
-    not _can_authenticate_with_sdk(),
-    reason="No Claude Code SDK authentication available (requires ANTHROPIC_API_KEY)",
-)
 
 
 class TestRealDeveloperSDKInitialization:
     """Test real SDK initialization and configuration for Developer agent."""
 
-    @skip_if_no_auth
     def test_real_sdk_developer_initialization_with_auth(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -91,7 +86,6 @@ class TestRealDeveloperSDKInitialization:
         client_options = agent.sdk_config.get_client_options("developer")
         assert client_options is not None
 
-    @skip_if_no_auth
     def test_real_sdk_developer_custom_configuration(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -115,7 +109,6 @@ class TestRealDeveloperSDKInitialization:
         assert agent.sdk_config.timeout == 120
         assert agent.sdk_config.max_retries == 2
 
-    @skip_if_no_auth
     def test_real_sdk_developer_tool_permissions_configuration(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -139,7 +132,6 @@ class TestRealDeveloperSDKInitialization:
 class TestRealDeveloperCodeGeneration:
     """Test real code generation with authentic AI responses."""
 
-    @skip_if_no_auth
     async def test_real_code_generation_from_design_artifact(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -284,7 +276,6 @@ class TestRealDeveloperCodeGeneration:
         assert execution_time < 180.0  # Should complete within extended timeout
         assert execution_time > 0.1  # Should take some processing time
 
-    @skip_if_no_auth
     async def test_real_code_generation_mailbuddy_email_templates(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -385,7 +376,6 @@ class TestRealDeveloperCodeGeneration:
         assert "design_reference" in implementation_data
         assert implementation_data["design_reference"]["id"] == "ARCH-EMAIL-TEMPLATES"
 
-    @skip_if_no_auth
     async def test_real_code_generation_with_tech_stack_constraints(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -472,7 +462,6 @@ class TestRealDeveloperCodeGeneration:
 class TestRealDeveloperSourceFileCreation:
     """Test real source file creation and validation."""
 
-    @skip_if_no_auth
     async def test_real_source_file_creation_and_structure(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -532,7 +521,6 @@ class TestRealDeveloperSourceFileCreation:
                         assert "path" in file_info or "filename" in file_info
                         assert "content" in file_info or "size" in file_info
 
-    @skip_if_no_auth
     async def test_real_test_file_generation_and_validation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -602,7 +590,6 @@ class TestRealDeveloperSourceFileCreation:
                             for key in ["filename", "path", "content", "description"]
                         )
 
-    @skip_if_no_auth
     async def test_real_code_quality_validation_and_metrics(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -665,7 +652,6 @@ class TestRealDeveloperSourceFileCreation:
 class TestRealDeveloperArtifactGeneration:
     """Test real artifact generation and file system integration."""
 
-    @skip_if_no_auth
     async def test_real_implementation_artifact_creation_and_structure(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -719,7 +705,6 @@ class TestRealDeveloperArtifactGeneration:
         # Verify artifact matches returned result
         assert artifact_data == implementation_data
 
-    @skip_if_no_auth
     async def test_real_agent_handoff_artifact_consumability(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -811,7 +796,6 @@ class TestRealDeveloperArtifactGeneration:
 class TestRealDeveloperErrorHandling:
     """Test error handling and resilience with real SDK conditions."""
 
-    @skip_if_no_auth
     async def test_real_sdk_timeout_handling(self, isolated_agilevv_dir: TestPathConfig) -> None:
         """Test handling of real SDK timeout conditions."""
         api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -855,7 +839,6 @@ class TestRealDeveloperErrorHandling:
             keyword in error_message for keyword in ["timeout", "time", "exceeded", "connection"]
         )
 
-    @skip_if_no_auth
     async def test_real_sdk_authentication_error_handling(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -894,7 +877,6 @@ class TestRealDeveloperErrorHandling:
             for keyword in ["auth", "key", "permission", "credential", "unauthorized"]
         )
 
-    @skip_if_no_auth
     async def test_real_sdk_network_resilience(self, isolated_agilevv_dir: TestPathConfig) -> None:
         """Test network resilience with retry mechanisms."""
         api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -939,7 +921,6 @@ class TestRealDeveloperErrorHandling:
 class TestRealDeveloperSessionManagement:
     """Test session management and context preservation across requests."""
 
-    @skip_if_no_auth
     async def test_real_session_context_preservation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -1002,7 +983,6 @@ class TestRealDeveloperSessionManagement:
         assert "ARCH-SESSION-001" in session_text
         assert "ARCH-SESSION-002" in session_text
 
-    @skip_if_no_auth
     async def test_real_session_isolation_between_agents(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -1052,7 +1032,6 @@ class TestRealDeveloperSessionManagement:
 class TestRealDeveloperPerformance:
     """Test performance characteristics with real SDK calls."""
 
-    @skip_if_no_auth
     async def test_real_implementation_performance_benchmarks(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -1172,7 +1151,6 @@ class TestRealDeveloperPerformance:
         assert complex_time > 0.1  # Should take some processing time
         # Complex may take longer, but this is not guaranteed with AI responses
 
-    @skip_if_no_auth
     async def test_real_concurrent_implementation_behavior(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:

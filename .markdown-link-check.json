@@ -1,0 +1,60 @@
+{
+	"ignorePatterns": [
+		{
+			"pattern": "^http://localhost"
+		},
+		{
+			"pattern": "^https://example.com"
+		},
+		{
+			"pattern": "^http://127.0.0.1"
+		},
+		{
+			"pattern": "^http://10.0.2.2"
+		},
+		{
+			"pattern": "^#[a-zA-Z0-9-_]+$"
+		},
+		{
+			"pattern": "^\\.roo/"
+		},
+		{
+			"pattern": "^docs/"
+		},
+		{
+			"pattern": "^LICENSE$"
+		},
+		{
+			"pattern": "https://github.com/ruvnet/claude-code-flow/"
+		},
+		{
+			"pattern": "^link$"
+		},
+		{
+			"pattern": "^\\[.*\\]\\(link\\)$"
+		},
+		{
+			"pattern": "\\.roo/rules-mcp/.*\\.md$"
+		},
+		{
+			"pattern": "\\.roo/README\\.md$"
+		}
+	],
+	"retryOn429": true,
+	"retryCount": 3,
+	"timeout": "20s",
+	"httpHeaders": [
+		{
+			"urls": ["https://github.com"],
+			"headers": {
+				"User-Agent": "Mozilla/5.0 (compatible; markdown-link-check; GitHub link checker)"
+			}
+		}
+	],
+	"replacementPatterns": [
+		{
+			"pattern": "^/",
+			"replacement": "{{BASEURL}}/"
+		}
+	]
+}

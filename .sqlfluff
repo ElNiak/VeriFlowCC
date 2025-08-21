@@ -1,0 +1,36 @@
+[sqlfluff]
+dialect = postgres
+templater = raw
+sql_file_exts = .sql,.SQL
+max_line_length = 200
+indent_unit = space
+tab_space_size = 2
+
+# Exclude problematic rules for migration files
+exclude_rules = LT01,LT02,LT05,CP01,CP02,CP03,CP05,AL01,AL05,RF03,AM03,PRS
+
+[sqlfluff:indentation]
+indented_joins = False
+indented_ctes = False
+indented_using_on = True
+template_blocks_indent = True
+
+[sqlfluff:layout:type:comma]
+spacing_before = touch
+spacing_after = space
+
+# Relaxed rules for migration scripts
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = consistent
+
+[sqlfluff:rules:capitalisation.identifiers]
+capitalisation_policy = consistent
+
+[sqlfluff:rules:capitalisation.functions]
+capitalisation_policy = consistent
+
+[sqlfluff:rules:capitalisation.literals]
+capitalisation_policy = consistent
+
+[sqlfluff:rules:capitalisation.types]
+capitalisation_policy = consistent

@@ -38,17 +38,10 @@ def _can_authenticate_with_sdk() -> bool:
         return False
 
 
-skip_if_no_auth = pytest.mark.skipif(
-    not _can_authenticate_with_sdk(),
-    reason="No Claude Code SDK authentication available (requires ANTHROPIC_API_KEY)",
-)
-
-
 @pytest.mark.asyncio
 class TestRealQATesterSDKInitialization:
     """Test real SDK integration for QA Tester agent initialization."""
 
-    @skip_if_no_auth
     async def test_real_qa_tester_sdk_initialization(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -75,7 +68,6 @@ class TestRealQATesterSDKInitialization:
         client_options = agent.sdk_config.get_client_options("qa")
         assert client_options is not None
 
-    @skip_if_no_auth
     async def test_real_qa_tester_template_loading(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -101,7 +93,6 @@ class TestRealQATesterSDKInitialization:
         assert len(prompt) > 0
         assert "Test template loading" in prompt
 
-    @skip_if_no_auth
     async def test_real_qa_tester_config_validation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -118,7 +109,6 @@ class TestRealQATesterSDKInitialization:
         assert hasattr(agent, "sdk_config")
         assert agent.sdk_config is not None
 
-    @skip_if_no_auth
     async def test_real_qa_tester_path_configuration(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -137,7 +127,6 @@ class TestRealQATesterSDKInitialization:
 class TestRealQATesterTestStrategyDevelopment:
     """Test real SDK integration for test strategy development."""
 
-    @skip_if_no_auth
     async def test_real_test_strategy_generation_unit_testing(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -235,7 +224,6 @@ class TestRealQATesterTestStrategyDevelopment:
                 assert "id" in test_case
                 assert "description" in test_case or "title" in test_case
 
-    @skip_if_no_auth
     async def test_real_test_strategy_integration_testing(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -325,7 +313,6 @@ class TestRealQATesterTestStrategyDevelopment:
 class TestRealQATesterTestCaseGeneration:
     """Test real SDK integration for test case generation."""
 
-    @skip_if_no_auth
     async def test_real_functional_test_case_generation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -395,7 +382,6 @@ class TestRealQATesterTestCaseGeneration:
             found_fields = [field for field in expected_fields if field in sample_test_case]
             assert len(found_fields) >= 2  # At least 2 expected fields found
 
-    @skip_if_no_auth
     async def test_real_security_test_case_generation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -467,7 +453,6 @@ class TestRealQATesterTestCaseGeneration:
         ]
         assert any(term in strategy_content for term in security_terms)
 
-    @skip_if_no_auth
     async def test_real_performance_test_case_generation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -544,7 +529,6 @@ class TestRealQATesterTestCaseGeneration:
 class TestRealQATesterArtifactGeneration:
     """Test real SDK integration for artifact generation."""
 
-    @skip_if_no_auth
     async def test_real_test_artifact_creation(self, isolated_agilevv_dir: TestPathConfig) -> None:
         """Test real test artifact creation and persistence."""
         # Arrange: Create comprehensive test scenario
@@ -595,7 +579,6 @@ class TestRealQATesterArtifactGeneration:
             assert isinstance(content, dict)
             assert len(content) > 0
 
-    @skip_if_no_auth
     async def test_real_traceability_matrix_generation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -658,7 +641,6 @@ class TestRealQATesterArtifactGeneration:
 class TestRealQATesterErrorHandling:
     """Test real SDK error handling scenarios."""
 
-    @skip_if_no_auth
     async def test_real_invalid_input_handling(self, isolated_agilevv_dir: TestPathConfig) -> None:
         """Test handling of invalid input data."""
         # Arrange: Create agent with invalid input
@@ -680,7 +662,6 @@ class TestRealQATesterErrorHandling:
         assert "status" in result
         # Should either succeed with minimal data or handle the error gracefully
 
-    @skip_if_no_auth
     async def test_real_timeout_handling(self, isolated_agilevv_dir: TestPathConfig) -> None:
         """Test SDK timeout handling."""
         # Arrange: Create agent with very short timeout
@@ -715,7 +696,6 @@ class TestRealQATesterErrorHandling:
             # Timeout or other network errors are expected with very short timeout
             assert "timeout" in str(e).lower() or "time" in str(e).lower()
 
-    @skip_if_no_auth
     async def test_real_network_resilience(self, isolated_agilevv_dir: TestPathConfig) -> None:
         """Test network resilience and retry behavior."""
         # Arrange: Create agent with retry configuration
@@ -752,7 +732,6 @@ class TestRealQATesterErrorHandling:
 class TestRealQATesterSessionManagement:
     """Test real SDK session management and context preservation."""
 
-    @skip_if_no_auth
     async def test_real_session_context_preservation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -805,7 +784,6 @@ class TestRealQATesterSessionManagement:
         assert "testing_data" in result_1
         assert "testing_data" in result_2
 
-    @skip_if_no_auth
     async def test_real_multi_agent_handoff_preparation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -858,7 +836,6 @@ class TestRealQATesterSessionManagement:
 class TestRealQATesterPerformanceAndScaling:
     """Test real SDK performance and scaling characteristics."""
 
-    @skip_if_no_auth
     async def test_real_large_requirement_set_processing(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -905,7 +882,6 @@ class TestRealQATesterPerformanceAndScaling:
         assert "test_strategy" in testing_data
         assert "test_cases" in testing_data
 
-    @skip_if_no_auth
     async def test_real_concurrent_processing_simulation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -957,7 +933,6 @@ class TestRealQATesterPerformanceAndScaling:
         concurrency_terms = ["concurrent", "parallel", "thread", "performance", "load"]
         assert any(term in strategy_content for term in concurrency_terms)
 
-    @skip_if_no_auth
     async def test_real_end_to_end_qa_workflow_simulation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:

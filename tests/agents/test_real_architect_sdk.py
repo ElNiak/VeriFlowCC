@@ -58,16 +58,11 @@ def _can_authenticate_with_sdk() -> bool:
 
 
 # Skip all tests if SDK authentication is not available
-skip_if_no_auth = pytest.mark.skipif(
-    not _can_authenticate_with_sdk(),
-    reason="No Claude Code SDK authentication available (requires ANTHROPIC_API_KEY)",
-)
 
 
 class TestRealArchitectSDKInitialization:
     """Test real SDK initialization and configuration for Architect agent."""
 
-    @skip_if_no_auth
     def test_real_sdk_architect_initialization_with_auth(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -91,7 +86,6 @@ class TestRealArchitectSDKInitialization:
         client_options = agent.sdk_config.get_client_options("architect")
         assert client_options is not None
 
-    @skip_if_no_auth
     def test_real_sdk_architect_custom_configuration(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -115,7 +109,6 @@ class TestRealArchitectSDKInitialization:
         assert agent.sdk_config.timeout == 60
         assert agent.sdk_config.max_retries == 2
 
-    @skip_if_no_auth
     def test_real_sdk_architect_tool_permissions_configuration(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -139,7 +132,6 @@ class TestRealArchitectSDKInitialization:
 class TestRealArchitectSystemDesignGeneration:
     """Test real system design generation with authentic AI responses."""
 
-    @skip_if_no_auth
     async def test_real_system_design_from_requirements_artifact(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -268,7 +260,6 @@ class TestRealArchitectSystemDesignGeneration:
         assert execution_time < 120.0  # Should complete within extended timeout
         assert execution_time > 0.1  # Should take some processing time
 
-    @skip_if_no_auth
     async def test_real_system_design_mailbuddy_email_templates(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -355,7 +346,6 @@ class TestRealArchitectSystemDesignGeneration:
         assert "requirements_reference" in design_data
         assert design_data["requirements_reference"]["id"] == "REQ-EMAIL-TEMPLATES"
 
-    @skip_if_no_auth
     async def test_real_system_design_context_integration(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -433,7 +423,6 @@ class TestRealArchitectSystemDesignGeneration:
 class TestRealArchitectPlantUMLDiagramGeneration:
     """Test real PlantUML and C4 diagram generation capabilities."""
 
-    @skip_if_no_auth
     async def test_real_plantuml_diagram_generation_and_validation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -539,7 +528,6 @@ class TestRealArchitectPlantUMLDiagramGeneration:
         service_coverage = sum(1 for service in services if service in design_text)
         assert service_coverage >= 2  # Should mention at least 2 of the services
 
-    @skip_if_no_auth
     async def test_real_c4_model_diagram_structure_validation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -622,7 +610,6 @@ class TestRealArchitectPlantUMLDiagramGeneration:
             keyword in design_text for keyword in ["integration", "api", "external", "interface"]
         )
 
-    @skip_if_no_auth
     async def test_real_diagram_format_validation_and_consumability(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -673,7 +660,6 @@ class TestRealArchitectPlantUMLDiagramGeneration:
 class TestRealArchitectArtifactGeneration:
     """Test real artifact generation and file system integration."""
 
-    @skip_if_no_auth
     async def test_real_design_artifact_creation_and_structure(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -723,7 +709,6 @@ class TestRealArchitectArtifactGeneration:
         # Verify artifact matches returned result
         assert artifact_data == design_data
 
-    @skip_if_no_auth
     async def test_real_architecture_documentation_updates(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -782,7 +767,6 @@ class TestRealArchitectArtifactGeneration:
             for keyword in ["architecture", "design", "system", "component"]
         )
 
-    @skip_if_no_auth
     async def test_real_agent_handoff_artifact_consumability(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -872,7 +856,6 @@ class TestRealArchitectArtifactGeneration:
 class TestRealArchitectErrorHandling:
     """Test error handling and resilience with real SDK conditions."""
 
-    @skip_if_no_auth
     async def test_real_sdk_timeout_handling(self, isolated_agilevv_dir: TestPathConfig) -> None:
         """Test handling of real SDK timeout conditions."""
         api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -914,7 +897,6 @@ class TestRealArchitectErrorHandling:
             keyword in error_message for keyword in ["timeout", "time", "exceeded", "connection"]
         )
 
-    @skip_if_no_auth
     async def test_real_sdk_authentication_error_handling(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -949,7 +931,6 @@ class TestRealArchitectErrorHandling:
             for keyword in ["auth", "key", "permission", "credential", "unauthorized"]
         )
 
-    @skip_if_no_auth
     async def test_real_sdk_network_resilience(self, isolated_agilevv_dir: TestPathConfig) -> None:
         """Test network resilience with retry mechanisms."""
         api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -990,7 +971,6 @@ class TestRealArchitectErrorHandling:
 class TestRealArchitectSessionManagement:
     """Test session management and context preservation across requests."""
 
-    @skip_if_no_auth
     async def test_real_session_context_preservation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -1045,7 +1025,6 @@ class TestRealArchitectSessionManagement:
         assert "REQ-SESSION-001" in session_text
         assert "REQ-SESSION-002" in session_text
 
-    @skip_if_no_auth
     async def test_real_session_isolation_between_agents(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -1095,7 +1074,6 @@ class TestRealArchitectSessionManagement:
 class TestRealArchitectPerformance:
     """Test performance characteristics with real SDK calls."""
 
-    @skip_if_no_auth
     async def test_real_design_performance_benchmarks(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -1201,7 +1179,6 @@ class TestRealArchitectPerformance:
         assert complex_time > 0.1  # Should take some processing time
         # Complex may take longer, but this is not guaranteed with AI responses
 
-    @skip_if_no_auth
     async def test_real_concurrent_design_behavior(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:

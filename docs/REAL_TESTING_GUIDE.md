@@ -14,9 +14,10 @@ VeriFlowCC follows a **100% real integration testing approach** with **zero mock
 
 ### 2. Real API Authentication
 
-- Tests require `ANTHROPIC_API_KEY` environment variable for full integration
-- Tests are automatically skipped if authentication is not available
-- Use test-friendly API keys for structure validation when needed
+- Tests use configured Claude Code authentication (subscription or API key)
+- Authentication is assumed to be pre-configured and available
+- Tests fail fast if authentication is not available (no graceful skipping)
+- Authentication flexibility allows various setup approaches
 
 ### 3. Test Isolation
 
@@ -34,7 +35,7 @@ VeriFlowCC follows a **100% real integration testing approach** with **zero mock
 from unittest.mock import patch
 
 
-@patch.dict(os.environ, {"API_KEY": "test-key"})
+@patch.dict(os.environ, {"AUTH_TOKEN": "test-token"})
 def test_something():
     # Test code here
     pass
@@ -77,34 +78,22 @@ def test_with_env_vars():
 **Pattern for real SDK authentication:**
 
 ```python
-import os
 import pytest
 from verifflowcc.core.sdk_config import SDKConfig
 
 
-def _can_authenticate_with_sdk() -> bool:
-    """Check if Claude Code SDK authentication is possible."""
-    try:
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if api_key:
-            sdk_config = SDKConfig(api_key=api_key, timeout=10)
-            return sdk_config.api_key is not None
-        return False
-    except Exception:
-        return False
-
-
-# Skip tests if no authentication
-skip_if_no_auth = pytest.mark.skipif(
-    not _can_authenticate_with_sdk(), reason="No Claude Code SDK authentication available"
-)
-
-
-@skip_if_no_auth
 def test_real_sdk_functionality():
-    # Test will only run with real API key
+    """Test with real SDK - authentication is assumed to be pre-configured."""
+    # Authentication is assumed to be available
+    # Tests fail fast if authentication is not configured
+    sdk_config = SDKConfig(timeout=10)
+
+    # Test will proceed assuming authentication is configured
+    # If authentication fails, test fails immediately (no skipping)
     pass
 ```
+
+**Note**: Tests now assume authentication is pre-configured and fail fast if unavailable, rather than being skipped gracefully.
 
 ### Test Isolation with Real Directories
 
@@ -134,17 +123,15 @@ from verifflowcc.core.sdk_config import SDKConfig
 
 
 @pytest.mark.real_sdk
-@skip_if_no_auth
 async def test_real_requirements_analysis():
-    """Test requirements analyst with real SDK."""
-    # Setup real SDK config
-    api_key = os.getenv("ANTHROPIC_API_KEY")
-    sdk_config = SDKConfig(api_key=api_key, timeout=60)
+    """Test requirements analyst with real SDK - authentication assumed."""
+    # Setup real SDK config - authentication is assumed to be configured
+    sdk_config = SDKConfig(timeout=60)
 
     # Create real agent instance
     agent = RequirementsAnalyst(sdk_config=sdk_config)
 
-    # Test with real input
+    # Test with real input - fails fast if authentication unavailable
     story = "As a user, I want to login to the system"
     result = await agent.analyze_requirements(story)
 
@@ -163,16 +150,15 @@ from typer.testing import CliRunner
 from verifflowcc.cli import app
 
 
-@skip_if_no_auth
 def test_real_cli_command(isolated_agilevv_dir: TestPathConfig):
-    """Test CLI commands with real orchestrator integration."""
+    """Test CLI commands with real orchestrator integration - authentication assumed."""
     runner = CliRunner()
 
-    # Set real environment
+    # Set real environment - authentication assumed to be pre-configured
     with temp_env_vars(AGILEVV_BASE_DIR=str(isolated_agilevv_dir.base_dir)):
         result = runner.invoke(app, ["init"])
 
-    # Verify real command execution
+    # Verify real command execution - fails fast if authentication unavailable
     assert result.exit_code == 0
     assert isolated_agilevv_dir.config_path.exists()
 ```
@@ -240,10 +226,10 @@ uv run pytest -x tests/integration/test_e2e_vmodel_workflow_handoffs.py
 
 ### 1. Authentication Strategy
 
-- Always check for real API key availability
-- Skip tests gracefully when authentication is not available
-- Use test-specific API keys when possible
-- Never hardcode API keys in test files
+- Authentication is assumed to be pre-configured and available
+- Tests fail fast when authentication is not available (no graceful skipping)
+- Use flexible authentication approaches (subscription or API key)
+- Never hardcode authentication credentials in test files
 
 ### 2. Resource Management
 
@@ -262,11 +248,10 @@ uv run pytest -x tests/integration/test_e2e_vmodel_workflow_handoffs.py
 ### 4. Error Handling
 
 ```python
-@skip_if_no_auth
 async def test_error_handling():
-    """Test real error scenarios."""
+    """Test real error scenarios - authentication assumed."""
     try:
-        # Trigger real error condition
+        # Trigger real error condition (authentication assumed available)
         result = await agent.process_invalid_input()
     except SomeExpectedError as e:
         assert "expected error pattern" in str(e)
@@ -287,7 +272,7 @@ async def test_error_handling():
 
 The project includes comprehensive validation to ensure no mock dependencies remain:
 
-```python
+```bash
 # Run mock removal validation
 uv run pytest tests/validation/test_mock_removal_validation.py
 ```
@@ -324,11 +309,16 @@ def test_artifact_validation():
 ### ❌ Don't Do This
 
 ```python
-# Using mocks
+# Using mocks - DON'T DO THIS
 from unittest.mock import patch, MagicMock
+
 
 # Patching environment
 @patch.dict(os.environ, {"KEY": "value"})
+def test_with_mock_env():
+    # test with mocked environment
+    pass
+
 
 # Mocking SDK responses
 mock_sdk = MagicMock()
@@ -340,13 +330,16 @@ mock_sdk.generate.return_value = "fake response"
 ```python
 # Real environment management
 with temp_env_vars(KEY="value"):
-    # test code
+    # test code here - proper indentation
+    result = some_test_function()
+    assert result is not None
 
-# Real SDK integration
-api_key = os.getenv("ANTHROPIC_API_KEY")
-if api_key:
-    sdk_config = SDKConfig(api_key=api_key)
+# Real SDK integration with flexible authentication
+sdk_config = SDKConfig()  # Uses configured authentication automatically
+if sdk_config.is_authenticated():
     # real test with actual SDK
+    response = sdk_config.get_client().generate("test prompt")
+    assert response is not None
 ```
 
 ## Debugging Tips
@@ -371,9 +364,10 @@ uv run pytest --log-cli-level=DEBUG -s tests/specific_test.py
 
 ### 4. Authentication Problems
 
-- Verify `ANTHROPIC_API_KEY` is set
-- Check API key permissions and quotas
-- Test authentication separately
+- Verify Claude Code authentication is configured properly before running tests
+- Check authentication method (subscription or API key setup)
+- Tests assume authentication is available and will fail fast if not configured
+- Test authentication separately with SDK configuration if tests are failing
 
 ## Migration from Mock-Based Tests
 

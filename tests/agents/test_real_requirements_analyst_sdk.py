@@ -56,16 +56,11 @@ def _can_authenticate_with_sdk() -> bool:
 
 
 # Skip all tests if SDK authentication is not available
-skip_if_no_auth = pytest.mark.skipif(
-    not _can_authenticate_with_sdk(),
-    reason="No Claude Code SDK authentication available (requires ANTHROPIC_API_KEY)",
-)
 
 
 class TestRealRequirementsAnalystSDKInitialization:
     """Test real SDK initialization and configuration for Requirements Analyst."""
 
-    @skip_if_no_auth
     def test_real_sdk_agent_initialization_with_auth(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -89,7 +84,6 @@ class TestRealRequirementsAnalystSDKInitialization:
         client_options = agent.sdk_config.get_client_options("requirements")
         assert client_options is not None
 
-    @skip_if_no_auth
     def test_real_sdk_agent_custom_configuration(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -113,7 +107,6 @@ class TestRealRequirementsAnalystSDKInitialization:
         assert agent.sdk_config.timeout == 45
         assert agent.sdk_config.max_retries == 2
 
-    @skip_if_no_auth
     def test_real_sdk_tool_permissions_configuration(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -137,7 +130,6 @@ class TestRealRequirementsAnalystSDKInitialization:
 class TestRealRequirementsAnalystINVESTValidation:
     """Test real INVEST compliance analysis with authentic AI responses."""
 
-    @skip_if_no_auth
     async def test_real_invest_validation_comprehensive_story(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -236,7 +228,6 @@ class TestRealRequirementsAnalystINVESTValidation:
             assert isinstance(smart_criteria[key]["score"], int | float)
             assert 0.0 <= smart_criteria[key]["score"] <= 1.0
 
-    @skip_if_no_auth
     async def test_real_invest_validation_problematic_story(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -285,7 +276,6 @@ class TestRealRequirementsAnalystINVESTValidation:
         assert invest_criteria["testable"]["score"] < 0.3
         assert len(problematic_story["acceptance_criteria"]) == 0
 
-    @skip_if_no_auth
     async def test_real_invest_validation_performance_timing(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -321,7 +311,6 @@ class TestRealRequirementsAnalystINVESTValidation:
 class TestRealRequirementsAnalystStoryProcessing:
     """Test real user story processing and elaboration with authentic AI responses."""
 
-    @skip_if_no_auth
     async def test_real_story_processing_mailbuddy_scenario(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -393,7 +382,6 @@ class TestRealRequirementsAnalystStoryProcessing:
         backlog_content = backlog_path.read_text()
         assert "Email Template Management" in backlog_content
 
-    @skip_if_no_auth
     async def test_real_story_processing_with_task_description(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -432,7 +420,6 @@ class TestRealRequirementsAnalystStoryProcessing:
         artifact_files = list(artifacts_dir.glob("*.json"))
         assert len(artifact_files) > 0
 
-    @skip_if_no_auth
     async def test_real_story_processing_context_preservation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -497,7 +484,6 @@ class TestRealRequirementsAnalystStoryProcessing:
 class TestRealRequirementsAnalystArtifactGeneration:
     """Test real artifact generation and file system integration."""
 
-    @skip_if_no_auth
     async def test_real_artifact_creation_and_structure(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -539,7 +525,6 @@ class TestRealRequirementsAnalystArtifactGeneration:
         # Verify artifact matches returned result
         assert artifact_data == result
 
-    @skip_if_no_auth
     async def test_real_backlog_integration_and_updates(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -585,7 +570,6 @@ class TestRealRequirementsAnalystArtifactGeneration:
         updated_content = backlog_path.read_text()
         assert updated_content.count("US-BACKLOG-001") == 1  # Should not duplicate
 
-    @skip_if_no_auth
     async def test_real_artifact_consumability_for_agent_handoff(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -649,7 +633,6 @@ class TestRealRequirementsAnalystArtifactGeneration:
 class TestRealRequirementsAnalystErrorHandling:
     """Test error handling and resilience with real SDK conditions."""
 
-    @skip_if_no_auth
     async def test_real_sdk_timeout_handling(self, isolated_agilevv_dir: TestPathConfig) -> None:
         """Test handling of real SDK timeout conditions."""
         api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -679,7 +662,6 @@ class TestRealRequirementsAnalystErrorHandling:
             keyword in error_message for keyword in ["timeout", "time", "exceeded", "connection"]
         )
 
-    @skip_if_no_auth
     async def test_real_sdk_authentication_error_handling(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -705,7 +687,6 @@ class TestRealRequirementsAnalystErrorHandling:
             for keyword in ["auth", "key", "permission", "credential", "unauthorized"]
         )
 
-    @skip_if_no_auth
     async def test_real_sdk_network_resilience(self, isolated_agilevv_dir: TestPathConfig) -> None:
         """Test network resilience with retry mechanisms."""
         api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -741,7 +722,6 @@ class TestRealRequirementsAnalystErrorHandling:
 class TestRealRequirementsAnalystSessionManagement:
     """Test session management and context preservation across requests."""
 
-    @skip_if_no_auth
     async def test_real_session_context_preservation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -784,7 +764,6 @@ class TestRealRequirementsAnalystSessionManagement:
         assert "First Story for Session Test" in session_text
         assert "Second Story for Session Test" in session_text
 
-    @skip_if_no_auth
     async def test_real_session_isolation_between_agents(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -824,7 +803,6 @@ class TestRealRequirementsAnalystSessionManagement:
 class TestRealRequirementsAnalystPerformance:
     """Test performance characteristics with real SDK calls."""
 
-    @skip_if_no_auth
     async def test_real_processing_performance_benchmarks(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -893,7 +871,6 @@ class TestRealRequirementsAnalystPerformance:
         assert simple_time > 0.1  # Should take some processing time
         assert complex_time > 0.1  # Should take some processing time
 
-    @skip_if_no_auth
     async def test_real_concurrent_processing_behavior(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:

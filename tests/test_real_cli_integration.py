@@ -81,10 +81,6 @@ def _can_authenticate_with_sdk() -> bool:
 
 
 # Skip all tests if SDK authentication is not available
-skip_if_no_auth = pytest.mark.skipif(
-    not _can_authenticate_with_sdk(),
-    reason="No Claude Code SDK authentication available (requires ANTHROPIC_API_KEY)",
-)
 
 
 @pytest.fixture
@@ -102,7 +98,6 @@ def fresh_project_dir(tmp_path: Path) -> Path:
 class TestRealCLIInitialization:
     """Test real CLI initialization and project setup with orchestrator integration."""
 
-    @skip_if_no_auth
     def test_real_init_command_execution(
         self, runner: CliRunner, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -158,7 +153,6 @@ class TestRealCLIInitialization:
         finally:
             os.chdir(original_cwd)
 
-    @skip_if_no_auth
     def test_real_init_command_with_force_flag(
         self, runner: CliRunner, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -204,7 +198,6 @@ class TestRealCLIInitialization:
         finally:
             os.chdir(original_cwd)
 
-    @skip_if_no_auth
     def test_real_init_command_with_custom_directory(
         self, runner: CliRunner, tmp_path: Path
     ) -> None:
@@ -235,7 +228,6 @@ class TestRealCLIInitialization:
 class TestRealCLIStatusAndValidation:
     """Test real CLI status and validation commands with orchestrator integration."""
 
-    @skip_if_no_auth
     def test_real_status_command_with_no_project(self, runner: CliRunner, tmp_path: Path) -> None:
         """Test status command with no project initialized."""
         original_cwd = Path.cwd()
@@ -256,7 +248,6 @@ class TestRealCLIStatusAndValidation:
         finally:
             os.chdir(original_cwd)
 
-    @skip_if_no_auth
     def test_real_status_command_with_initialized_project(
         self, runner: CliRunner, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -285,7 +276,6 @@ class TestRealCLIStatusAndValidation:
         finally:
             os.chdir(original_cwd)
 
-    @skip_if_no_auth
     def test_real_status_command_json_output(
         self, runner: CliRunner, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -319,7 +309,6 @@ class TestRealCLIStatusAndValidation:
         finally:
             os.chdir(original_cwd)
 
-    @skip_if_no_auth
     def test_real_validate_command_execution(
         self, runner: CliRunner, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -351,7 +340,6 @@ class TestRealCLIStatusAndValidation:
 class TestRealCLISprintExecution:
     """Test real CLI sprint execution with orchestrator and agent integration."""
 
-    @skip_if_no_auth
     def test_real_sprint_command_missing_story(
         self, runner: CliRunner, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -378,7 +366,6 @@ class TestRealCLISprintExecution:
         finally:
             os.chdir(original_cwd)
 
-    @skip_if_no_auth
     def test_real_sprint_command_no_project(self, runner: CliRunner, tmp_path: Path) -> None:
         """Test sprint command with no project initialized."""
         original_cwd = Path.cwd()
@@ -397,7 +384,6 @@ class TestRealCLISprintExecution:
         finally:
             os.chdir(original_cwd)
 
-    @skip_if_no_auth
     @pytest.mark.timeout(300)  # 5 minute timeout for real sprint execution
     def test_real_sprint_command_basic_execution(
         self, runner: CliRunner, isolated_agilevv_dir: TestPathConfig
@@ -446,7 +432,6 @@ class TestRealCLISprintExecution:
 class TestRealCLIPlanExecution:
     """Test real CLI plan command with orchestrator integration."""
 
-    @skip_if_no_auth
     def test_real_plan_command_no_project(self, runner: CliRunner, tmp_path: Path) -> None:
         """Test plan command with no project initialized."""
         original_cwd = Path.cwd()
@@ -465,7 +450,6 @@ class TestRealCLIPlanExecution:
         finally:
             os.chdir(original_cwd)
 
-    @skip_if_no_auth
     def test_real_plan_command_basic_execution(
         self, runner: CliRunner, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -492,7 +476,6 @@ class TestRealCLIPlanExecution:
         finally:
             os.chdir(original_cwd)
 
-    @skip_if_no_auth
     def test_real_plan_command_with_story_id(
         self, runner: CliRunner, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -523,7 +506,6 @@ class TestRealCLIPlanExecution:
 class TestRealCLIEnvironmentHandling:
     """Test real CLI environment variable handling and configuration."""
 
-    @skip_if_no_auth
     def test_real_cli_environment_variable_handling(
         self, runner: CliRunner, tmp_path: Path
     ) -> None:
@@ -556,7 +538,6 @@ class TestRealCLIEnvironmentHandling:
         finally:
             os.chdir(original_cwd)
 
-    @skip_if_no_auth
     def test_real_cli_custom_directory_parameter(self, runner: CliRunner, tmp_path: Path) -> None:
         """Test CLI --dir parameter overrides environment variables."""
         original_cwd = Path.cwd()
@@ -586,7 +567,6 @@ class TestRealCLIEnvironmentHandling:
 class TestRealCLIErrorHandling:
     """Test comprehensive CLI error handling with real orchestrator integration."""
 
-    @skip_if_no_auth
     def test_real_cli_invalid_command_handling(self, runner: CliRunner) -> None:
         """Test CLI handling of invalid commands."""
         result = runner.invoke(app, ["invalid_command"])
@@ -594,7 +574,6 @@ class TestRealCLIErrorHandling:
         assert result.exit_code != 0
         assert result.output is not None
 
-    @skip_if_no_auth
     def test_real_cli_help_commands_functionality(self, runner: CliRunner) -> None:
         """Test all CLI help commands work correctly."""
         # Test main help
@@ -609,14 +588,12 @@ class TestRealCLIErrorHandling:
             assert result.exit_code == 0
             assert len(result.output) > 0
 
-    @skip_if_no_auth
     def test_real_cli_version_command(self, runner: CliRunner) -> None:
         """Test CLI version command functionality."""
         result = runner.invoke(app, ["--version"])
         assert result.exit_code == 0
         assert "version" in result.output.lower()
 
-    @skip_if_no_auth
     def test_real_cli_keyboard_interrupt_handling(
         self, runner: CliRunner, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -642,7 +619,6 @@ class TestRealCLIErrorHandling:
 class TestRealCLIIntegrationWorkflow:
     """Test complete CLI workflow integration with real orchestrator."""
 
-    @skip_if_no_auth
     @pytest.mark.timeout(600)  # 10 minute timeout for full workflow
     def test_real_cli_complete_workflow(
         self, runner: CliRunner, isolated_agilevv_dir: TestPathConfig
@@ -695,7 +671,6 @@ class TestRealCLIIntegrationWorkflow:
         finally:
             os.chdir(original_cwd)
 
-    @skip_if_no_auth
     def test_real_cli_multiple_sprint_execution(
         self, runner: CliRunner, isolated_agilevv_dir: TestPathConfig
     ) -> None:

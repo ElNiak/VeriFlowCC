@@ -59,16 +59,11 @@ def _can_authenticate_with_sdk() -> bool:
 
 
 # Skip all tests if SDK authentication is not available
-skip_if_no_auth = pytest.mark.skipif(
-    not _can_authenticate_with_sdk(),
-    reason="No Claude Code SDK authentication available (requires ANTHROPIC_API_KEY)",
-)
 
 
 class TestRealIntegrationSDKInitialization:
     """Test real SDK initialization and configuration for Integration agent."""
 
-    @skip_if_no_auth
     def test_real_sdk_integration_initialization_with_auth(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -92,7 +87,6 @@ class TestRealIntegrationSDKInitialization:
         client_options = agent.sdk_config.get_client_options("integration")
         assert client_options is not None
 
-    @skip_if_no_auth
     def test_real_sdk_integration_custom_configuration(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -113,7 +107,6 @@ class TestRealIntegrationSDKInitialization:
         assert agent.sdk_config.max_retries == 2
         assert agent.sdk_config.api_key == api_key
 
-    @skip_if_no_auth
     def test_real_sdk_integration_tool_permissions_configuration(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -138,7 +131,6 @@ class TestRealIntegrationSDKInitialization:
 class TestRealIntegrationGONOGODecisionMaking:
     """Test real Integration agent GO/NO-GO decision making with SDK."""
 
-    @skip_if_no_auth
     async def test_real_go_nogo_decision_comprehensive_validation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -200,7 +192,6 @@ class TestRealIntegrationGONOGODecisionMaking:
         # Verify performance requirements
         assert processing_time < 120  # Should complete within 2 minutes
 
-    @skip_if_no_auth
     async def test_real_go_nogo_decision_problematic_scenario(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -245,7 +236,6 @@ class TestRealIntegrationGONOGODecisionMaking:
         assert "integration_results" in result
         assert isinstance(integration_output.integration_results, dict)
 
-    @skip_if_no_auth
     async def test_real_go_nogo_decision_performance_timing(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -286,7 +276,6 @@ class TestRealIntegrationGONOGODecisionMaking:
 class TestRealIntegrationSystemHealthValidation:
     """Test real Integration agent system health assessment with SDK."""
 
-    @skip_if_no_auth
     async def test_real_system_health_comprehensive_assessment(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -341,7 +330,6 @@ class TestRealIntegrationSystemHealthValidation:
         # Should provide actionable recommendations
         assert integration_output.status is not None
 
-    @skip_if_no_auth
     async def test_real_deployment_validation_infrastructure_checks(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -389,7 +377,6 @@ class TestRealIntegrationSystemHealthValidation:
 class TestRealIntegrationArtifactGeneration:
     """Test real Integration agent artifact creation and management."""
 
-    @skip_if_no_auth
     async def test_real_integration_artifact_creation_and_structure(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -431,7 +418,6 @@ class TestRealIntegrationArtifactGeneration:
         # Verify base artifact directory structure
         assert isolated_agilevv_dir.artifacts_dir.exists()
 
-    @skip_if_no_auth
     async def test_real_integration_release_documentation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -472,7 +458,6 @@ class TestRealIntegrationArtifactGeneration:
         # Should provide release readiness assessment
         assert isinstance(integration_output.next_stage_ready, bool)
 
-    @skip_if_no_auth
     async def test_real_agent_handoff_artifact_consumability(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -514,7 +499,6 @@ class TestRealIntegrationArtifactGeneration:
 class TestRealIntegrationErrorHandling:
     """Test real Integration agent error handling and resilience."""
 
-    @skip_if_no_auth
     async def test_real_sdk_timeout_handling(self, isolated_agilevv_dir: TestPathConfig) -> None:
         """Test Integration agent handling of SDK timeouts."""
         api_key = os.getenv("ANTHROPIC_API_KEY") or "test-api-key-for-structure-validation"
@@ -549,7 +533,6 @@ class TestRealIntegrationErrorHandling:
             # Should handle timeouts gracefully
             assert "timeout" in str(e).lower() or "time" in str(e).lower()
 
-    @skip_if_no_auth
     async def test_real_sdk_authentication_error_handling(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -584,7 +567,6 @@ class TestRealIntegrationErrorHandling:
             # Should handle auth errors gracefully
             assert "auth" in str(e).lower() or "permission" in str(e).lower()
 
-    @skip_if_no_auth
     async def test_real_sdk_network_resilience(self, isolated_agilevv_dir: TestPathConfig) -> None:
         """Test Integration agent network resilience and retry behavior."""
         api_key = os.getenv("ANTHROPIC_API_KEY") or "test-api-key-for-structure-validation"
@@ -620,7 +602,6 @@ class TestRealIntegrationErrorHandling:
 class TestRealIntegrationSessionManagement:
     """Test real Integration agent session management and context."""
 
-    @skip_if_no_auth
     async def test_real_session_context_preservation(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -656,7 +637,6 @@ class TestRealIntegrationSessionManagement:
         # Should maintain context consistency
         assert isinstance(result, dict)
 
-    @skip_if_no_auth
     async def test_real_session_isolation_between_agents(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -711,7 +691,6 @@ class TestRealIntegrationSessionManagement:
 class TestRealIntegrationPerformance:
     """Test real Integration agent performance and scaling characteristics."""
 
-    @skip_if_no_auth
     async def test_real_integration_performance_benchmarks(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -748,7 +727,6 @@ class TestRealIntegrationPerformance:
         assert integration_output.status is not None
         assert integration_output.integration_results is not None
 
-    @skip_if_no_auth
     async def test_real_concurrent_integration_behavior(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:

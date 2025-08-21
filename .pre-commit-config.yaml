@@ -54,12 +54,7 @@ repos:
         entry: uv run mypy
         language: system
         types: [python]
-        args:
-          [
-            --ignore-missing-imports,
-            --no-strict-optional,
-            verifflowcc,
-          ]
+        args: [--ignore-missing-imports, --no-strict-optional, verifflowcc]
         require_serial: false
         pass_filenames: false
 
@@ -106,3 +101,20 @@ repos:
           - mdformat-ruff # Python code formatting
           - mdformat-frontmatter # YAML frontmatter support
           - ruff # Required for mdformat-ruff
+
+  # =============================================================================
+  # 🗄️ DATABASE & SQL VALIDATION
+  # =============================================================================
+
+  # SQLFluff - SQL linting for PostgreSQL/TimescaleDB
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 3.0.7
+    hooks:
+      - id: sqlfluff-lint
+        name: SQL lint (PostgreSQL)
+        args: [--dialect, postgres, --disable-progress-bar]
+        types: [sql]
+      - id: sqlfluff-fix
+        name: SQL auto-fix
+        args: [--dialect, postgres, --disable-progress-bar]
+        types: [sql]

@@ -70,8 +70,11 @@ temp/
 .mcp.json
 .venv
 .ruff_cache
-.serena
+.serena/cache/
 .benchmarks
 .coverage.*
 .codacy/
 .claude/hooks/tool_logs/
+.agilevv-test/
+# Large documentation files
+docs/Jeff\ Tian-Software\ Quality\ Engineering_*.pdf

@@ -59,16 +59,11 @@ def _can_authenticate_with_sdk() -> bool:
 
 
 # Skip all tests if SDK authentication is not available
-skip_if_no_auth = pytest.mark.skipif(
-    not _can_authenticate_with_sdk(),
-    reason="No Claude Code SDK authentication available (requires ANTHROPIC_API_KEY)",
-)
 
 
 class TestRealOrchestratorSDKInitialization:
     """Test real SDK initialization and agent coordination for Orchestrator."""
 
-    @skip_if_no_auth
     def test_real_sdk_orchestrator_initialization_with_auth(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -102,7 +97,6 @@ class TestRealOrchestratorSDKInitialization:
             assert agent.sdk_config.max_retries == 3
             assert agent.path_config == isolated_agilevv_dir
 
-    @skip_if_no_auth
     def test_real_sdk_orchestrator_agent_factory_integration(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -130,7 +124,6 @@ class TestRealOrchestratorSDKInitialization:
             assert agent.name == agent_name
             assert hasattr(agent, "tool_permissions")
 
-    @skip_if_no_auth
     def test_real_sdk_orchestrator_with_custom_configuration(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -197,7 +190,6 @@ class TestRealOrchestratorSDKInitialization:
 class TestRealOrchestratorVModelWorkflow:
     """Test complete V-Model workflow execution with real SDK agents."""
 
-    @skip_if_no_auth
     async def test_real_requirements_to_design_workflow(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -268,7 +260,6 @@ class TestRealOrchestratorVModelWorkflow:
         # Verify state progression
         assert orchestrator.current_stage in [VModelStage.DESIGN, VModelStage.CODING]
 
-    @skip_if_no_auth
     async def test_real_design_to_development_workflow(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -344,7 +335,6 @@ class TestRealOrchestratorVModelWorkflow:
         assert len(development_artifacts) > 0
         assert len(qa_artifacts) > 0
 
-    @skip_if_no_auth
     async def test_real_complete_sprint_workflow_end_to_end(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -436,7 +426,6 @@ class TestRealOrchestratorVModelWorkflow:
 class TestRealOrchestratorArtifactPassing:
     """Test artifact passing and session management between stages."""
 
-    @skip_if_no_auth
     async def test_real_artifact_passing_requirements_to_design(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -499,7 +488,6 @@ class TestRealOrchestratorArtifactPassing:
         assert "system_design" in design_result
         assert isinstance(design_result["system_design"], dict)
 
-    @skip_if_no_auth
     async def test_real_session_context_preservation_across_stages(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -552,7 +540,6 @@ class TestRealOrchestratorArtifactPassing:
         if orchestrator_session:  # May be empty depending on implementation
             assert isinstance(orchestrator_session, dict)
 
-    @skip_if_no_auth
     async def test_real_artifact_validation_and_error_recovery(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -614,7 +601,6 @@ class TestRealOrchestratorArtifactPassing:
 class TestRealOrchestratorErrorHandling:
     """Test error handling and recovery mechanisms with real SDK conditions."""
 
-    @skip_if_no_auth
     async def test_real_orchestrator_stage_failure_recovery(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -665,7 +651,6 @@ class TestRealOrchestratorErrorHandling:
             # Verify state was restored
             assert "before_risky_operation" in str(orchestrator.state.get("checkpoint_history", []))
 
-    @skip_if_no_auth
     async def test_real_orchestrator_checkpoint_and_rollback_workflow(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -715,7 +700,6 @@ class TestRealOrchestratorErrorHandling:
         # Verify modification was rolled back
         assert "test_modification" not in orchestrator.state
 
-    @skip_if_no_auth
     async def test_real_orchestrator_network_resilience(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -761,7 +745,6 @@ class TestRealOrchestratorErrorHandling:
 class TestRealOrchestratorConfiguration:
     """Test configuration loading and agent setup validation."""
 
-    @skip_if_no_auth
     def test_real_orchestrator_complex_configuration_loading(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -861,7 +844,6 @@ class TestRealOrchestratorConfiguration:
         assert orchestrator.config["project"]["name"] == "ComplexConfigTest"
         assert "Python" in orchestrator.config["project"]["technology_stack"]
 
-    @skip_if_no_auth
     def test_real_orchestrator_configuration_override_and_defaults(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -908,7 +890,6 @@ class TestRealOrchestratorConfiguration:
         # Should have custom timeout if configuration system supports it
         # (Actual behavior depends on agent configuration implementation)
 
-    @skip_if_no_auth
     def test_real_orchestrator_configuration_validation_and_errors(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -974,7 +955,6 @@ class TestRealOrchestratorConfiguration:
 class TestRealOrchestratorPerformance:
     """Test performance characteristics with real SDK calls."""
 
-    @skip_if_no_auth
     async def test_real_orchestrator_stage_execution_performance(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:
@@ -1040,7 +1020,6 @@ class TestRealOrchestratorPerformance:
             agent_metrics = orchestrator.state["agent_metrics"]
             assert isinstance(agent_metrics, dict)
 
-    @skip_if_no_auth
     async def test_real_orchestrator_memory_and_session_management(
         self, isolated_agilevv_dir: TestPathConfig
     ) -> None:

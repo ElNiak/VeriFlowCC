@@ -387,9 +387,9 @@ def print_report(
             )
         ),
     }
-    print("BEGIN_HOOK_REPORT")
-    print(json.dumps(report, indent=2))
-    print("END_HOOK_REPORT")
+    print("BEGIN_HOOK_REPORT", file=sys.stderr)
+    print(json.dumps(report, indent=2), file=sys.stderr)
+    print("END_HOOK_REPORT", file=sys.stderr)
 
 
 # ---------- entrypoint ----------
@@ -436,7 +436,6 @@ def main(argv: list[str]) -> int:
     if not files:
         if args.verbose:
             print("No supported files to process.")
-        print_report("ok", [], [], [], note="No files")
         return 0
 
     fmt_rc, fmt_res = (0, [])

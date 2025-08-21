@@ -36,14 +36,6 @@ pytestmark = [
 ]
 
 
-def skip_if_no_auth(func):
-    """Skip test if no API key is available."""
-    return pytest.mark.skipif(
-        not os.getenv("ANTHROPIC_API_KEY"),
-        reason="ANTHROPIC_API_KEY environment variable required for real SDK tests",
-    )(func)
-
-
 @pytest.fixture
 def enhanced_sdk_config() -> SDKConfig:
     """Enhanced SDK configuration with extended timeouts for integration tests."""
@@ -311,7 +303,6 @@ class ArtifactValidator:
 class TestVModelWorkflowHandoffs:
     """Test suite for Task 4: V-Model workflow integration tests with real agent handoffs."""
 
-    @skip_if_no_auth
     async def test_real_requirements_to_design_handoff(
         self,
         isolated_agilevv_dir: PathConfig,
@@ -412,7 +403,6 @@ class TestVModelWorkflowHandoffs:
         metrics_path = isolated_agilevv_dir.logs_dir / "handoff_metrics_req_to_design.json"
         metrics_path.write_text(json.dumps(handoff_metrics, indent=2))
 
-    @skip_if_no_auth
     async def test_real_design_to_development_handoff(
         self,
         isolated_agilevv_dir: PathConfig,
@@ -529,7 +519,6 @@ class TestVModelWorkflowHandoffs:
         metrics_path = isolated_agilevv_dir.logs_dir / "handoff_metrics_design_to_dev.json"
         metrics_path.write_text(json.dumps(handoff_metrics, indent=2))
 
-    @skip_if_no_auth
     async def test_real_development_to_qa_handoff(
         self,
         isolated_agilevv_dir: PathConfig,
@@ -644,7 +633,6 @@ class TestVModelWorkflowHandoffs:
         metrics_path = isolated_agilevv_dir.logs_dir / "handoff_metrics_dev_to_qa.json"
         metrics_path.write_text(json.dumps(handoff_metrics, indent=2))
 
-    @skip_if_no_auth
     async def test_real_qa_to_integration_handoff(
         self,
         isolated_agilevv_dir: PathConfig,
@@ -796,7 +784,6 @@ class TestVModelWorkflowHandoffs:
         metrics_path = isolated_agilevv_dir.logs_dir / "handoff_metrics_qa_to_integration.json"
         metrics_path.write_text(json.dumps(handoff_metrics, indent=2))
 
-    @skip_if_no_auth
     async def test_real_complete_vmodel_cycle(
         self,
         isolated_agilevv_dir: PathConfig,

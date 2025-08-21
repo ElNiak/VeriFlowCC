@@ -54,17 +54,12 @@ def _can_authenticate_with_sdk() -> bool:
         return False
 
 
-# Skip all tests if SDK authentication is not available
-skip_if_no_auth = pytest.mark.skipif(
-    not _can_authenticate_with_sdk(),
-    reason="No Claude Code SDK authentication available (requires ANTHROPIC_API_KEY)",
-)
+# Authentication is assumed to be available - no conditional skipping
 
 
 class TestRealSDKAuthenticationValidation:
     """Test real SDK authentication methods and validation."""
 
-    @skip_if_no_auth
     def test_real_api_key_authentication(self) -> None:
         """Test real API key authentication validation."""
         api_key = os.getenv("ANTHROPIC_API_KEY") or "test-api-key-for-structure-validation"
@@ -81,7 +76,6 @@ class TestRealSDKAuthenticationValidation:
         except AuthenticationError:
             pytest.fail("Authentication validation should pass with valid API key")
 
-    @skip_if_no_auth
     def test_subscription_authentication_detection(self) -> None:
         """Test Claude subscription authentication detection."""
         # Test subscription detection without API key
@@ -96,7 +90,6 @@ class TestRealSDKAuthenticationValidation:
             # In test mode, API key should be set automatically
             assert sdk_config.api_key is not None
 
-    @skip_if_no_auth
     def test_authentication_priority_validation(self) -> None:
         """Test authentication method priority (API key over subscription)."""
         api_key = os.getenv("ANTHROPIC_API_KEY") or "test-api-key-priority-test"
@@ -108,15 +101,20 @@ class TestRealSDKAuthenticationValidation:
         assert auth_method == "api_key"
         assert sdk_config.api_key == api_key
 
-    @skip_if_no_auth
     def test_authentication_error_handling(self) -> None:
         """Test authentication error handling with descriptive messages."""
         # Force authentication failure by clearing API key and disabling subscription
         sdk_config = SDKConfig(api_key="")  # Empty string should be treated as None
 
-        # Override subscription verification to return False
+        # Override both subscription verification and test environment detection
         original_verify = sdk_config._verify_claude_subscription
+        original_is_test = sdk_config._is_test_environment
+
         sdk_config._verify_claude_subscription = lambda: False
+        # Temporarily disable test environment detection to allow failure testing
+        sdk_config._is_test_environment = lambda: False
+        # Force API key to None to simulate authentication failure
+        sdk_config.api_key = None
 
         try:
             # Should raise AuthenticationError with descriptive message
@@ -124,19 +122,19 @@ class TestRealSDKAuthenticationValidation:
                 sdk_config._validate_authentication()
 
             error_message = str(exc_info.value)
-            assert "No authentication method available" in error_message
-            assert "ANTHROPIC_API_KEY" in error_message
-            assert "Claude Code subscription" in error_message
-            assert "claude auth login" in error_message
+            # Expect generic error message (per user requirements)
+            assert "Authentication is required to use VeriFlowCC" in error_message
+            assert "environment is configured with appropriate" in error_message
+            assert "authentication credentials" in error_message
         finally:
-            # Restore original method
+            # Restore original methods
             sdk_config._verify_claude_subscription = original_verify
+            sdk_config._is_test_environment = original_is_test
 
 
 class TestRealSDKClientCreation:
     """Test real SDK client creation with proper configuration."""
 
-    @skip_if_no_auth
     def test_claude_code_sdk_client_initialization(self) -> None:
         """Test Claude Code SDK client initialization with real configuration."""
         api_key = os.getenv("ANTHROPIC_API_KEY") or "test-client-init-key"
@@ -164,7 +162,6 @@ class TestRealSDKClientCreation:
         assert options.tools_enabled is True
         assert options.model == "claude-3-5-sonnet-20241022"
 
-    @skip_if_no_auth
     def test_sdk_client_configuration_validation(self) -> None:
         """Test SDK client configuration parameter validation."""
         api_key = os.getenv("ANTHROPIC_API_KEY") or "test-config-validation-key"
@@ -188,7 +185,6 @@ class TestRealSDKClientCreation:
         assert sdk_config_min.max_retries == 0
         assert sdk_config_min.retry_delay == 0.0
 
-    @skip_if_no_auth
     def test_sdk_environment_configuration(self) -> None:
         """Test SDK environment-specific configuration."""
         api_key = os.getenv("ANTHROPIC_API_KEY") or "test-env-config-key"
@@ -209,7 +205,6 @@ class TestRealSDKClientCreation:
 class TestRealSDKAgentSpecificConfigurations:
     """Test agent-specific configurations with real SDK integration."""
 
-    @skip_if_no_auth
     @pytest.mark.parametrize(
         "agent_type,expected_timeout",
         [
@@ -242,7 +237,6 @@ class TestRealSDKAgentSpecificConfigurations:
 
         assert timeout == expected_timeout
 
-    @skip_if_no_auth
     @pytest.mark.parametrize(
         "agent_type", ["requirements", "architect", "developer", "qa", "integration"]
     )
@@ -282,7 +276,6 @@ class TestRealSDKAgentSpecificConfigurations:
             assert "Integration Engineer" in options.system_prompt
             assert "system coherence" in options.system_prompt
 
-    @skip_if_no_auth
     @pytest.mark.parametrize(
         "agent_type,expected_permissions",
         [
@@ -327,7 +320,6 @@ class TestRealSDKAgentSpecificConfigurations:
 class TestRealSDKSessionManagement:
     """Test session management functionality with real SDK."""
 
-    @skip_if_no_auth
     def test_session_persistence_configuration(self) -> None:
         """Test session persistence settings."""
         api_key = os.getenv("ANTHROPIC_API_KEY") or "test-session-key"
@@ -343,7 +335,6 @@ class TestRealSDKSessionManagement:
         assert options.max_turns == 10
         assert options.max_tokens == 4000
 
-    @skip_if_no_auth
     def test_multi_agent_session_isolation(self, isolated_agilevv_dir: PathConfig) -> None:
         """Test session isolation between multiple agent configurations."""
         api_key = os.getenv("ANTHROPIC_API_KEY") or "test-multi-session-key"
@@ -371,7 +362,6 @@ class TestRealSDKSessionManagement:
         assert "System Architect" in arch_options.system_prompt
         assert "Developer" in dev_options.system_prompt
 
-    @skip_if_no_auth
     def test_session_state_persistence(self, isolated_agilevv_dir: PathConfig) -> None:
         """Test session state persistence capabilities."""
         api_key = os.getenv("ANTHROPIC_API_KEY") or "test-persistence-key"
@@ -411,7 +401,6 @@ class TestRealSDKSessionManagement:
 class TestRealSDKStreamingAndToolPermissions:
     """Test streaming configuration and tool permissions with real SDK."""
 
-    @skip_if_no_auth
     @pytest.mark.parametrize(
         "agent_type", ["requirements", "architect", "developer", "qa", "integration"]
     )
@@ -429,7 +418,6 @@ class TestRealSDKStreamingAndToolPermissions:
         # Verify model consistency
         assert options.model == "claude-3-5-sonnet-20241022"
 
-    @skip_if_no_auth
     def test_tool_permissions_security(self) -> None:
         """Test tool permissions follow security principles."""
         api_key = os.getenv("ANTHROPIC_API_KEY") or "test-security-key"
@@ -456,7 +444,6 @@ class TestRealSDKStreamingAndToolPermissions:
         assert int_perms["execute"] is True
         assert int_perms["web_search"] is True  # Can check dependencies
 
-    @skip_if_no_auth
     def test_tool_permissions_principle_of_least_privilege(self) -> None:
         """Test that tool permissions follow least privilege principle."""
         api_key = os.getenv("ANTHROPIC_API_KEY") or "test-privilege-key"
@@ -501,7 +488,6 @@ class TestRealSDKStreamingAndToolPermissions:
 class TestRealSDKNetworkResilienceAndErrorHandling:
     """Test network resilience and error handling with real SDK."""
 
-    @skip_if_no_auth
     def test_timeout_configuration_and_handling(self) -> None:
         """Test timeout configuration and handling."""
         api_key = os.getenv("ANTHROPIC_API_KEY") or "test-timeout-key"
@@ -522,7 +508,6 @@ class TestRealSDKNetworkResilienceAndErrorHandling:
         with pytest.raises(ValueError, match="Timeout must be positive"):
             SDKConfig(api_key=api_key, timeout=-1)
 
-    @skip_if_no_auth
     def test_retry_configuration_and_exponential_backoff(self) -> None:
         """Test retry configuration with exponential backoff settings."""
         api_key = os.getenv("ANTHROPIC_API_KEY") or "test-retry-key"
@@ -548,7 +533,6 @@ class TestRealSDKNetworkResilienceAndErrorHandling:
         with pytest.raises(ValueError, match="Retry delay must be non-negative"):
             SDKConfig(api_key=api_key, retry_delay=-0.5)
 
-    @skip_if_no_auth
     @pytest.mark.asyncio
     async def test_concurrent_sdk_operations_stability(self) -> None:
         """Test stability under concurrent SDK operations."""
@@ -610,7 +594,6 @@ class TestRealSDKNetworkResilienceAndErrorHandling:
             assert result["streaming"] is True
             assert isinstance(result["permissions"], dict)
 
-    @skip_if_no_auth
     def test_configuration_edge_cases_and_boundaries(self) -> None:
         """Test configuration edge cases and boundary conditions."""
         api_key = os.getenv("ANTHROPIC_API_KEY") or "test-boundary-key"
