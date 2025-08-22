@@ -12,6 +12,7 @@ Mechanics:
 import json
 import os
 import sys
+from pathlib import Path
 
 
 def read_json_stdin():
@@ -24,18 +25,18 @@ def read_json_stdin():
 
 def read_file(path):
     try:
-        with open(path, encoding="utf-8") as f:
+        with Path(path).open(encoding="utf-8") as f:
             return f.read()
     except FileNotFoundError:
         return ""
 
 
 def transcript_contains_marker(transcript_path, marker):
-    if not transcript_path or not os.path.exists(transcript_path):
+    if not transcript_path or not Path(transcript_path).exists():
         return False
     found = False
     try:
-        with open(transcript_path, encoding="utf-8") as f:
+        with Path(transcript_path).open(encoding="utf-8") as f:
             for line in f:
                 if marker in line:
                     found = True
@@ -49,11 +50,11 @@ def main():
     data = read_json_stdin()
     event = data.get("hook_event_name", "")
     tool_name = data.get("tool_name", "")
-    project_dir = os.environ.get("CLAUDE_PROJECT_DIR", os.getcwd())
-    preflight_path = os.path.join(
-        project_dir, ".claude", "instructions", "meta", "pre-flight.md"
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR", str(Path.cwd()))
+    preflight_path = (
+        Path(project_dir) / ".claude" / "instructions" / "meta" / "pre-flight.md"
     )
-    marker = "PRE_FLIGHT_MARKER: AgileVerifFlowCC v1.0"
+    marker = "PRE_FLIGHT_MARKER: AgileVerifFlowCC"
 
     if event == "UserPromptSubmit":
         content = read_file(preflight_path).strip()

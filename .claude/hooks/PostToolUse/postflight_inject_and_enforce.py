@@ -6,6 +6,7 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
 from typing import Any
 
 DONE_HINTS = (
@@ -45,7 +46,7 @@ def response_looks_done(tool_resp: Any) -> bool:
 
 def load_file(path: str) -> str:
     try:
-        with open(path, encoding="utf-8") as f:
+        with Path(path).open(encoding="utf-8") as f:
             return f.read()
     except Exception:
         return ""
@@ -72,12 +73,12 @@ def transcript_paths(payload: dict[str, Any]) -> list[str]:
     # Claude Code usually passes transcript_path; keep extensible
     paths = []
     tp = payload.get("transcript_path")
-    if tp and os.path.exists(tp):
+    if tp and Path(tp).exists():
         paths.append(tp)
     # Fallback: known session logs (optional)
     for env_key in ("CLAUDE_TRANSCRIPT", "SESSION_LOG"):
         p = os.environ.get(env_key)
-        if p and os.path.exists(p):
+        if p and Path(p).exists():
             paths.append(p)
     return paths
 
@@ -86,9 +87,11 @@ def slurp(paths: list[str]) -> str:
     buf = []
     for p in paths:
         try:
-            with open(p, encoding="utf-8", errors="ignore") as f:
+            with Path(p).open(encoding="utf-8", errors="ignore") as f:
                 buf.append(f.read())
-        except Exception:
+        except Exception as e:
+            # Log exception for debugging but continue processing other paths
+            print(f"[slurp] Warning: Failed to read {p}: {e}", file=sys.stderr)
             continue
     return "\n".join(buf)
 
@@ -133,7 +136,7 @@ def main():
 
     tool_name = data.get("tool_name", "")
     tool_resp = data.get("tool_response", {})
-    cwd = data.get("cwd", os.getcwd())
+    cwd = data.get("cwd", Path.cwd())
 
     # Only run when it *looks* complete after tools likely to end a flow
     likely_finish_tools = {"TodoWrite", "Task", "Write", "Edit", "MultiEdit"}
@@ -141,7 +144,7 @@ def main():
         sys.exit(0)
 
     # Load rules + transcript for a light pre-audit
-    rules_path = os.path.join(cwd, "instructions", "agentos-postflight.md")
+    rules_path = Path(cwd) / ".claude" / "instructions" / "meta" / "post-flight.md"
     rules_text = load_file(rules_path)
     transcript_text = slurp(transcript_paths(data))
 
