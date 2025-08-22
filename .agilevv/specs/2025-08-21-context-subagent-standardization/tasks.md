@@ -1,62 +1,121 @@
-# Spec Tasks
+# Tasks: 2025-08-21-context-subagent-standardization
 
-These are the tasks to be completed for the spec detailed in @.agilevv/specs/2025-08-21-context-subagent-standardization/spec.md
+Generated: 2025-08-22
+Status: Ready for execution
 
-> Created: 2025-08-22
-> Status: Ready for Implementation
+## Task Breakdown
 
-## Tasks
+### 1. Context Schema Design
 
-- [ ] 1. Hook Infrastructure Setup and Configuration
+**Objective**: Design JSON Schema definitions and validation infrastructure for sequential context transfer
+**Definition of Done**: Context schemas defined with comprehensive validation and type safety
+**Dependencies**: none (foundational task)
+**Estimate**: 1 day
+**Risk**: Medium (foundational design affects all agents)
 
-  - [ ] 1.1 Write tests for hook configuration validation and V-Model stage coordination
-  - [ ] 1.2 Create .claude/hooks/ directory structure with Python validation scripts
-  - [ ] 1.3 Implement .claude/config.json with hook event mappings for sequential workflow
-  - [ ] 1.4 Create hook scripts for V-Model stage transitions (SubagentStop, PreToolUse, PostToolUse)
-  - [ ] 1.5 Implement environment variable handling for $CLAUDE_PROJECT_DIR and context paths
-  - [ ] 1.6 Create hook chaining patterns for multi-stage validation workflows
-  - [ ] 1.7 Verify all hook configuration tests pass
+- [ ] 1.1. Write comprehensive tests for context schema validation and type safety mechanisms
+- [ ] 1.2. Design JSON Schema definitions for all context types (agent input/output, workflow state, error contexts)
+- [ ] 1.3. Create schema validation utilities with proper error handling and constraint checking
+- [ ] 1.4. Implement context type definitions and Pydantic models for constrained decoding
+- [ ] 1.5. Verify tests pass and acceptance criteria met: `uv run pytest tests/context/test_schemas.py -v --cov=verifflowcc/context`
 
-- [ ] 2. Context Transfer Standardization System
+### 2. Context Transfer Implementation
 
-  - [ ] 2.1 Write tests for ContextTransfer class and CONTEXT1 → CONTEXT2 → CONTEXT3 chains
-  - [ ] 2.2 Implement ContextTransfer class with serialize/deserialize methods for sequential workflow
-  - [ ] 2.3 Create context validation middleware using PreToolUse hooks for format verification
-  - [ ] 2.4 Implement context versioning system in .agilevv/state.json for stage tracking
-  - [ ] 2.5 Create SessionStart hooks for V-Model context loading and stage initialization
-  - [ ] 2.6 Establish JSON Schema validation pipeline for context objects at each stage
-  - [ ] 2.7 Implement error recovery patterns for failed context transfers between agents
-  - [ ] 2.8 Verify all context transfer tests pass
+**Objective**: Implement context passing mechanisms with serialization and transfer protocols
+**Definition of Done**: Context transfer working between agents with validation and error handling
+**Dependencies**: Task 1 (requires context schemas)
+**Estimate**: 1 day
+**Risk**: Medium (integration complexity)
 
-- [ ] 3. Claude Code Subagent Template Migration
+- [ ] 2.1. Write tests for context transfer protocols and serialization mechanisms
+- [ ] 2.2. Implement context passing mechanisms in base agent infrastructure
+- [ ] 2.3. Add context serialization/deserialization with type safety and validation
+- [ ] 2.4. Create context transformation utilities for agent handoffs
+- [ ] 2.5. Verify tests pass and acceptance criteria met: `uv run pytest tests/context/test_transfer.py -v --cov=verifflowcc/context`
 
-  - [ ] 3.1 Write tests for template conversion and YAML frontmatter validation
-  - [ ] 3.2 Create .claude/agents/ directory structure with project-level subagent definitions
-  - [ ] 3.3 Convert requirements.j2 template to .claude/agents/requirements_analyst.md format
-  - [ ] 3.4 Convert architect.j2 template to .claude/agents/architect.md format
-  - [ ] 3.5 Convert developer.j2 template to .claude/agents/developer.md format
-  - [ ] 3.6 Convert qa.j2 and integration.j2 templates to corresponding .md subagent format
-  - [ ] 3.7 Implement tool permission mapping between VeriFlowCC agents and subagent capabilities
-  - [ ] 3.8 Verify all template migration tests pass
+### 3. Hook Infrastructure Integration
 
-- [ ] 4. Sequential Workflow Validation and Quality Gates
+**Objective**: Integrate Claude Code hooks with V-Model workflow for automated coordination
+**Definition of Done**: PreToolUse, PostToolUse, and SubagentStop hooks implemented and working with workflow
+**Dependencies**: Task 2 (requires context transfer mechanisms)
+**Estimate**: 1 day
+**Risk**: Medium (coordination complexity)
 
-  - [ ] 4.1 Write tests for V-Model stage validation and quality gate enforcement
-  - [ ] 4.2 Implement requirements gate hook validating INVEST/SMART criteria before architecture
-  - [ ] 4.3 Create architecture validation hook ensuring design completeness before development
-  - [ ] 4.4 Implement code quality hook enforcing standards before testing using PostToolUse
-  - [ ] 4.5 Create test validation hook verifying completion before integration using SubagentStop
-  - [ ] 4.6 Implement integration gate hook for final validation before deployment approval
-  - [ ] 4.7 Create comprehensive error handling and recovery mechanisms for failed validations
-  - [ ] 4.8 Verify all validation and quality gate tests pass
+- [ ] 3.1. Write tests for hook integration with V-Model workflow and subagent coordination
+- [ ] 3.2. Implement PreToolUse hooks for workflow validation and constraint enforcement
+- [ ] 3.3. Implement PostToolUse hooks for automatic follow-up actions and state updates
+- [ ] 3.4. Implement SubagentStop hooks for seamless phase transitions and handoffs
+- [ ] 3.5. Integrate hooks with orchestrator for automated workflow management
+- [ ] 3.6. Verify tests pass and acceptance criteria met: `uv run pytest tests/hooks/ -v --cov=verifflowcc/hooks`
 
-- [ ] 5. System Integration and End-to-End Validation
+### 4. Core Agent Template Conversion
 
-  - [ ] 5.1 Write tests for complete sequential workflow execution with all hooks active
-  - [ ] 5.2 Update BaseAgent class with standardized context passing methods (send_context, receive_context)
-  - [ ] 5.3 Enhance TaskAgent wrapper for Claude Code subagent invocation using Task tool
-  - [ ] 5.4 Implement context chain traceability logging for debugging sequential workflows
-  - [ ] 5.5 Update .claude/instructions/ files to leverage hooks for workflow coordination
-  - [ ] 5.6 Create comprehensive integration tests validating CONTEXT1 → CONTEXT2 → CONTEXT3 chains
-  - [ ] 5.7 Perform end-to-end testing of complete V-Model workflow with standardized context transfer
-  - [ ] 5.8 Verify all integration tests pass and system meets specification deliverables
+**Objective**: Convert Requirements Analyst and Architect agents to standardized Claude Code format
+**Definition of Done**: Core agents follow Claude Code patterns with consistent interfaces and instructions
+**Dependencies**: Task 3 (requires hook infrastructure)
+**Estimate**: 1 day
+**Risk**: Medium (agent interface changes)
+
+- [ ] 4.1. Write tests for RequirementsAnalyst and Architect standardized interfaces
+- [ ] 4.2. Convert RequirementsAnalyst to Claude Code template format with standardized instructions
+- [ ] 4.3. Convert Architect to Claude Code template format with standardized instructions
+- [ ] 4.4. Update prompt templates and instruction standardization for core agents
+- [ ] 4.5. Verify tests pass and acceptance criteria met: `uv run pytest tests/agents/test_core_agents.py -v --cov=verifflowcc/agents`
+
+### 5. Implementation Agent Template Conversion
+
+**Objective**: Convert Developer and QA Tester agents to standardized Claude Code format
+**Definition of Done**: Implementation agents follow Claude Code patterns with consistent interfaces and instructions
+**Dependencies**: Task 4 (requires core agent templates)
+**Estimate**: 1 day
+**Risk**: Medium (implementation complexity)
+
+- [ ] 5.1. Write tests for Developer and QATester standardized interfaces
+- [ ] 5.2. Convert Developer to Claude Code template format with standardized instructions
+- [ ] 5.3. Convert QATester to Claude Code template format with standardized instructions
+- [ ] 5.4. Update prompt templates and instruction standardization for implementation agents
+- [ ] 5.5. Verify tests pass and acceptance criteria met: `uv run pytest tests/agents/test_implementation_agents.py -v --cov=verifflowcc/agents`
+
+### 6. Integration Agent Template Conversion
+
+**Objective**: Convert Integration Agent and update factory for complete template standardization
+**Definition of Done**: All agents follow Claude Code patterns, factory updated, interfaces unified
+**Dependencies**: Task 5 (requires implementation agent templates)
+**Estimate**: 1 day
+**Risk**: Low (final template conversion)
+
+- [ ] 6.1. Write tests for IntegrationAgent and factory standardized interfaces
+- [ ] 6.2. Convert IntegrationAgent to Claude Code template format with standardized instructions
+- [ ] 6.3. Update agent factory and base classes for template consistency
+- [ ] 6.4. Finalize standardized subagent interface specification and contracts
+- [ ] 6.5. Verify tests pass and acceptance criteria met: `uv run pytest tests/agents/test_integration_agent.py -v --cov=verifflowcc/agents`
+
+### 7. Quality Assurance Integration
+
+**Objective**: Implement comprehensive testing framework with performance validation and integration testing
+**Definition of Done**: Full test coverage, performance benchmarks, integration validation working
+**Dependencies**: Task 6 (requires all agent templates)
+**Estimate**: 1 day
+**Risk**: Low (testing and validation)
+
+- [ ] 7.1. Write tests for quality assurance framework and performance validation systems
+- [ ] 7.2. Implement performance benchmarking and metrics collection for standardized workflows
+- [ ] 7.3. Create integration test suite for end-to-end subagent coordination
+- [ ] 7.4. Add automated quality gates and validation checkpoints
+- [ ] 7.5. Verify tests pass and acceptance criteria met: `uv run pytest tests/ -v --cov=verifflowcc --cov-report=term-missing`
+
+## Acceptance Criteria Coverage
+
+**AC1 (Sequential Context Transfer)**: Covered by Tasks 1-2 - JSON Schema validation and context transfer mechanisms
+**AC2 (Subagent Template Conversion)**: Covered by Tasks 4-6 - All agents converted to Claude Code format
+**AC3 (JSON Schema Output Validation)**: Covered by Tasks 1-2 - Constrained decoding and validation
+**AC4 (Main Agent Coordination)**: Covered by Task 3 - Hook infrastructure for automated coordination
+**AC5 (Instruction Standardization)**: Covered by Tasks 4-6 - Sequential workflow instruction templates
+
+## Execution Notes
+
+- Follow TDD approach: write tests first for each major component
+- Incremental implementation: each task builds on previous foundations
+- All tasks are atomic (≤1 day) with clear dependencies
+- Maintain backward compatibility during agent conversion process
+- All changes must pass existing test suite before proceeding to next task

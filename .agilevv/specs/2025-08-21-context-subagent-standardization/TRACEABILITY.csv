@@ -1,0 +1,11 @@
+requirement_id,task_id,test_id,notes
+US-001,TSK-001,test_sequential_context::test_schema_validation,Sequential Context Transfer with JSON Schema validation
+US-001,TSK-001,test_sequential_context::test_context_transfer,Context transfer mechanism validation
+US-002,TSK-003,test_standardized_templates::test_agent_conversion,Subagent Template Conversion to Claude Code format
+US-002,TSK-003,test_standardized_templates::test_template_consistency,Template consistency validation across agents
+US-003,TSK-001,test_sequential_context::test_schema_validation,JSON Schema Output Validation with constrained decoding
+US-003,TSK-004,test_context_subagent_e2e::test_end_to_end_workflow,End-to-end validation of JSON schema constraints
+US-004,TSK-002,test_hook_vmodel_integration::test_pretooluse_validation,Main Agent Coordination enhancement via PreToolUse hooks
+US-004,TSK-002,test_hook_vmodel_integration::test_automated_handoffs,Automated handoffs between V-Model agents
+US-005,TSK-003,test_standardized_templates::test_template_consistency,Instruction Standardization for sequential workflows
+US-005,TSK-004,test_context_subagent_e2e::test_performance_benchmarks,Performance validation of standardized workflows
