@@ -1,7 +1,0 @@
-{
-  "timestamp": "2025-08-19T19:20:11.480260",
-  "session_id": "0db89026-481b-4386-a2ae-65d42e222b16",
-  "tool_name": "Bash",
-  "command": "uv run pytest tests/agents/ --tb=short --timeout=300",
-  "description": "Run agent tests with timeout"
-}

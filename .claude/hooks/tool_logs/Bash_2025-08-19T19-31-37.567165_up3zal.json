@@ -1,7 +1,0 @@
-{
-  "timestamp": "2025-08-19T19:31:37.567121",
-  "session_id": "0db89026-481b-4386-a2ae-65d42e222b16",
-  "tool_name": "Bash",
-  "command": "uv run pytest --tb=no --disable-warnings | grep -E \"(PASSED|FAILED|ERROR|SKIPPED|passed|failed|error|skipped)\" | tail -10",
-  "description": "Run full test suite and capture summary"
-}

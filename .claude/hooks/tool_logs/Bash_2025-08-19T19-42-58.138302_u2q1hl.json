@@ -1,7 +1,0 @@
-{
-  "timestamp": "2025-08-19T19:42:58.138261",
-  "session_id": "0db89026-481b-4386-a2ae-65d42e222b16",
-  "tool_name": "Bash",
-  "command": "pre-commit run ruff --all-files",
-  "description": "Run Ruff linting hook"
-}

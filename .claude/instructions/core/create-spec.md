@@ -1,468 +1,349 @@
 ---
-description: Spec Creation Rules for AgileVerifFlowCC
+description: Rules to finish off and deliver to user a set of tasks that have been completed using Agent OS / AgileVerifFlowCC
 globs:
+  - .agilevv/specs/**
+  - .agilevv/product/**
+  - .agilevv/recaps/**
+  - **/*.md
 alwaysApply: false
-version: 1.1
+version: 1.2
 encoding: UTF-8
 ---
 
-# Spec Creation Rules
+# Task Completion Rules
 
 ## Overview
+After **all tasks** in the current spec are completed, follow these steps to:
+1) validate with a **full test suite**, 2) resolve **pre-commit** issues, 3) commit/push and open a **PR**, 4) verify **tasks.md** and optionally update **roadmap.md**, 5) create a **recap** and a **completion report** in the spec folder, and 6) present a concise summary.
 
-Generate detailed feature specifications aligned with product roadmap and mission.
+**Guardrails**
+- **Only** `implementer` (code changes) and `file-creator` (docs/status) write to disk.
+- **Parallelize analysis, serialize writes** (avoid concurrent edits).
+- Append **evidence** to `EVIDENCE.md` at each major step.
 
 <process_flow>
 
-<step number="1" subagent="context-fetcher" name="spec_initiation">
+<variables>
+  <var name="SPEC_DIR"        source="choose-or-detect:current_spec_dir"         required="true" />
+  <var name="SPEC_SLUG"       source="basename:${SPEC_DIR}"                      required="true" />
+  <var name="TASKS_FILE"      source="computed:${SPEC_DIR}/tasks.md"             required="true" />
+  <var name="EVIDENCE_FILE"   source="computed:${SPEC_DIR}/EVIDENCE.md"          required="true" />
+  <var name="SPEC_LITE"       source="computed:${SPEC_DIR}/spec-lite.md"         required="false" />
+  <var name="ROADMAP_FILE"    source="path:.agilevv/product/roadmap.md"          required="false" />
+  <var name="COMPLETION_FILE" source="computed:${SPEC_DIR}/COMPLETION.md"        required="true" />
+  <var name="TODAY"           source="date:YYYY-MM-DD"                           required="true" />
+</variables>
 
-### Step 1: Spec Initiation
+<step number="0" subagent="project-manager" name="pre_flight_validation">
 
-Use the context-fetcher subagent to identify spec initiation method by either finding the next uncompleted roadmap item when user asks "what's next?" or accepting a specific spec idea from the user.
+### Step 0: Pre-Flight Validation
 
-<option_a_flow>
-<trigger_phrases>
+Ensure the environment is safe and artifacts are present.
 
-- "what's next?"
-  </trigger_phrases>
-  <actions>
+<checks>
+- `${TASKS_FILE}` exists and is non-empty.
+- `EVIDENCE.md` exists; last task entry contains reviewer verdict + test summary.
+- We are **not** on `main`; if on main, Step 4 will enforce a feature branch/worktree.
+</checks>
 
-1\. CHECK @.agilevv/product/roadmap.md
-2\. FIND next uncompleted item
-3\. SUGGEST item to user
-4\. WAIT for approval
-</actions>
-</option_a_flow>
+<outputs>
+- Confirmed `${SPEC_DIR}`, `${TASKS_FILE}`, `${EVIDENCE_FILE}`.
+</outputs>
+</step>
 
-<option_b_flow>
-<trigger>user describes specific spec idea</trigger>
-<accept>any format, length, or detail level</accept>
-<proceed>to context gathering</proceed>
-</option_b_flow>
+<step number="1" subagent="test-runner" name="test_suite_verification">
+
+### Step 1: Run All Tests (Full Suite)
+
+Use the `test-runner` to run the **entire** test suite. Fix regressions before proceeding.
+
+<instructions>
+  ACTION: Use test-runner
+  REQUEST: "Run the full test suite"
+  OUTPUT: Commands executed; counts (run/passed/failed/xfail); duration
+  LOOP: If failures → engage fixes (implementer/debugger) → re-run until **100% pass**
+</instructions>
+
+<test_execution>
+  <order>1. Run entire suite  2. Fix failures  3. Re-run</order>
+  <requirement>100% pass rate</requirement>
+</test_execution>
+
+<evidence_log>
+- Append to `${EVIDENCE_FILE}`: suite command(s), table summary, failure notes (if any), final status.
+</evidence_log>
 
 </step>
 
-<step number="2" subagent="context-fetcher" name="context_gathering">
+<step number="2" subagent="precommit-error-analyzer" name="precommit_error_analysis">
 
-### Step 2: Context Gathering (Conditional)
+### Step 2: Pre-commit Error Analysis
 
-Use the context-fetcher subagent to read @.agilevv/product/mission-lite.md and @.agilevv/product/tech-stack.md only if not already in context to ensure minimal context for spec alignment.
+Analyze any pre-commit issues and group them **per file** (formatting, linting, types, secrets, etc.).
 
-<conditional_logic>
-IF both mission-lite.md AND tech-stack.md already read in current context:
-SKIP this entire step
-PROCEED to step 3
-ELSE:
-READ only files not already in context:
+<instructions>
+  ACTION: Use precommit-error-analyzer
+  REQUEST: "Analyze pre-commit errors and group by file & category"
+  OUTPUT: Structured list: file → [formatter, linter, mypy, secrets, …]
+</instructions>
 
-- mission-lite.md (if not in context)
-- tech-stack.md (if not in context)
-  CONTINUE with context analysis
-  </conditional_logic>
-
-<context_analysis>
-<mission_lite>core product purpose and value</mission_lite>
-<tech_stack>technical requirements</tech_stack>
-</context_analysis>
+<notes>
+- Prefer deterministic fixes (formatters) before style/complexity changes.
+</notes>
 
 </step>
 
-<step number="3" subagent="context-fetcher" name="requirements_clarification">
+<step number="3" subagent="lint-type-fixer" name="precommit_fix">
 
-### Step 3: Requirements Clarification
+### Step 3: Pre-commit Fix (Safe, Targeted)
 
-Use the context-fetcher subagent to clarify scope boundaries and technical considerations by asking numbered questions as needed to ensure clear requirements before proceeding.
+Use `lint-type-fixer` **per independent file** to auto-fix issues.  
+**Serialize** overlapping edits; parallelize disjoint files if safe.
 
-<clarification_areas>
-<scope>
+<instructions>
+  ACTION: Use lint-type-fixer
+  REQUEST: "Fix pre-commit issues in this file with minimal diffs"
+  VERIFY: Re-run pre-commit on changed files; iterate until clean
+</instructions>
 
-- in_scope: what is included
-- out_of_scope: what is excluded (optional)
-  </scope>
+<guardrails>
+- Keep diffs minimal; avoid refactors beyond necessary fixes.
+- If a fix might change runtime behavior, request an explicit reviewer check.
+</guardrails>
 
-<technical>
-- functionality specifics
-- UI/UX requirements
-- integration points
-</technical>
-</clarification_areas>
-
-<decision_tree>
-IF clarification_needed:
-ASK numbered_questions
-WAIT for_user_response
-ELSE:
-PROCEED to_date_determination
-</decision_tree>
+<evidence_log>
+- Append: files fixed, categories resolved, re-run results to `${EVIDENCE_FILE}`.
+</evidence_log>
 
 </step>
 
-<step number="4" subagent="date-checker" name="date_determination">
+<step number="4" subagent="git-workflow" name="git_workflow">
 
-### Step 4: Date Determination
+### Step 4: Git Workflow (Commit → Push → PR)
 
-Use the date-checker subagent to determine the current date in YYYY-MM-DD format for folder naming. The subagent will output today's date which will be used in subsequent steps.
+Create a commit, push to remote, and open/update the **Pull Request**.
 
-<subagent_output>
-The date-checker subagent will provide the current date in YYYY-MM-DD format at the end of its response. Store this date for use in folder naming in step 5.
-</subagent_output>
+<instructions>
+  ACTION: Use git-workflow
+  REQUEST: |
+    Prepare PR for spec: ${SPEC_SLUG}
+    - Ensure we are on a feature branch/worktree (not main)
+    - Stage only relevant files
+    - Commit with conventional message
+    - Push branch to origin
+    - Open or update PR targeting default branch
+    - Add concise description and link to spec & evidence
+  WAIT: Capture PR URL
+</instructions>
 
-</step>
+<commit_process>
+  <commit>
+    <message>feat(${SPEC_SLUG}): deliver spec tasks — tests green, pre-commit clean</message>
+    <format>Conventional Commits</format>
+  </commit>
+  <push>
+    <target>feature branch</target>
+    <remote>origin</remote>
+  </push>
+  <pull_request>
+    <title>[${SPEC_SLUG}] Deliver feature — tests green</title>
+    <description>
+      - Summary of changes
+      - How to test (commands)
+      - Links: @${SPEC_DIR}/spec.md, @${TASKS_FILE}, @${EVIDENCE_FILE}
+    </description>
+  </pull_request>
+</commit_process>
 
-<step number="5" subagent="file-creator" name="spec_folder_creation">
+<outputs>
+- `PR_URL` (persist for later steps).
+</outputs>
 
-### Step 5: Spec Folder Creation
-
-Use the file-creator subagent to create directory: .agilevv/specs/YYYY-MM-DD-spec-name/ using the date from step 4.
-
-Use kebab-case for spec name. Maximum 5 words in name.
-
-<folder_naming>
-<format>YYYY-MM-DD-spec-name</format>
-<date>use stored date from step 4</date>
-<name_constraints>
-
-- max_words: 5
-- style: kebab-case
-- descriptive: true
-  </name_constraints>
-  </folder_naming>
-
-<example_names>
-
-- 2025-03-15-password-reset-flow
-- 2025-03-16-user-profile-dashboard
-- 2025-03-17-api-rate-limiting
-  </example_names>
-
-</step>
-
-<step number="6" subagent="file-creator" name="create_spec_md">
-
-### Step 6: Create spec.md
-
-Use the file-creator subagent to create the file: .agilevv/specs/YYYY-MM-DD-spec-name/spec.md using this template:
-
-<file_template>
-
-<header>
-    # Spec Requirements Document
-
-```
-> Spec: [SPEC_NAME]
-> Created: [CURRENT_DATE]
-```
-
-</header>
-  <required_sections>
-    - Overview
-    - User Stories
-    - Spec Scope
-    - Out of Scope
-    - Expected Deliverable
-  </required_sections>
-</file_template>
-
-<section name="overview">
-  <template>
-    ## Overview
-
-```
-[1-2_SENTENCE_GOAL_AND_OBJECTIVE]
-```
-
-</template>
-  <constraints>
-    - length: 1-2 sentences
-    - content: goal and objective
-  </constraints>
-  <example>
-    Implement a secure password reset functionality that allows users to regain account access through email verification. This feature will reduce support ticket volume and improve user experience by providing self-service account recovery.
-  </example>
-</section>
-
-<section name="user_stories">
-  <template>
-    ## User Stories
-
-```
-### [STORY_TITLE]
-
-As a [USER_TYPE], I want to [ACTION], so that [BENEFIT].
-
-[DETAILED_WORKFLOW_DESCRIPTION]
-```
-
-</template>
-  <constraints>
-    - count: 1-3 stories
-    - include: workflow and problem solved
-    - format: title + story + details
-  </constraints>
-</section>
-
-<section name="spec_scope">
-  <template>
-    ## Spec Scope
-
-```
-1. **[FEATURE_NAME]** - [ONE_SENTENCE_DESCRIPTION]
-2. **[FEATURE_NAME]** - [ONE_SENTENCE_DESCRIPTION]
-```
-
-</template>
-  <constraints>
-    - count: 1-5 features
-    - format: numbered list
-    - description: one sentence each
-  </constraints>
-</section>
-
-<section name="out_of_scope">
-  <template>
-    ## Out of Scope
-
-```
-- [EXCLUDED_FUNCTIONALITY_1]
-- [EXCLUDED_FUNCTIONALITY_2]
-```
-
-</template>
-  <purpose>explicitly exclude functionalities</purpose>
-</section>
-
-<section name="expected_deliverable">
-  <template>
-    ## Expected Deliverable
-
-```
-1. [TESTABLE_OUTCOME_1]
-2. [TESTABLE_OUTCOME_2]
-```
-
-</template>
-  <constraints>
-    - count: 1-3 expectations
-    - focus: browser-testable outcomes
-  </constraints>
-</section>
+<evidence_log>
+- Append PR URL and commit hash to `${EVIDENCE_FILE}`.
+</evidence_log>
 
 </step>
 
-<step number="7" subagent="file-creator" name="create_spec_lite_md">
+<step number="5" subagent="project-manager" name="tasks_list_check">
 
-### Step 7: Create spec-lite.md
+### Step 5: Tasks Completion Verification
 
-Use the file-creator subagent to create the file: .agilevv/specs/YYYY-MM-DD-spec-name/spec-lite.md for the purpose of establishing a condensed spec for efficient AI context usage.
+Confirm `tasks.md` is accurate: completed items `[x]`, or documented blockers.
 
-<file_template>
+<instructions>
+  ACTION: Use project-manager
+  REQUEST: |
+    Verify task completion in ${TASKS_FILE}:
+    - Mark completed tasks `[x]` **only** if verified (tests green + reviewed)
+    - Ensure any incomplete tasks include a ⚠️ blocker note with reason & link to evidence
+</instructions>
 
-<header>
-    # Spec Summary (Lite)
-  </header>
-</file_template>
+<completion_criteria>
+  <valid_states>- Completed `[x]`  ·  Blocked with ⚠️ reason</valid_states>
+  <invalid_state>- Unmarked without blocker documentation</invalid_state>
+</completion_criteria>
 
-<content_structure>
-<spec_summary>
-
-- source: Step 6 spec.md overview section
-- length: 1-3 sentences
-- content: core goal and objective of the feature
-  </spec_summary>
-  </content_structure>
-
-<content_template>
-[1-3_SENTENCES_SUMMARIZING_SPEC_GOAL_AND_OBJECTIVE]
-</content_template>
-
-<example>
-  Implement secure password reset via email verification to reduce support tickets and enable self-service account recovery. Users can request a reset link, receive a time-limited token via email, and set a new password following security best practices.
-</example>
+<evidence_log>
+- Append a short “task status snapshot” to `${EVIDENCE_FILE}`.
+</evidence_log>
 
 </step>
 
-<step number="8" subagent="file-creator" name="create_technical_spec">
+<step number="6" subagent="project-manager" name="roadmap_progress_check">
 
-### Step 8: Create Technical Specification
+### Step 6: Roadmap Progress Update (Conditional)
 
-Use the file-creator subagent to create the file: sub-specs/technical-spec.md using this template:
+Update `@.agilevv/product/roadmap.md` **only if** the spec fully completes a roadmap item.
 
-<file_template>
+<conditional_execution>
+  <preliminary_check>
+    IF tasks clearly do **not** complete a roadmap item → SKIP
+    ELSE analyze mapping from spec to roadmap
+  </preliminary_check>
+</conditional_execution>
 
-<header>
-    # Technical Specification
+<roadmap_criteria>
+  <update_when>
+    - Spec implements the roadmap feature end-to-end
+    - All related tasks completed
+    - Full test suite passes
+  </update_when>
+</roadmap_criteria>
 
-```
-This is the technical specification for the spec detailed in @.agilevv/specs/YYYY-MM-DD-spec-name/spec.md
-```
-
-</header>
-</file_template>
-
-<spec_sections>
-<technical_requirements>
-
-- functionality details
-- UI/UX specifications
-- integration requirements
-- performance criteria
-  </technical_requirements>
-  <external_dependencies_conditional>
-- only include if new dependencies needed
-- new libraries/packages
-- justification for each
-- version requirements
-  </external_dependencies_conditional>
-  </spec_sections>
-
-<example_template>
-
-## Technical Requirements
-
-- [SPECIFIC_TECHNICAL_REQUIREMENT]
-- [SPECIFIC_TECHNICAL_REQUIREMENT]
-
-## External Dependencies (Conditional)
-
-[ONLY_IF_NEW_DEPENDENCIES_NEEDED]
-
-- **[LIBRARY_NAME]** - [PURPOSE]
-- **Justification:** [REASON_FOR_INCLUSION]
-  </example_template>
-
-<conditional_logic>
-IF spec_requires_new_external_dependencies:
-INCLUDE "External Dependencies" section
-ELSE:
-OMIT section entirely
-</conditional_logic>
+<instructions>
+  ACTION: If criteria met, mark roadmap entry `[x]` and reference `${PR_URL}`.
+</instructions>
 
 </step>
 
-<step number="9" subagent="file-creator" name="create_database_schema">
+<step number="7" subagent="file-creator" name="document_recap">
 
-### Step 9: Create Database Schema (Conditional)
+### Step 7: Create Recap Document
 
-Use the file-creator subagent to create the file: sub-specs/database-schema.md ONLY IF database changes needed for this task.
+Create a recap in `.agilevv/recaps/` summarizing what was delivered.
 
-<decision_tree>
-IF spec_requires_database_changes:
-CREATE sub-specs/database-schema.md
-ELSE:
-SKIP this_step
-</decision_tree>
+<file_creation>
+  <location>.agilevv/recaps/</location>
+  <naming>${SPEC_SLUG}.md</naming>
+  <format>markdown</format>
+</file_creation>
 
-<file_template>
+<recap_template>
+# [${TODAY}] Recap: ${SPEC_SLUG}
 
-<header>
-    # Database Schema
+This recaps what was delivered for the spec at @${SPEC_DIR}/spec.md.
 
-```
-This is the database schema implementation for the spec detailed in @.agilevv/specs/YYYY-MM-DD-spec-name/spec.md
-```
+## Recap
+[1 paragraph + bullets of completed functionality]
 
-</header>
-</file_template>
+## Context
+[Paste or paraphrase the summary from spec-lite.md, if present]
 
-<schema_sections>
-<changes>
+## Links
+- Spec: @${SPEC_DIR}/spec.md
+- Tasks: @${TASKS_FILE}
+- Evidence: @${EVIDENCE_FILE}
+- PR: ${PR_URL}
+</recap_template>
 
-- new tables
-- new columns
-- modifications
-- migrations
-  </changes>
-
-<specifications>
-- exact SQL or migration syntax
-- indexes and constraints
-- foreign key relationships
-</specifications>
-<rationale>
-- reason for each change
-- performance considerations
-- data integrity rules
-</rationale>
-</schema_sections>
+<evidence_log>
+- Append recap path to `${EVIDENCE_FILE}`.
+</evidence_log>
 
 </step>
 
-<step number="10" subagent="file-creator" name="create_api_spec">
+<step number="8" subagent="file-creator" name="completion_report">
 
-### Step 10: Create API Specification (Conditional)
+### Step 8: Create Completion Report (in Spec Folder)
 
-Use the file-creator subagent to create file: sub-specs/api-spec.md ONLY IF API changes needed.
+Create `${COMPLETION_FILE}` inside the spec folder to serve as the final, immutable report.
 
-<decision_tree>
-IF spec_requires_api_changes:
-CREATE sub-specs/api-spec.md
-ELSE:
-SKIP this_step
-</decision_tree>
+<report_template>
+# Completion Report — ${SPEC_SLUG}
+_Date: ${TODAY}_
 
-<file_template>
+## Summary
+[2–4 sentences: what changed, why, and user impact.]
 
-<header>
-    # API Specification
+## Verification Evidence
+- Full test suite: **pass** (include counts & command)
+- Pre-commit: **clean** (tools run)
+- Reviewer verdicts: [summary with dates]
+- Key commits: [hashes/subjects]
 
-```
-This is the API specification for the spec detailed in @.agilevv/specs/YYYY-MM-DD-spec-name/spec.md
-```
+## How to Validate
+- Commands to run locally
+- Any browser steps (if applicable)
 
-</header>
-</file_template>
+## Links
+- PR: ${PR_URL}
+- Spec: @${SPEC_DIR}/spec.md
+- Tasks: @${TASKS_FILE}
+- Evidence: @${EVIDENCE_FILE}
+- Recap: @.agilevv/recaps/${SPEC_SLUG}.md
+</report_template>
 
-<api_sections>
-<routes>
+<outputs>
+- Wrote `${COMPLETION_FILE}`
+</outputs>
 
-- HTTP method
-- endpoint path
-- parameters
-- response format
-  </routes>
-
-<controllers>
-- action names
-- business logic
-- error handling
-</controllers>
-<purpose>
-- endpoint rationale
-- integration with features
-</purpose>
-</api_sections>
-
-<endpoint_template>
-
-## Endpoints
-
-### [HTTP_METHOD] [ENDPOINT_PATH]
-
-**Purpose:** [DESCRIPTION]
-**Parameters:** [LIST]
-**Response:** [FORMAT]
-**Errors:** [POSSIBLE_ERRORS]
-</endpoint_template>
+<evidence_log>
+- Append completion report path to `${EVIDENCE_FILE}`.
+</evidence_log>
 
 </step>
 
-<step number="11" name="user_review">
+<step number="9" subagent="project-manager" name="completion_summary">
 
-### Step 11: User Review
+### Step 9: Completion Summary (for the user)
 
-Request user review of spec.md and all sub-specs files, waiting for approval or revision requests before proceeding to task creation.
+Produce a succinct, emoji-sectioned summary message.
 
-<review_request>
-I've created the spec documentation:
+<summary_template>
+## ✅ What’s been done
+1. **[FEATURE_1]** — [one-sentence]
+2. **[FEATURE_2]** — [one-sentence]
 
-- Spec Requirements: @.agilevv/specs/YYYY-MM-DD-spec-name/spec.md
+## 🧪 Tests
+- Full suite passed (run/passed/failed: N/N/0)
+- Commands: `pytest -q` …
 
-- Spec Summary: @.agilevv/specs/YYYY-MM-DD-spec-name/spec-lite.md
+## ⚠️ Issues encountered
+[ONLY_IF_APPLICABLE]
+- **[ISSUE]** — [description & status]
 
-- Technical Spec: @.agilevv/specs/YYYY-MM-DD-spec-name/sub-specs/technical-spec.md
-  [LIST_OTHER_CREATED_SPECS]
+## 👀 Ready to test
+[ONLY_IF_APPLICABLE]
+1) [browser step 1]  
+2) [browser step 2]
 
-Please review and let me know if any changes are needed before I create the task breakdown.
+## 📦 Pull Request
+{PR_URL}
+</summary_template>
 
-When you're ready, run the /create-tasks command to have me build the tasks checklist from this spec.
-</review_request>
+<instructions>
+  ACTION: Present this summary; also copy into the PR description if useful.
+</instructions>
+
+</step>
+
+<step number="10" subagent="project-manager" name="completion_notification">
+
+### Step 10: Completion Notification (Cross-Platform)
+
+Play a completion sound **if available**; otherwise show a visual cue.
+
+<notification_commands>
+  <macOS>afplay /System/Library/Sounds/Glass.aiff || true</macOS>
+  <linux>paplay /usr/share/sounds/freedesktop/stereo/complete.oga || aplay /usr/share/sounds/alsa/Front_Center.wav || true</linux>
+  <windows>powershell -c "[console]::beep(880,250); [console]::beep(660,250)"</windows>
+</notification_commands>
+
+<instructions>
+  ACTION: Try the platform-appropriate command; ignore failures gracefully.
+</instructions>
+
+</step>
+
+</process_flow>

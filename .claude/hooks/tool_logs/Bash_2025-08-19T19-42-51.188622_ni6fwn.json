@@ -1,7 +1,0 @@
-{
-  "timestamp": "2025-08-19T19:42:51.188581",
-  "session_id": "0db89026-481b-4386-a2ae-65d42e222b16",
-  "tool_name": "Bash",
-  "command": "pre-commit run check-merge-conflict --all-files",
-  "description": "Run merge conflict check hook"
-}

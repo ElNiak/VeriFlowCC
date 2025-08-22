@@ -1,7 +1,0 @@
-{
-  "timestamp": "2025-08-19T19:31:16.712233",
-  "session_id": "0db89026-481b-4386-a2ae-65d42e222b16",
-  "tool_name": "Bash",
-  "command": "uv run pytest --co -q | grep -E \"(FAILED|ERROR|::)\" | head -20",
-  "description": "Check for test collection issues"
-}

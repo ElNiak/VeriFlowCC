@@ -1,7 +1,0 @@
-{
-  "timestamp": "2025-08-19T19:19:34.117919",
-  "session_id": "0db89026-481b-4386-a2ae-65d42e222b16",
-  "tool_name": "Bash",
-  "command": "uv run pytest tests/schemas/ -v --tb=short",
-  "description": "Run schema tests first (typically fastest)"
-}

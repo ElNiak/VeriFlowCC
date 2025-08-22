@@ -6,7 +6,7 @@ version: 1.0
 encoding: UTF-8
 ---
 
-# Task Execution Rules
+# Task Completion Rules
 
 ## Overview
 

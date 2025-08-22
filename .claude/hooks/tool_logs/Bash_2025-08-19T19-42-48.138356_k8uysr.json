@@ -1,7 +1,0 @@
-{
-  "timestamp": "2025-08-19T19:42:48.138313",
-  "session_id": "0db89026-481b-4386-a2ae-65d42e222b16",
-  "tool_name": "Bash",
-  "command": "pre-commit run check-yaml --all-files",
-  "description": "Run YAML check hook"
-}
