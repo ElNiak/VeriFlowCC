@@ -19,11 +19,7 @@ BANNED_PATTERNS = [
 REQUIRE_TOKENS = [r"\bV\s*=\s*[1-3]\b"]  # your “verbosity” convention
 
 GUIDELINES = """\
-ALWAYS HARD THINK BEFORE AND THINK STEP BY STEP ANY ACTION.
-Project norms:
-- Use V=1/2/3 to set response verbosity.
-- Prefer updating existing files; no *_enhanced/*_unified duplicates.
-- Fix QA issues before committing.
+ALWAYS ULTRA THINK BEFORE AND THINK STEP BY STEP.
 """
 
 

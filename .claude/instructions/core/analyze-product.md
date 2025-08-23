@@ -1,25 +1,110 @@
 ---
-description: Analyze Current Product & install AgileVerifFlowCC
+description: Analyze Current Product & Install AgileVerifFlowCC (for existing repositories)
 globs:
 alwaysApply: false
-version: 1.0
+version: 1.2
 encoding: UTF-8
 ---
 
-# Analyze Current Product & install AgileVerifFlowCC
+# Analyze Current Product & Install AgileVerifFlowCC
 
 ## Overview
 
-Install AgileVerifFlowCC into an existing codebase, analyze current product state and progress.
-Builds on @.claude/instructions/core/plan-product.md
+Install AgileVerifFlowCC into an **existing** codebase and generate accurate product docs that reflect the _actual_ implementation.  
+This flow is **deterministic**, **idempotent**, and writes **only** via `file-creator`.
+
+<pre_flight_check>
+EXECUTE: @.claude/instructions/meta/pre-flight.md
+REQUIRE_MARKER: PRE_FLIGHT_MARKER: AgileVerifFlowCC v1.0
+MUST_RUN: @agent:system-checker <!-- Block if any Critical fails -->
+</pre_flight_check>
+
+<artifacts>
+- `.agilevv/product/` — canonical product docs (mission, mission-lite, tech-stack, roadmap)
+- `.agilevv/analysis/` — codebase analysis outputs
+- `.agilevv/decisions/` — architecture/decision logs
+- `.agilevv/install/` — install logs & readiness snapshots
+</artifacts>
+
+<inputs_template>
+
+```xml
+<install-existing-request>
+  <repo_root>.</repo_root>
+  <branch_name optional="true">install-agileverifflowcc</branch_name>
+  <product_type optional="true">auto</product_type>
+  <prior_docs optional="true">
+    <path>.agilevv/product/mission.md</path>
+  </prior_docs>
+</install-existing-request>
+```
+
+<outputs_template>
+
+```md
+# 🧭 Install Report
+
+Repo: <repo_root> Branch: <branch_name> Product: <observed_product_type>
+
+## Summary
+
+- System readiness: <Ready yes/no> (Critical passed: <n>/<m>)
+- Product docs created/updated: mission, mission-lite, tech-stack, roadmap
+- Analysis artifacts: inventory.md, stack.md, endpoints.md, decisions.md
+
+## Next Actions
+
+1. Review `.agilevv/product/` documents
+2. Confirm roadmap Phase 0 items
+3. Approve branch & open PR
+```
+
+</outputs_template>
 
 <process_flow>
 
-<step number="1" name="analyze_existing_codebase">
+<step number="0" subagent="project-manager" name="initialize_and_guard">
 
-### Step 1: Analyze Existing Codebase
+### Step 0: Initialize & Guard (Read-Only)
 
-Perform a deep codebase analysis of the current codebase to understand current state before documentation purposes.
+Resolve repository root and enforce safe write conditions.
+
+<checks>
+- Resolve repo root (`git rev-parse --show-toplevel`, fallback to `.`)
+- Verify workspace writable
+- Ensure dedicated branch/worktree exists for installation tasks
+</checks>
+
+<instructions>
+  ACTION: If `branch_name` not provided, derive from date: `install-agileverif-YYYYMMDD`
+  DELEGATE: @agent:git-workflow to create/switch branch (exclude default `main/master`)
+  RECORD: planned writes under `.agilevv/`
+</instructions>
+
+</step>
+
+<step number="1" subagent="system-checker" name="environment_readiness">
+
+### Step 1: Environment Readiness Gate
+
+Run `system-checker` and **block** if any Critical checks fail.
+
+<gate>
+- Critical must all pass
+- If blocked: print top 3 remediations and STOP
+</gate>
+
+<artifacts>
+- Write JSON and MD snapshot to `.agilevv/install/system-check-<DATE>.{json,md}`
+</artifacts>
+
+</step>
+
+<step number="2" subagent="context-fetcher" name="deep_codebase_analysis">
+
+### Step 2: Deep Codebase Analysis
+
+Use `context-fetcher` to read the codebase and extract concrete signals.
 
 <analysis_areas>
 <project_structure>
@@ -30,126 +115,155 @@ Perform a deep codebase analysis of the current codebase to understand current s
 - Build configuration
   </project_structure>
   <technology_stack>
-- Frameworks in use
-- Dependencies (package.json, Gemfile, requirements.txt, etc.)
-- Database systems
-- Infrastructure configuration
+- Frameworks (pyproject.toml, requirements.txt, package.json, Gemfile)
+- Databases and ORMs
+- Infra & deploy configs (Dockerfile, Compose, CI)
   </technology_stack>
   <implementation_progress>
 - Completed features
 - Work in progress
 - Authentication/authorization state
 - API endpoints
-- Database schema
+- Database schema/migrations
   </implementation_progress>
   <code_patterns>
-- Coding style in use
-- Naming conventions
-- File organization patterns
-- Testing approach
+- Coding style and conventions
+- Tests layout (unit/integration/validation)
+- Reusable utilities and middleware/hooks
   </code_patterns>
   </analysis_areas>
 
-<instructions>
-  ACTION: Thoroughly analyze the existing codebase
-  DOCUMENT: Current technologies, features, and patterns
-  IDENTIFY: Architectural decisions already made
-  NOTE: Development progress and completed work
-</instructions>
+<outputs>
+- `analysis/inventory.md` — file tree & modules
+- `analysis/stack.md` — frameworks, libs, versions (observed)
+- `analysis/endpoints.md` — API surface (routes, methods, auth)
+- `analysis/db.md` — schema summary & migrations
+- `analysis/tests.md` — test structure & coverage hints
+</outputs>
 
 </step>
 
-<step number="2" subagent="context-fetcher" name="gather_product_context">
+<step number="3" subagent="context-fetcher" name="gather_product_context">
 
-### Step 2: Gather Product Context
+### Step 3: Gather Product Context
 
-Use the context-fetcher subagent to supplement codebase analysis with business context and future plans.
+Ask the user concise, numbered questions; merge answers with code facts.
 
 <context_questions>
-Based on my analysis of your codebase, I can see you're building [OBSERVED_PRODUCT_TYPE].
+Based on the repository, you appear to be building **[OBSERVED_PRODUCT_TYPE]**.
 
-To properly set up AgileVerifFlowCC, I need to understand:
+To set up AgileVerifFlowCC correctly:
 
-1. **Product Vision**: What problem does this solve? Who are the target users?
-
-1. **Current State**: Are there features I should know about that aren't obvious from the code?
-
-1. **Roadmap**: What features are planned next? Any major refactoring planned?
-
-1. **Decisions**: Are there important technical or product decisions I should document?
-
-1. **Team Preferences**: Any coding standards or practices the team follows that I should capture?
+1. **Product Vision** — problem solved & primary users?
+2. **Hidden Features** — anything not obvious from code?
+3. **Roadmap** — what’s next? any refactors planned?
+4. **Decisions** — key product/tech decisions to record?
+5. **Team Preferences** — coding standards/practices we should codify?
    </context_questions>
 
 <instructions>
-  ACTION: Ask user for product context
-  COMBINE: Merge user input with codebase analysis
-  PREPARE: Information for plan-product.md execution
+  ACTION: Present questions; WAIT for answers
+  MERGE: user context with Step 2 analysis into a single data model
+  STORE: in-memory for Step 4
 </instructions>
 
 </step>
 
-<step number="3" name="execute_plan_product">
+<step number="4" subagent="file-creator" name="persist_analysis_artifacts">
 
-### Step 3: Execute Plan-Product with Context
+### Step 4: Persist Analysis Artifacts
 
-Execute our standard flow for installing AgileVerifFlowCC in existing products
+Create/update `.agilevv/analysis/*.md` using **idempotent** sentinel blocks.
+
+<files>
+- `.agilevv/analysis/inventory.md`
+- `.agilevv/analysis/stack.md`
+- `.agilevv/analysis/endpoints.md`
+- `.agilevv/analysis/db.md`
+- `.agilevv/analysis/tests.md`
+</files>
+
+<write_policy>
+
+- Atomic writes (temp + rename)
+- Preserve manual notes outside sentinel blocks
+  </write_policy>
+
+</step>
+
+<step number="5" subagent="project-manager" name="prepare_plan_product_input">
+
+### Step 5: Prepare plan-product Input
+
+Assemble structured input from analysis + user responses.
 
 <execution_parameters>
 <main_idea>[DERIVED_FROM_ANALYSIS_AND_USER_INPUT]</main_idea>
-<key_features>[IDENTIFIED_IMPLEMENTED_AND_PLANNED_FEATURES]</key_features>
-<target_users>[FROM_USER_CONTEXT]</target_users>
-<tech_stack>[DETECTED_FROM_CODEBASE]</tech_stack>
+<key_features>
+<implemented>[FROM_STEP_2]</implemented>
+<planned>[FROM_STEP_3]</planned>
+</key_features>
+<target_users>[FROM_STEP_3]</target_users>
+<tech_stack>[FROM_STEP_2_STACK]</tech_stack>
 </execution_parameters>
+
+<outputs>
+- `install/plan-product-input.json` (for reproducibility)
+</outputs>
+
+</step>
+
+<step number="6" subagent="project-manager" name="execute_plan_product">
+
+### Step 6: Execute plan-product
+
+Invoke `@.claude/instructions/core/plan-product.md` with the prepared context; allow it to create `.agilevv/product/`.
 
 <execution_prompt>
 @.claude/instructions/core/plan-product.md
 
-I'm installing AgileVerifFlowCC into an existing product. Here's what I've gathered:
+Installing AgileVerifFlowCC into an existing product.
 
-**Main Idea**: [SUMMARY_FROM_ANALYSIS_AND_CONTEXT]
+**Main Idea:** [SUMMARY_FROM_ANALYSIS_AND_CONTEXT]
 
-**Key Features**:
+**Key Features**
 
-- Already Implemented: [LIST_FROM_ANALYSIS]
-
+- Implemented: [LIST_FROM_ANALYSIS]
 - Planned: [LIST_FROM_USER]
 
-  **Target Users**: [FROM_USER_RESPONSE]
+**Target Users:** [FROM_USER_RESPONSE]
 
-  **Tech Stack**: [DETECTED_STACK_WITH_VERSIONS]
-  </execution_prompt>
+**Tech Stack:** [DETECTED_STACK_WITH_VERSIONS]
+</execution_prompt>
 
-<instructions>
-  ACTION: Execute plan-product.md with gathered information
-  PROVIDE: All context as structured input
-  ALLOW: plan-product.md to create .agilevv/product/ structure
-</instructions>
+<guardrails>
+- Only `file-creator` writes
+- Paths limited to `.agilevv/product/`
+</guardrails>
 
 </step>
 
-<step number="4" name="customize_generated_files">
+<step number="7" subagent="file-creator" name="customize_generated_files">
 
-### Step 4: Customize Generated Documentation
+### Step 7: Customize Generated Documentation
 
-Refine the generated documentation to ensure accuracy for the existing product by updating roadmap, tech stack, and decisions based on actual implementation.
+Refine roadmap/tech-stack/decisions to reflect _actual_ implementation.
 
 <customization_tasks>
 <roadmap_adjustment>
 
-- Mark completed features as done
-- Move implemented items to "Phase 0: Already Completed"
-- Adjust future phases based on actual progress
+- Add **Phase 0: Already Completed** with detected features
+- Move implemented items under Phase 0 with `[x]`
+- Ensure Phase 1 reflects current in-progress work
   </roadmap_adjustment>
   <tech_stack_verification>
-- Verify detected versions are correct
-- Add any missing infrastructure details
-- Document actual deployment setup
+- Verify versions
+- Add infra details (CI/CD, container, hosting)
+- Note environment constraints
   </tech_stack_verification>
   <decisions_documentation>
-- Add historical decisions that shaped current architecture
-- Document why certain technologies were chosen
-- Capture any pivots or major changes
+- Record historical decisions (why chosen, when)
+- Capture pivots/changes and rationale
   </decisions_documentation>
   </customization_tasks>
 
@@ -157,91 +271,105 @@ Refine the generated documentation to ensure accuracy for the existing product b
 
 ## Phase 0: Already Completed
 
-The following features have been implemented:
-
-- [x] [FEATURE_1] - [DESCRIPTION_FROM_CODE]
-- [x] [FEATURE_2] - [DESCRIPTION_FROM_CODE]
-- [x] [FEATURE_3] - [DESCRIPTION_FROM_CODE]
+- [x] [FEATURE_1] — [DESCRIPTION_FROM_CODE]
+- [x] [FEATURE_2] — [DESCRIPTION_FROM_CODE]
+- [x] [FEATURE_3] — [DESCRIPTION_FROM_CODE]
 
 ## Phase 1: Current Development
 
-- [ ] [IN_PROGRESS_FEATURE] - [DESCRIPTION]
+- [ ] [IN_PROGRESS_FEATURE] — [DESCRIPTION]
 
-  [CONTINUE_WITH_STANDARD_PHASES]
-  </roadmap_template>
+[CONTINUE_WITH_STANDARD_PHASES]
+</roadmap_template>
 
 </step>
 
-<step number="5" name="final_verification">
+<step number="8" subagent="git-workflow" name="commit_and_pr">
 
-### Step 5: Final Verification and Summary
+### Step 8: Commit & PR
 
-Verify installation completeness and provide clear next steps for the user to start using AgileVerifFlowCC with their existing codebase.
+Create a commit and open a PR for the installation changes.
+
+<commit_message>
+chore(agent-os): install AgileVerifFlowCC — analysis, product docs, roadmap phase 0
+</commit_message>
+
+<pr_template>
+Title: Install AgileVerifFlowCC — analysis + product docs  
+Body:
+
+- Adds `.agilevv/analysis/*` artifacts
+- Adds/updates `.agilevv/product/*` (mission, mission-lite, tech-stack, roadmap)
+- Documents decisions & environment snapshot
+  </pr_template>
+
+</step>
+
+<step number="9" subagent="project-manager" name="final_verification_and_summary">
+
+### Step 9: Final Verification & Summary
+
+Verify completeness and present next steps.
 
 <verification_checklist>
 
-- [ ] .agilevv/product/ directory created
-- [ ] All product documentation reflects actual codebase
-- [ ] Roadmap shows completed and planned features accurately
-- [ ] Tech stack matches installed dependencies
+- [ ] `.agilevv/product/` exists and is populated
+- [ ] Roadmap includes **Phase 0** completed features
+- [ ] Tech stack aligns with detected dependencies
+- [ ] PR created and linked
       </verification_checklist>
 
 <summary_template>
 
-## ✅ AgileVerifFlowCC Successfully Installed
+## ✅ AgileVerifFlowCC Installed for Existing Product
 
-I've analyzed your [PRODUCT_TYPE] codebase and set up AgileVerifFlowCC with documentation that reflects your actual implementation.
+**Tech Stack:** [SUMMARY_OF_DETECTED_STACK]  
+**Completed Features:** [COUNT]  
+**Code Style:** [DETECTED_PATTERNS]  
+**Current Phase:** [IDENTIFIED_STAGE]
 
-### What I Found
+**Created/Updated**
 
-- **Tech Stack**: [SUMMARY_OF_DETECTED_STACK]
-- **Completed Features**: [COUNT] features already implemented
-- **Code Style**: [DETECTED_PATTERNS]
-- **Current Phase**: [IDENTIFIED_DEVELOPMENT_STAGE]
+- `.agilevv/product/` — mission, mission-lite, tech-stack, roadmap
+- `.agilevv/analysis/` — inventory, stack, endpoints, db, tests
+- `.agilevv/decisions/` — decision logs
+- `.agilevv/install/` — system-check snapshot, plan-product input
 
-### What Was Created
+**Next Steps**
 
-- ✓ Product documentation in `.agilevv/product/`
-- ✓ Roadmap with completed work in Phase 0
-- ✓ Tech stack reflecting actual dependencies
-- ✓ Decision log capturing key architectural choices
-- ✓ Mission statement summarizing product vision
-
-### Next Steps
-
-1. Review the generated documentation in `.agilevv/product/`
-
-1. Make any necessary adjustments to reflect your vision
-
-1. See the AgileVerifFlowCC README for usage instructions: <https://github.com/buildermethods/agent-os>
-
-1. Start using AgileVerifFlowCC for your next feature:
-
-   ```
-   @.claude/instructions/core/create-spec.md
-   ```
-
-Your codebase is now AgileVerifFlowCC-enabled! 🚀
-</summary_template>
+1. Review `.agilevv/product/` docs
+2. Confirm roadmap **Phase 0** and upcoming phases
+3. Approve PR and merge
+4. Start your next feature with: `@.claude/instructions/core/create-spec.md`
+   </summary_template>
 
 </step>
 
 </process_flow>
 
+<post_flight_check>
+EXECUTE: @.claude/instructions/meta/post-flight.md
+REQUIRE_MARKER: POST_FLIGHT_MARKER: AgileVerifFlowCC v1.0
+</post_flight_check>
+
 ## Error Handling
 
 <error_scenarios>
 <scenario name="no_clear_structure">
-<condition>Cannot determine project type or structure</condition>
-<action>Ask user for clarification about project</action>
+<condition>Project type/structure cannot be determined</condition>
+<action>Ask user for project type and primary entry points</action>
 </scenario>
 <scenario name="conflicting_patterns">
 <condition>Multiple coding styles detected</condition>
-<action>Ask user which pattern to document</action>
+<action>Ask user which standard to document as canonical</action>
 </scenario>
 <scenario name="missing_dependencies">
-<condition>Cannot determine full tech stack</condition>
-<action>List detected technologies and ask for missing pieces</action>
+<condition>Tech stack incomplete or ambiguous</condition>
+<action>List detected technologies and ask for missing/ambiguous items</action>
+</scenario>
+<scenario name="blocked_by_readiness">
+<condition>system-checker Critical failures</condition>
+<action>Report top 3 remediations and stop until resolved</action>
 </scenario>
 </error_scenarios>
 
@@ -250,11 +378,11 @@ Your codebase is now AgileVerifFlowCC-enabled! 🚀
 <final_checklist>
 <verify>
 
-- [ ] Codebase analyzed thoroughly
-- [ ] User context gathered
-- [ ] plan-product.md executed with proper context
+- [ ] Repo resolved and branch protected
+- [ ] System readiness verified (Critical all pass)
+- [ ] Codebase analyzed and artifacts persisted
+- [ ] plan-product executed with structured context
 - [ ] Documentation customized for existing product
-- [ ] Team can adopt AgileVerifFlowCC workflow
+- [ ] PR created for adoption
       </verify>
-
-</final_checklist>
+      </final_checklist>

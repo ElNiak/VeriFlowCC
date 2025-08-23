@@ -12,7 +12,7 @@ encoding: UTF-8
 
 - **Subagent fidelity.** For any step that specifies a subagent via `subagent="<name>"`, you **MUST** use that exact subagent to execute the step. Do **not** emulate or merge roles. If the subagent is unavailable or under-privileged, **stop** and ask the user numbered questions to resolve it.
 
-- **Deterministic execution.** Process `<process_flow>` blocks **sequentially**. Execute **every numbered step** exactly as written before proceeding. Respect all `<conditional>` / `<decision_tree>` branches.
+- **Deterministic execution.** Process `<process_flow>` blocks **sequentially**. Execute **every numbered step** exactly as written before proceeding. Respect all `<conditional>` / `<decision_tree>` branches. Do not merge or skip steps.
 
 - **Least-privilege & serialized writes.** Only **implementer** (code edits) and **file-creator** (docs/status) are allowed to write. All other subagents are **read/plan/review** only. **Serialize** write operations; never perform concurrent edits.
 
@@ -27,9 +27,11 @@ encoding: UTF-8
 
 - **Templates = contracts.** When a step provides a template, **use it verbatim**: preserve section order, headings, and placeholders. Fill all placeholders; do not remove required sections or add unrequested ones.
 
+- **Subagent inputs/outputs.** For steps with `<inputs_template>` or `<outputs_template>`, **strictly adhere** to the specified XML structure. Do not add/remove fields or change formats. If a required input is unavailable, **stop** and ask numbered questions.
+
 - **Idempotency & duplication guards.** Reruns must not create duplicate lines/sections. When appending, prefer sentinels such as:
   - `<!-- AUTO:BEGIN <section-name> -->` … `<!-- AUTO:END <section-name> -->`
-  and replace within those bounds on subsequent runs.
+    and replace within those bounds on subsequent runs.
 
 - **Evidence-first logging.** After critical actions (tests, reviews, commits, file creation), append a brief entry to `EVIDENCE.md` with **paths, commands run, diffs/summary, and outcomes**. Redact secrets/tokens.
 

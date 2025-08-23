@@ -1,8 +1,11 @@
 ---
 description: Rules to execute a task and its sub-tasks using AgileVerifFlowCC
 globs:
+  - .agilevv/specs/**
+  - .agilevv/standards/**
+  - **/*.md
 alwaysApply: false
-version: 1.0
+version: 1.2
 encoding: UTF-8
 ---
 
@@ -10,59 +13,89 @@ encoding: UTF-8
 
 ## Overview
 
-Execute a specific task along with its sub-tasks systematically following a TDD development workflow.
+Execute a specific parent task and its subtasks using a **TDD** workflow.  
+**Guardrails**
 
-\<pre_flight_check>
-EXECUTE: @.claude/instructions/meta/pre-flight.md
-\</pre_flight_check>
+- **Only** `implementer` (code changes) and `file-creator` (docs/status) write to disk.
+- **Parallelize analysis, serialize writes.** Run on a feature branch/worktree.
+- Log **evidence** (diffs, commands, test results, commit hashes) as you go.
 
-\<process_flow>
+<process_flow>
+
+<variables>
+  <var name="SPEC_DIR" source="choose-or-detect:current_spec_dir" required="true" />
+  <var name="TASKS_FILE" source="computed:${SPEC_DIR}/tasks.md" required="true" />
+  <var name="EVIDENCE_FILE" source="computed:${SPEC_DIR}/EVIDENCE.md" required="true" />
+  <var name="TRACE_FILE" source="computed:${SPEC_DIR}/TRACEABILITY.csv" required="true" />
+  <var name="PARENT_TASK_NUMBER" source="input:param(parent_task_number)" required="true" />
+</variables>
+
+<step number="0" subagent="context-fetcher" name="pre_flight_validation">
+
+### Step 0: Pre-Flight Validation
+
+Validate inputs and environment before writing anything.
+
+<checks>
+- `${TASKS_FILE}` exists and is non-empty
+- `${PARENT_TASK_NUMBER}` exists in `${TASKS_FILE}`
+- Optional but recommended present: `${SPEC_DIR}/spec-lite.md`, `${SPEC_DIR}/sub-specs/technical-spec.md`
+</checks>
+
+<git_policy>
+
+- If on `main`, request branch switch (or invoke `git-workflow` to prepare feature branch).
+  </git_policy>
+
+<outputs>
+- Confirmed `${SPEC_DIR}`, `${TASKS_FILE}`, and `${PARENT_TASK_NUMBER}`
+- Count of subtasks under the parent task
+</outputs>
+</step>
 
 <step number="1" name="task_understanding">
 
 ### Step 1: Task Understanding
 
-Read and analyze the given parent task and all its sub-tasks from tasks.md to gain complete understanding of what needs to be built.
+Read and analyze the **parent task** `${PARENT_TASK_NUMBER}` and all its subtasks from `tasks.md`.
 
-\<task_analysis>
-\<read_from_tasks_md>
-\- Parent task description
-\- All sub-task descriptions
-\- Task dependencies
-\- Expected outcomes
-\</read_from_tasks_md>
-\</task_analysis>
+<task_analysis>
+<read_from_tasks_md>
+
+- Parent task title & objective
+- All subtask descriptions (1.x … n.x)
+- Dependencies & Definition of Done
+- Acceptance criteria covered (AC-###)
+  </read_from_tasks_md>
+  </task_analysis>
 
 <instructions>
-  ACTION: Read the specific parent task and all its sub-tasks
-  ANALYZE: Full scope of implementation required
-  UNDERSTAND: Dependencies and expected deliverables
-  NOTE: Test requirements for each sub-task
+  ACTION: Summarize scope, DoD, dependencies, AC coverage in ≤8 bullets.
+  OUTPUT: A one-paragraph execution plan (tests → impl → verify).
 </instructions>
 
 </step>
 
-<step number="2" name="technical_spec_review">
+<step number="2" subagent="context-fetcher" name="technical_spec_review">
 
 ### Step 2: Technical Specification Review
 
-Search and extract relevant sections from technical-spec.md to understand the technical implementation approach for this task.
+Use `context-fetcher` to extract only the sections of `technical-spec.md` that support this task.
 
-\<selective_reading>
-\<search_technical_spec>
-FIND sections in technical-spec.md related to:
-\- Current task functionality
-\- Implementation approach for this feature
-\- Integration requirements
-\- Performance criteria
-\</search_technical_spec>
-\</selective_reading>
+<selective_reading>
+<search_technical_spec>
+FIND sections related to:
+
+- This feature’s functionality & data boundaries
+- Implementation approach and interfaces
+- Integration points
+- Performance criteria/SLOs
+  </search_technical_spec>
+  </selective_reading>
 
 <instructions>
-  ACTION: Search technical-spec.md for task-relevant sections
-  EXTRACT: Only implementation details for current task
-  SKIP: Unrelated technical specifications
-  FOCUS: Technical approach for this specific feature
+  ACTION: Extract **only** details needed for the current task; ignore unrelated areas.
+  OUTPUT: ≤6 bullets mapping spec details → impacted files/symbols.
 </instructions>
 
 </step>
@@ -71,28 +104,27 @@ FIND sections in technical-spec.md related to:
 
 ### Step 3: Best Practices Review
 
-Use the context-fetcher subagent to retrieve relevant sections from @.agilevv/standards/best-practices.md that apply to the current task's technology stack and feature type.
+Pull relevant guidance from `.agilevv/standards/best-practices.md`.
 
-\<selective_reading>
-\<search_best_practices>
+<selective_reading>
+<search_best_practices>
 FIND sections relevant to:
-\- Task's technology stack
-\- Feature type being implemented
-\- Testing approaches needed
-\- Code organization patterns
-\</search_best_practices>
-\</selective_reading>
 
-<instructions>
-  ACTION: Use context-fetcher subagent
-  REQUEST: "Find best practices sections relevant to:
-            - Task's technology stack: [CURRENT_TECH]
-            - Feature type: [CURRENT_FEATURE_TYPE]
-            - Testing approaches needed
-            - Code organization patterns"
-  PROCESS: Returned best practices
-  APPLY: Relevant patterns to implementation
-</instructions>
+- Current tech stack & feature type
+- Testing approach (unit/integration/property/fuzz)
+- Code organization & error handling
+- Security & performance gotchas (if applicable)
+  </search_best_practices>
+  </selective_reading>
+
+<if>
+IF none found:
+launch standard-analyser agent to infer best practices from repo context.
+</if>
+
+<outputs>
+- Checklist of applicable practices to follow for this task.
+</outputs>
 
 </step>
 
@@ -100,198 +132,214 @@ FIND sections relevant to:
 
 ### Step 4: Code Style Review
 
-Use the context-fetcher subagent to retrieve relevant code style rules from @.agilevv/standards/code-style.md for the languages and file types being used in this task.
+Load style rules from `.agilevv/standards/code-style.md` for languages/files touched.
 
-\<selective_reading>
-\<search_code_style>
+<selective_reading>
+<search_code_style>
 FIND style rules for:
-\- Languages used in this task
-\- File types being modified
-\- Component patterns being implemented
-\- Testing style guidelines
-\</search_code_style>
-\</selective_reading>
 
-<instructions>
-  ACTION: Use context-fetcher subagent
-  REQUEST: "Find code style rules for:
-            - Languages: [LANGUAGES_IN_TASK]
-            - File types: [FILE_TYPES_BEING_MODIFIED]
-            - Component patterns: [PATTERNS_BEING_IMPLEMENTED]
-            - Testing style guidelines"
-  PROCESS: Returned style rules
-  APPLY: Relevant formatting and patterns
-</instructions>
+- Languages/file types in scope
+- Component patterns involved
+- Test style guidelines
+  </search_code_style>
+  </selective_reading>
+
+<outputs>
+- Short list of style constraints (naming, structure, docstrings, linting).
+</outputs>
 
 </step>
 
-<step number="5" name="task_execution">
+<step number="5" subagent="implementer" name="task_execution">
 
-### Step 5: Task and Sub-task Execution
+### Step 5: Task & Subtask Execution (TDD, Implementer-only writes)
 
-Create a clear execution plan for the parent task and its sub-tasks, following a TDD approach.
+The `implementer` performs code edits; all others read/plan/review.  
+Follow the **test-first** ordering, then implementation, then verification.
 
-Spawn the appropriate sub-agent to handle the execution of the parent task and its sub-tasks in a structured manner.
+<typical_task_structure>
+<first_subtask>Write tests for the feature (unit/integration/edge cases)</first_subtask>
+<middle_subtasks>Implement functionality in small steps; keep tests green; refactor</middle_subtasks>
+<final_subtask>Verify all tests pass; prepare for review</final_subtask>
+</typical_task_structure>
 
-Once
+<execution_order>
+<subtask_1_tests>
 
-\<typical_task_structure>
-\<first_subtask>Write tests for [feature]\</first_subtask>
-\<middle_subtasks>Implementation steps\</middle_subtasks>
-\<final_subtask>Verify all tests pass\</final_subtask>
-\</typical_task_structure>
+- Create tests for the parent feature (target AC-###)
+- Run tests to confirm expected failures
+  </subtask_1_tests>
 
-\<execution_order>
-\<subtask_1_tests>
-IF sub-task 1 is "Write tests for [feature]":
-\- Write all tests for the parent feature
-\- Include unit tests, integration tests, edge cases
-\- Run tests to ensure they fail appropriately
-\- Mark sub-task 1 complete
-\</subtask_1_tests>
+  <middle_subtasks_implementation>
 
-\<middle_subtasks_implementation>
-FOR each implementation sub-task (2 through n-1):
-\- Implement the specific functionality
-\- Make relevant tests pass
-\- Update any adjacent/related tests if needed
-\- Refactor while keeping tests green
-\- Mark sub-task complete
-\</middle_subtasks_implementation>
+- Implement per subtask (2.x … n-1.x)
+- After each edit: run the **relevant** tests
+- Keep diffs small; update docs if needed
+  </middle_subtasks_implementation>
 
-\<final_subtask_verification>
-IF final sub-task is "Verify all tests pass":
-\- Run entire test suite
-\- Fix any remaining failures
-\- Ensure no regressions
-\- Mark final sub-task complete
-\</final_subtask_verification>
-\</execution_order>
+  <final_subtask_verification>
 
-\<test_management>
-\<new_tests>
-\- Written in first sub-task
-\- Cover all aspects of parent feature
-\- Include edge cases and error handling
-\</new_tests>
-\<test_updates>
-\- Made during implementation sub-tasks
-\- Update expectations for changed behavior
-\- Maintain backward compatibility
-\</test_updates>
-\</test_management>
+- Ensure all task-specific tests pass locally
+- Prepare notes for reviewer (files/symbols changed)
+  </final_subtask_verification>
+  </execution_order>
 
 <instructions>
-  ACTION: Execute sub-tasks in their defined order
-  RECOGNIZE: First sub-task typically writes all tests
-  IMPLEMENT: Middle sub-tasks build functionality
-  VERIFY: Final sub-task ensures all tests pass
-  UPDATE: Mark each sub-task complete as finished
+  ACTION: Execute subtasks in order; mark each subtask draft-complete locally (do not tick in `tasks.md` yet).
+  OUTPUT: Provide a concise changelog (files touched, symbols changed).
 </instructions>
 
 </step>
 
 <step number="6" subagent="test-runner" name="task_test_verification">
 
-### Step 6: Task-Specific Test Verification
+### Step 6: Focused Test Verification (Test-Runner)
 
-Use the test-runner subagent to run and verify only the tests specific to this parent task (not the full test suite) to ensure the feature is working correctly.
+Run **only** tests relevant to this parent task.
 
-\<focused_test_execution>
-\<run_only>
-\- All new tests written for this parent task
-\- All tests updated during this task
-\- Tests directly related to this feature
-\</run_only>
-<skip>
-\- Full test suite (done later in execute-tasks.md)
-\- Unrelated test files
-</skip>
-\</focused_test_execution>
+<focused_test_execution>
+<run_only>
 
-\<final_verification>
-IF any test failures:
-\- Debug and fix the specific issue
-\- Re-run only the failed tests
-ELSE:
-\- Confirm all task tests passing
-\- Ready to proceed
-\</final_verification>
+- New/updated tests for this feature
+- Directly related existing tests
+  </run_only>
+  <skip>
+- Full suite (run later in multi-task flow)
+  </skip>
+
+</focused_test_execution>
+
+<final_verification>
+IF failures:
+
+- Engage **debugger** to isolate and fix minimal changes
+- Re-run focused tests until green
+  ELSE:
+- Confirm task-specific tests pass
+  </final_verification>
 
 <instructions>
-  ACTION: Use test-runner subagent
-  REQUEST: "Run tests for [this parent task's test files]"
-  WAIT: For test-runner analysis
-  PROCESS: Returned failure information
-  VERIFY: 100% pass rate for task-specific tests
-  CONFIRM: This feature's tests are complete
+  ACTION: Request test-runner to execute the narrowed set; report command(s) used and results.
+  OUTPUT: Table of tests run with pass/fail counts.
 </instructions>
 
 </step>
 
-<step number="7" name="task_completion_check">
+<step number="7" subagent="reviewer" name="review_gate">
 
-### Step 7: Task Completion Check
+### Step 7: Reviewer Gate (Quality/Security/Perf)
 
-Read and analyze the given parent task and all its sub-tasks from tasks.md to gain complete understanding of what needs to be built.
+Run **reviewer** on the diffs produced by Step 5.
 
-Then, for each sub-task, check the related changes in the project, think about the implementation details, and determine if it can be marked as complete or not. If all sub-tasks are done, mark the parent task as complete. Else, mark it as incomplete and list the remaining sub-tasks.
+<review_checklist>
 
-\<task_analysis>
-\<read_from_tasks_md>
-\ - Parent task description
-\ - All sub-task descriptions
-\ - Task dependencies
-\ - Expected outcomes
-\</read_from_tasks_md>
-\</task_analysis>
+- DRY, clarity, error handling, input validation
+- Test adequacy (happy paths + edge cases)
+- Security: secrets, injections, path traversal (if relevant)
+- Performance considerations and obvious hotspots
+  </review_checklist>
 
-<instructions>
-  ACTION: Read the specific parent task and all its sub-tasks
-  ANALYZE: Full scope of implementation realized
-\- Parent task description
-\- All sub-task descriptions
-\- Task dependencies
-\- Expected outcomes vs actual outcomes
-  UNDERSTAND: Dependencies and expected deliverables
-  NOTE: Test requirements for each sub-task
-  CHECK: If all sub-tasks are complete
-  MARK: Parent task as complete if all sub-tasks are done, update tasks.md with status
-  LIST: Remaining sub-tasks if any are incomplete, update TodoList if needed and go to step 5 for the remaining sub-tasks.
-</instructions>
-\</read_from_tasks_md>
-\</task_analysis>
+<gate>
+IF reviewer **blocks**:
+  - Summarize actionable issues
+  - Return to Step 5 (implementer) → Step 6 (tests) → re-review
+IF reviewer **approves**:
+  - Proceed to completion
+</gate>
+
+<outputs>
+- Reviewer verdict and line-level notes.
+</outputs>
 
 </step>
 
-<step number="8" name="task_status_updates">
+<step number="8" subagent="file-creator" name="traceability_and_evidence">
 
-### Step 8: Task Status Updates
+### Step 8: Traceability & Evidence Logging
 
-Update the tasks.md file immediately after completing each task to track progress.
+Update **TRACEABILITY.csv** and append to **EVIDENCE.md**.
 
-\<update_format>
-<completed>- [x] Task description</completed>
-<incomplete>- [ ] Task description</incomplete>
+<traceability_update>
+
+- For each acceptance criterion (AC-###) covered by this task:
+  - Add or update mapping rows: `US-xxx,TSK-${PARENT_TASK_NUMBER:03d},test_<area>::test_<case>,"notes"`
+- Keep idempotent (avoid duplicate rows).
+  </traceability_update>
+
+<evidence_append>
+Add a section to `${EVIDENCE_FILE}`:
+
+- Parent task number/title
+- Files changed (paths)
+- Commands run (tests, linters)
+- Test summary (how many run/passed/failed)
+- Reviewer verdict (approve/block + date)
+- Commit hash(es) or WIP
+  </evidence_append>
+
+<outputs>
+- Updated `${TRACE_FILE}` and `${EVIDENCE_FILE}`
+</outputs>
+
+</step>
+
+<step number="9" subagent="file-creator" name="task_status_updates">
+
+### Step 9: Task Status Updates (tasks.md)
+
+Update `${TASKS_FILE}` **only after** Reviewer approval and focused tests pass.
+
+<update_format>
+<completed>
+
+- [x] <parent task line> (append short note: “tests green; reviewed”)
+  - [x] 1.1 … (tests)
+  - [x] 1.2 …
+  - [x] 1.3 …
+        </completed>
+
+<incomplete>
+- [ ] <subtask line>  (if anything remains)
+</incomplete>
 <blocked>
-\- [ ] Task description
-⚠️ Blocking issue: [DESCRIPTION]
+- [ ] <subtask line>
+  ⚠️ Blocking issue: <description> (link to EVIDENCE section)
 </blocked>
-\</update_format>
+</update_format>
 
-\<blocking_criteria>
-<attempts>maximum 3 different approaches</attempts>
-<action>document blocking issue</action>
-<emoji>⚠️</emoji>
-\</blocking_criteria>
+<blocking_criteria>
 
-<instructions>
-  ACTION: Update tasks.md after each task completion 
-  MARK: [x] for completed items immediately (ONLY if the task is fully done and verified)
-  DOCUMENT: Blocking issues with ⚠️ emoji
-  LIMIT: 3 attempts before marking as blocked
-</instructions>
+- Max 3 serious attempts before marking ⚠️ blocked
+- Record reproduction steps and logs in EVIDENCE
+  </blocking_criteria>
+
+<outputs>
+- `${TASKS_FILE}` updated with accurate status checkboxes.
+</outputs>
 
 </step>
 
-\</process_flow>
+<step number="10" name="finalize_and_handoff">
+
+### Step 10: Finalize & Handoff
+
+Optionally commit now (if not already done by hooks) and hand off to the task completion routine.
+
+<commit_policy>
+
+- Commit message: `feat(task ${PARENT_TASK_NUMBER}): complete <title> — tests green, reviewed`
+- Ensure no unrelated files are staged.
+  </commit_policy>
+
+<instructions>
+LOAD once: @.claude/instructions/core/complete-task.md  
+ACTION: Execute all steps in `complete-task.md` process_flow.
+</instructions>
+
+<outputs>
+- Completion artifacts as defined by `complete-task.md`
+</outputs>
+
+</step>
+
+</process_flow>

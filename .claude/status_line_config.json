@@ -25,14 +25,16 @@
           },
           "session": {
             "enabled": true,
-            "type": "tokens"
+            "type": "tokens",
+            "costSource": "calculated"
           },
           "today": {
             "enabled": true,
             "type": "tokens"
           },
           "context": {
-            "enabled": true
+            "enabled": true,
+            "showPercentageOnly": false
           },
           "block": {
             "enabled": true,

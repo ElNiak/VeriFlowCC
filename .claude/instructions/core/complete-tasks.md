@@ -1,8 +1,12 @@
 ---
-description: Rules to finish off and deliver to user set of tasks that have been completed using Agent OS
+description: Rules to finish off and deliver to user a set of tasks that have been completed using Agent OS / AgileVerifFlowCC
 globs:
+  - .agilevv/specs/**
+  - .agilevv/product/**
+  - .agilevv/recaps/**
+  - **/*.md
 alwaysApply: false
-version: 1.0
+version: 1.2
 encoding: UTF-8
 ---
 
@@ -10,34 +14,68 @@ encoding: UTF-8
 
 ## Overview
 
-After all tasks in the current spec have been completed, follow these steps to mark your progress updates, create a recap, and deliver the final report to the user at .agilevv/specs/[spec-folder-name]/[completion-report].md
+After **all tasks** in the current spec are completed, follow these steps to:
+
+1. validate with a **full test suite**, 2) resolve **pre-commit** issues, 3) commit/push and open a **PR**, 4) verify **tasks.md** and optionally update **roadmap.md**, 5) create a **recap** and a **completion report** in the spec folder, and 6) present a concise summary.
+
+**Guardrails**
+
+- **Only** `implementer` (code changes) and `file-creator` (docs/status) write to disk.
+- **Parallelize analysis, serialize writes** (avoid concurrent edits).
+- Append **evidence** to `EVIDENCE.md` at each major step.
 
 <process_flow>
 
+<variables>
+  <var name="SPEC_DIR"        source="choose-or-detect:current_spec_dir"         required="true" />
+  <var name="SPEC_SLUG"       source="basename:${SPEC_DIR}"                      required="true" />
+  <var name="TASKS_FILE"      source="computed:${SPEC_DIR}/tasks.md"             required="true" />
+  <var name="EVIDENCE_FILE"   source="computed:${SPEC_DIR}/EVIDENCE.md"          required="true" />
+  <var name="SPEC_LITE"       source="computed:${SPEC_DIR}/spec-lite.md"         required="false" />
+  <var name="ROADMAP_FILE"    source="path:.agilevv/product/roadmap.md"          required="false" />
+  <var name="COMPLETION_FILE" source="computed:${SPEC_DIR}/COMPLETION.md"        required="true" />
+  <var name="TODAY"           source="date:YYYY-MM-DD"                           required="true" />
+</variables>
+
+<step number="0" subagent="project-manager" name="pre_flight_validation">
+
+### Step 0: Pre-Flight Validation
+
+Ensure the environment is safe and artifacts are present.
+
+<checks>
+- `${TASKS_FILE}` exists and is non-empty.
+- `EVIDENCE.md` exists; last task entry contains reviewer verdict + test summary.
+- We are **not** on `main`; if on main, Step 4 will enforce a feature branch/worktree.
+</checks>
+
+<outputs>
+- Confirmed `${SPEC_DIR}`, `${TASKS_FILE}`, `${EVIDENCE_FILE}`.
+</outputs>
+</step>
+
 <step number="1" subagent="test-runner" name="test_suite_verification">
 
-### Step 1: Run All Tests
+### Step 1: Run All Tests (Full Suite)
 
-Use the test-runner subagent to run the ALL tests in the application's test suite to ensure no regressions and fix any failures until all tests pass.
+Use the `test-runner` to run the **entire** test suite. Fix regressions before proceeding.
 
 <instructions>
-  ACTION: Use test-runner subagent
+  ACTION: Use test-runner
   REQUEST: "Run the full test suite"
-  WAIT: For test-runner analysis
-  PROCESS: Fix any reported failures
-  REPEAT: Until all tests pass
+  OUTPUT: Commands executed; counts (run/passed/failed/xfail); duration
+  LOOP: If failures → engage fixes (implementer/debugger) → re-run until **100% pass**
 </instructions>
 
 <test_execution>
-<order> 1. Run entire test suite 2. Fix any failures
-</order>
+<order>1. Run entire suite 2. Fix failures 3. Re-run</order>
 <requirement>100% pass rate</requirement>
 </test_execution>
 
-<failure_handling>
-<action>troubleshoot and fix</action>
-<priority>before proceeding</priority>
-</failure_handling>
+<evidence_log>
+
+- Append to `${EVIDENCE_FILE}`: suite command(s), table summary, failure notes (if any), final status.
+  </evidence_log>
 
 </step>
 
@@ -45,64 +83,88 @@ Use the test-runner subagent to run the ALL tests in the application's test suit
 
 ### Step 2: Pre-commit Error Analysis
 
-Use the precommit-error-analyzer subagent to analyze any errors reported by the pre-commit hooks.
-Split the errors into categories like linting, formatting, or other issues PER file that need to be addressed before finalizing the tasks.
+Analyze any pre-commit issues and group them **per file** (formatting, linting, types, secrets, etc.).
 
 <instructions>
-  ACTION: Use precommit-error-analyzer subagent
-  REQUEST: "Analyze pre-commit errors"
-  WAIT: For analysis completion
+  ACTION: Use precommit-error-analyzer
+  REQUEST: "Analyze pre-commit errors and group by file & category"
+  OUTPUT: Structured list: file → [formatter, linter, mypy, secrets, …]
 </instructions>
+
+<notes>
+- Prefer deterministic fixes (formatters) before style/complexity changes.
+</notes>
 
 </step>
 
 <step number="3" subagent="lint-type-fixer" name="precommit_fix">
 
-### Step 3: Pre-commit Fix
+### Step 3: Pre-commit Fix (Safe, Targeted)
 
-Use one lint-type-fixer subagent per file to automatically fix any linting issues reported by the pre-commit hooks.
-Spawn all subagents in parallel in a single message to speed up the process.
+Use `lint-type-fixer` **per independent file** to auto-fix issues.  
+**Serialize** overlapping edits; parallelize disjoint files if safe.
 
 <instructions>
-  ACTION: Use lint-type-fixer subagent
-  REQUEST: "Fix pre-commit linting issues"
-  WAIT: For fixing completion
+  ACTION: Use lint-type-fixer
+  REQUEST: "Fix pre-commit issues in this file with minimal diffs"
+  VERIFY: Re-run pre-commit on changed files; iterate until clean
 </instructions>
+
+<guardrails>
+- Keep diffs minimal; avoid refactors beyond necessary fixes.
+- If a fix might change runtime behavior, request an explicit reviewer check.
+</guardrails>
+
+<evidence_log>
+
+- Append: files fixed, categories resolved, re-run results to `${EVIDENCE_FILE}`.
+  </evidence_log>
 
 </step>
 
 <step number="4" subagent="git-workflow" name="git_workflow">
 
-### Step 3: Git Workflow
+### Step 4: Git Workflow (Commit → Push → PR)
 
-Use the git-workflow subagent to create git commit, push to GitHub, and create/edit pull request for the implemented features.
+Create a commit, push to remote, and open/update the **Pull Request**.
 
 <instructions>
-  ACTION: Use git-workflow subagent
-  REQUEST: "Complete git workflow for [SPEC_NAME] feature:
-            - Spec: [SPEC_FOLDER_PATH]
-            - Changes: All modified files
-            - Target: main branch
-            - Description: [SUMMARY_OF_IMPLEMENTED_FEATURES]"
-  WAIT: For workflow completion
-  PROCESS: Save PR URL for summary
+  ACTION: Use git-workflow
+  REQUEST: |
+    Prepare PR for spec: ${SPEC_SLUG}
+    - Ensure we are on a feature branch/worktree (not main)
+    - Stage only relevant files
+    - Commit with conventional message
+    - Push branch to origin
+    - Open or update PR targeting default branch
+    - Add concise description and link to spec & evidence
+  WAIT: Capture PR URL
 </instructions>
 
 <commit_process>
 <commit>
-<message>descriptive summary of changes</message>
-<format>conventional commits if applicable</format>
-</commit>
-<push>
-<target>spec branch</target>
-<remote>origin</remote>
-</push>
-<pull_request>
-
-<title>descriptive PR title</title>
-<description>functionality recap</description>
+<message>feat(${SPEC_SLUG}): deliver spec tasks — tests green, pre-commit clean</message>
+    <format>Conventional Commits</format>
+  </commit>
+  <push>
+    <target>feature branch</target>
+    <remote>origin</remote>
+  </push>
+  <pull_request>
+    <title>[${SPEC_SLUG}] Deliver feature — tests green</title>
+<description> - Summary of changes - How to test (commands) - Links: @${SPEC_DIR}/spec.md, @${TASKS_FILE}, @${EVIDENCE_FILE}
+</description>
 </pull_request>
 </commit_process>
+
+<outputs>
+- `PR_URL` (persist for later steps).
+</outputs>
+
+<evidence_log>
+
+- Append PR URL and commit hash to `${EVIDENCE_FILE}`.
+  </evidence_log>
 
 </step>
 
@@ -110,182 +172,197 @@ Use the git-workflow subagent to create git commit, push to GitHub, and create/e
 
 ### Step 5: Tasks Completion Verification
 
-Use the project-manager subagent to read the current spec's tasks.md file and verify that all tasks have been properly marked as complete with [x] or documented with blockers.
+Confirm `tasks.md` is accurate: completed items `[x]`, or documented blockers.
 
 <instructions>
-  ACTION: Use project-manager subagent
-  REQUEST: "Verify task completion in current spec:
-            - Read [SPEC_FOLDER_PATH]/tasks.md
-            - Check all tasks are marked complete with [x]
-            - Verify any incomplete tasks have documented blockers
-            - Mark completed tasks as [x] if verification confirms completion"
-  WAIT: For task verification analysis
-  PROCESS: Update task status as needed
+  ACTION: Use project-manager
+  REQUEST: |
+    Verify task completion in ${TASKS_FILE}:
+    - Mark completed tasks `[x]` **only** if verified (tests green + reviewed)
+    - Ensure any incomplete tasks include a ⚠️ blocker note with reason & link to evidence
 </instructions>
 
-<verification_process>
-<read_tasks>
-<file>[SPEC_FOLDER_PATH]/tasks.md</file>
-<purpose>verify completion status</purpose>
-</read_tasks>
-<check_status>
-<complete>tasks marked with [x]</complete>
-<incomplete>tasks without [x] marking</incomplete>
-<blockers>documented impediments</blockers>
-</check_status>
-<update_required>
-<action>mark verified completed tasks with [x]</action>
-<condition>when task is actually finished</condition>
-</update_required>
-</verification_process>
-
 <completion_criteria>
-<valid_states> - Task marked complete [x] - Task has documented blocker preventing completion
-</valid_states>
-<invalid_state> - Task unmarked without blocker documentation
-</invalid_state>
+<valid_states>- Completed `[x]` · Blocked with ⚠️ reason</valid_states>
+<invalid_state>- Unmarked without blocker documentation</invalid_state>
 </completion_criteria>
+
+<evidence_log>
+
+- Append a short “task status snapshot” to `${EVIDENCE_FILE}`.
+  </evidence_log>
 
 </step>
 
 <step number="6" subagent="project-manager" name="roadmap_progress_check">
 
-### Step 6: Roadmap Progress Update (conditional)
+### Step 6: Roadmap Progress Update (Conditional)
 
-Use the project-manager subagent to read @.agilevv/product/roadmap.md and mark roadmap items as complete with [x] ONLY IF the executed tasks have completed any roadmap item(s) and the spec completes that item.
+Update `@.agilevv/product/roadmap.md` **only if** the spec fully completes a roadmap item.
 
 <conditional_execution>
 <preliminary_check>
-EVALUATE: Did executed tasks complete any roadmap item(s)?
-IF NO:
-SKIP this entire step
-PROCEED to step 6
-IF YES:
-CONTINUE with roadmap check
+IF tasks clearly do **not** complete a roadmap item → SKIP
+ELSE analyze mapping from spec to roadmap
 </preliminary_check>
 </conditional_execution>
 
 <roadmap_criteria>
-<update_when> - spec fully implements roadmap feature - all related tasks completed - tests passing
+<update_when> - Spec implements the roadmap feature end-to-end - All related tasks completed - Full test suite passes
 </update_when>
 </roadmap_criteria>
 
 <instructions>
-  ACTION: First evaluate if roadmap check is needed
-      SKIP: If tasks clearly don't complete roadmap items
-  EVALUATE: If current spec completes roadmap goals
-  UPDATE: Mark roadmap items complete with [x] if applicable
-  VERIFY: Certainty before marking complete
+  ACTION: If criteria met, mark roadmap entry `[x]` and reference `${PR_URL}`.
 </instructions>
 
 </step>
 
-<step number="7" subagent="project-manager" name="document_recap">
+<step number="7" subagent="file-creator" name="document_recap">
 
 ### Step 7: Create Recap Document
 
-Use the project-manager subagent to create a recap document in .agilevv/recaps/ folder that summarizes what was built for this spec.
+Create a recap in `.agilevv/recaps/` summarizing what was delivered.
 
-<instructions>
-  ACTION: Use project-manager subagent
-  REQUEST: "Create recap document for current spec:
-            - Create file: .agilevv/recaps/[SPEC_FOLDER_NAME].md
-            - Use template format with completed features summary
-            - Include context from spec-lite.md
-            - Document: [SPEC_FOLDER_PATH]"
-  WAIT: For recap document creation
-  PROCESS: Verify file is created with proper content
-</instructions>
+<file_creation>
+<location>.agilevv/recaps/</location>
+<naming>${SPEC_SLUG}.md</naming>
+<format>markdown</format>
+</file_creation>
 
 <recap_template>
 
-# [yyyy-mm-dd] Recap: Feature Name
+# [${TODAY}] Recap: ${SPEC_SLUG}
 
-This recaps what was built for the spec documented at .agilevv/specs/[spec-folder-name]/spec.md.
+This recaps what was delivered for the spec at @${SPEC_DIR}/spec.md.
 
 ## Recap
 
-[1 paragraph summary plus short bullet list of what was completed]
+[1 paragraph + bullets of completed functionality]
 
 ## Context
 
-[Copy the summary found in spec-lite.md to provide concise context of what the initial goal for this spec was]
-</recap_template>
+[Paste or paraphrase the summary from spec-lite.md, if present]
 
-<file_creation>
-  <location>.agilevv/recaps/</location>
-  <naming>[SPEC_FOLDER_NAME].md</naming>
-  <format>markdown with yaml frontmatter if needed</format>
-</file_creation>
+## Links
 
-<content_requirements>
-  <summary>1 paragraph plus bullet points</summary>
-  <context>from spec-lite.md summary</context>
-  <reference>link to original spec</reference>
-</content_requirements>
+- Spec: @${SPEC_DIR}/spec.md
+- Tasks: @${TASKS_FILE}
+- Evidence: @${EVIDENCE_FILE}
+- PR: ${PR_URL}
+  </recap_template>
+
+<evidence_log>
+
+- Append recap path to `${EVIDENCE_FILE}`.
+  </evidence_log>
 
 </step>
 
-<step number="8" subagent="project-manager" name="completion_summary">
+<step number="8" subagent="file-creator" name="completion_report">
 
-### Step 8: Completion Summary
+### Step 8: Create Completion Report (in Spec Folder)
 
-Use the project-manager subagent to create a structured summary message with emojis showing what was done, any issues, testing instructions, and PR link.
+Create `${COMPLETION_FILE}` inside the spec folder to serve as the final, immutable report.
+
+<report_template>
+
+# Completion Report — ${SPEC_SLUG}
+
+_Date: ${TODAY}_
+
+## Summary
+
+[2–4 sentences: what changed, why, and user impact.]
+
+## Verification Evidence
+
+- Full test suite: **pass** (include counts & command)
+- Pre-commit: **clean** (tools run)
+- Reviewer verdicts: [summary with dates]
+- Key commits: [hashes/subjects]
+
+## How to Validate
+
+- Commands to run locally
+- Any browser steps (if applicable)
+
+## Links
+
+- PR: ${PR_URL}
+- Spec: @${SPEC_DIR}/spec.md
+- Tasks: @${TASKS_FILE}
+- Evidence: @${EVIDENCE_FILE}
+- Recap: @.agilevv/recaps/${SPEC_SLUG}.md
+  </report_template>
+
+<outputs>
+- Wrote `${COMPLETION_FILE}`
+</outputs>
+
+<evidence_log>
+
+- Append completion report path to `${EVIDENCE_FILE}`.
+  </evidence_log>
+
+</step>
+
+<step number="9" subagent="project-manager" name="completion_summary">
+
+### Step 9: Completion Summary (for the user)
+
+Produce a succinct, emoji-sectioned summary message.
 
 <summary_template>
 
-## ✅ What's been done
+## ✅ What’s been done
 
-1. **[FEATURE_1]** - [ONE_SENTENCE_DESCRIPTION]
-2. **[FEATURE_2]** - [ONE_SENTENCE_DESCRIPTION]
+1. **[FEATURE_1]** — [one-sentence]
+2. **[FEATURE_2]** — [one-sentence]
+
+## 🧪 Tests
+
+- Full suite passed (run/passed/failed: N/N/0)
+- Commands: `pytest -q` …
 
 ## ⚠️ Issues encountered
 
 [ONLY_IF_APPLICABLE]
 
-- **[ISSUE_1]** - [DESCRIPTION_AND_REASON]
+- **[ISSUE]** — [description & status]
 
-## 👀 Ready to test in browser
+## 👀 Ready to test
 
 [ONLY_IF_APPLICABLE]
 
-1. [STEP_1_TO_TEST]
-2. [STEP_2_TO_TEST]
+1. [browser step 1]
+2. [browser step 2]
 
 ## 📦 Pull Request
 
-View PR: [GITHUB_PR_URL]
+{PR_URL}
 </summary_template>
 
-<summary_sections>
-<required> - functionality recap - pull request info
-</required>
-<conditional> - issues encountered (if any) - testing instructions (if testable in browser)
-</conditional>
-</summary_sections>
-
 <instructions>
-  ACTION: Create comprehensive summary
-  INCLUDE: All required sections
-  ADD: Conditional sections if applicable
-  FORMAT: Use emoji headers for scannability
+  ACTION: Present this summary; also copy into the PR description if useful.
 </instructions>
 
 </step>
 
-<step number="9" subagent="project-manager" name="completion_notification">
+<step number="10" subagent="project-manager" name="completion_notification">
 
-### Step 9: Task Completion Notification
+### Step 10: Completion Notification (Cross-Platform)
 
-Use the project-manager subagent to play a system sound to alert the user that tasks are complete.
+Play a completion sound **if available**; otherwise show a visual cue.
 
-<notification_command>
-afplay /System/Library/Sounds/Glass.aiff
-</notification_command>
+<notification_commands>
+<macOS>afplay /System/Library/Sounds/Glass.aiff || true</macOS>
+<linux>paplay /usr/share/sounds/freedesktop/stereo/complete.oga || aplay /usr/share/sounds/alsa/Front_Center.wav || true</linux>
+<windows>powershell -c "[console]::beep(880,250); [console]::beep(660,250)"</windows>
+</notification_commands>
 
 <instructions>
-  ACTION: Play completion sound
-  PURPOSE: Alert user that task is complete
+  ACTION: Try the platform-appropriate command; ignore failures gracefully.
 </instructions>
 
 </step>
