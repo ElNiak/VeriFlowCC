@@ -15,7 +15,7 @@ This flow is **deterministic**, **idempotent**, and writes **only** via `file-cr
 
 <pre_flight_check>
 EXECUTE: @.claude/instructions/meta/pre-flight.md
-REQUIRE_MARKER: PRE_FLIGHT_MARKER: AgileVerifFlowCC v1.0
+REQUIRE_MARKER: PRE_FLIGHT_MARKER: AgileVerifFlowCC
 MUST_RUN: @agent:system-checker <!-- Block if any Critical fails -->
 </pre_flight_check>
 

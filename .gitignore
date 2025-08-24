@@ -78,3 +78,7 @@ temp/
 .agilevv-test/
 # Large documentation files
 docs/Jeff\ Tian-Software\ Quality\ Engineering_*.pdf
+
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md

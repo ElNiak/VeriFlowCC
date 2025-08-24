@@ -1,3 +1,0 @@
-# Claude Code Hooks Integration - Lite Summary
-
-Implement Claude Code Hooks for VeriFlowCC to provide automated quality control and enforce V-Model stage procedures through systematic integration with Claude Code's native hook system. The system will prevent inappropriate tool usage during specific development phases, automatically run quality checks after code modifications, and block dangerous operations while maintaining developer experience. This creates a comprehensive workflow enforcement layer that minimizes development errors and ensures consistent V-Model compliance across all VeriFlow projects.

@@ -1,3 +1,0 @@
-# Spec Summary (Lite)
-
-Design and implement a comprehensive Memory & Context Manager for VeriFlowCC that provides persistent state management, artifact tracking, and contextual memory across V-Model workflow executions through file-based storage in the `.agilevv` directory structure. The system maintains project continuity by automatically persisting V-Model stage artifacts, synchronizing project memory between CLAUDE.md and backlog.md, and integrating with Git-based checkpointing for rollback capability. This ensures all agents have consistent, up-to-date context for informed decision-making while enabling seamless sprint resumption after interruptions.

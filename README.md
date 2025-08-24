@@ -1,8 +1,8 @@
-# AgileVerifFlowCC
+# AgileVerifFlowCC — Agent‑Driven Agile V&V with Claude Code + MCP
 
-**AgileVerifFlowCC** is a **Verification Flow Command Center** that integrates **Anthropic’s Claude-Code with Opus 4.1 and Sonnet 4 models** to create a **structured, agent-driven software development pipeline**.
+> **Purpose.** Automate an [Agile V-Model](https://aiotplaybook.org/index.php?title=Agile_V-Model) (planning → requirements → design → coding → testing → integration → validation) with specialized Claude Code instances wrapped in VeriFlow CLI and its sub‑agents, **Model Context Protocol (MCP)** tools, and **client‑side verification** (tests/linters run locally).
 
-It is a Python CLI tool that orchestrates Anthropic’s Claude-Code AI in a structured pipeline, enforcing the [Agile V-Model](https://aiotplaybook.org/index.php?title=Agile_V-Model) methodology, ensuring rigorous verification and validation (V&V) at each stage of feature development.
+The goal is to **reduce hallucinations & context drift** using **context template injection**, persistent project memory, and gated verification at every step.
 
 We focus on implementation of cheap context oriented engineering, agent orchestration, and a **plan-then-act** workflow that ensures each feature is developed with clear requirements, design, coding, testing, and validation steps.
 
@@ -14,235 +14,387 @@ Focusing on sequential execution of subagents and tools since, context engineeri
 - context carry implicit and explicit decisions on actions
 - the shared context between agents and the non-shared context between agents
 
-_When "Verification flow" meets Claude's intelligence for seamless V&V pipelines._
+______________________________________________________________________
 
-## Authentication Disclaimer
+## Why this project?
 
-VeriFlowCC requires Claude Code authentication to function properly. Users must ensure their environment is configured with appropriate authentication methods through VeriFlow's guidelines before using this tool. The system supports flexible authentication approaches without requiring specific setup steps in this documentation.
+Modern coding agents are powerful but drift without structure. AgileVerifFlowCC enforces a **documented, test‑first flow** where each V‑phase is handled by a focused sub‑agent with a **scoped context window**. We externalize long‑lived state into files/memory so agents can **read/write “ground truth”** rather than relying on chat history. MCP adds a **standard tool bus** for agents to call linters, run tests, access Git, and query knowledge sources—**without bespoke glue code per tool**.
 
-## Agile V-Model Overview
+______________________________________________________________________
 
-The V-model is a systems development lifecycle which has verification and validation "built in". It is often used for the development of mission critical systems, e.g., in automotive, aviation, energy and military applications. It also tends to be used in hardware-centric domains. Not surprisingly, the V-model uses a v-shaped visual representation, where the left side of the "V" represents the decomposition of requirements, as well as the creation of system specifications ("definition and decomposition"). The right side of the "V" represents the integration and testing of components. Moving up on the right side, testing usually starts with the basic verification (e.g., unit tests, then integration tests), followed by validation (e.g., user acceptance tests).
+## Key Ideas (TL;DR)
 
-Combining agile development with the V-model is not a contradiction. They can both work very well together, as shown in the figure following:
+- **V‑Model, per sprint:** every story goes from planning → … → validation, and only progresses when gates pass.
+- **Specialized sub‑agents:** requirements analyst, architect, developer, tester, reviewer—each with **its own prompt + context**.
+- **Context engineering:** Jinja2 templates + project memory (**`CLAUDE.md`**, `/docs`, `/state`) feed only relevant inputs to each agent.
+- **Client‑side verification:** tests, linters, type checkers, and formatters run **locally via MCP tools**; failing gates trigger fix loops.
+- **MCP integration:** standardized tool access (filesystems, Git, CI, web search, knowledge) + discovery via **`.mcp.json`**.
+- **Long‑context strategy:** don’t just “stuff more tokens.” Persist and select **grounded** context, summarize aggressively, and use tools.
 
-- Agile methods use story maps including epics, themes, features and user stories for logical decomposition. This maps well to the left side of the V
+______________________________________________________________________
 
-- Continuous Integration / Continuous Test / Continuous Delivery are inherently agile methods, that map well to the right side of the V
+## Tech Stack
 
-- The key assumption is that the V-model is not used like one large waterfall approach. Instead, the Agile V-model must ensure that the sprints themselves will become Vs according to the V-model
+- **Python CLI** (Typer) orchestrator with **uv** for packaging/running
+- **Claude Code**: CLI & **SDK (Python/TS)** for sub‑agents and tool use
 
-There are two options to implement the latter:
+> *Authentication Disclaimer*: VeriFlowCC requires Claude Code authentication to function properly. Users must ensure their environment is configured with appropriate authentication methods through VeriFlow's guidelines before using this tool. The system supports flexible authentication approaches without requiring specific setup steps in this documentation.
 
-1. Each sprint becomes a complete V, including development and integration/test.
-   The agile schedule introduces the concept of dedicated integration sprints.
+- **Jinja2** for prompt/context templates
+- **Pydantic** for validating agent IO (JSON contracts)
+- **Git** for checkpoints; optional **pre‑commit** with **Ruff/Mypy/Black**
+- **MCP** servers for filesystem, Git/GitHub, lint/test execution, web/research
 
-1. One V becomes 2 sprints: one development sprint, one integration sprint
+> *Works cross‑project*: use this orchestrator and templates **inside any repo** to turn its backlog into verified code changes.
 
-There are pros and cons to both approaches. The complexity and scale of the project will surely play a role in determining the best setup.
+______________________________________________________________________
 
-For most projects / product teams, it is recommended that development and integration are combined in a single sprint ("v-sprint"). Only for projects with a very high level of complexity and dependencies, e.g., between components developed by different organizations, is it recommended to alternate between development and integration sprints. The latter approach is likely to add inefficiencies to the development process, but could be the only approach to effectively deal with alignment across organizational boundaries.
+## Installation (with `uv`)
 
-To illustrate how AgileVerifFlowCC orchestrates work, we describe two scenarios: Sprint 0 (project foundation) and a normal Sprint N (feature development). Each follows the Agile V-model loop, with the tool enforcing the proper sequence of activities and artifact generation.
+```bash
+# 1) Create env
+uv venv
+source .venv/bin/activate
 
-### Sprint 0 - Foundations and Setup
+# 2) Install CLI + dev tooling (adjust extras as needed)
+uv pip install -e ".[dev]"
 
-Sprint 0 is a preparation phase to lay down requirements and architecture before development sprints begin ￼. AgileVerifFlowCC performs the following sequence in Sprint 0 (often automatically upon init unless the user skips it):
+# Or minimal runtime:
+# uv pip install -e .
 
-1. Collect Vision & Initial Requirements: The user (or the tool, if provided with a brief) inputs the high-level product vision. The Requirements subagent (Product Owner persona) takes this and produces an initial Story Map/Backlog ￼. This means identifying major epics or features and breaking them into tentative user stories. For example, if the project is a to-do list app, it would list epics like “User Accounts”, “Task Management”, “Sharing”, etc., each with some user stories. The subagent ensures each story has at least a short description and acceptance criteria (or notes on definition of done). These are compiled into backlog.md. (Citations: The Agile V-model calls for capturing requirements progressively in a backlog rather than upfront documents; Sprint 0 is typically used to seed this backlog.)
+# 3) Install Claude Code (required for sub‑agents & tools)
+npm install -g @anthropic-ai/claude-code
 
-1. Establish High-Level V&V Criteria: In parallel, or as part of the story map, the tool ensures that for each epic there is a notion of how it will be validated. For instance, for each feature it notes any critical quality requirements or compliance needs (e.g. “must handle 1000 users = performance test criteria”). This essentially sets up a traceability matrix concept from the start, linking features to how they will be verified. The Requirements agent might populate a section in backlog.md or a separate testing-strategy.md describing these overall V&V approaches. (This is especially important in AIoT or safety contexts where even agile teams must plan verification strategies early ￼.)
-
-1. Draft Component Architecture: The Design subagent (Architect persona) is invoked next. It reads the list of features and proposes an initial architecture – e.g. a list of components or modules and their responsibilities ￼. It might create a top-level diagram (in text form) or outline: for the to-do app example, it could define a front-end web app, a backend service, a database, etc., plus any external integrations. The architecture is stored in architecture.md. The design agent’s output ensures that “different components will integrate well” and follows any known constraints (the prompt could mention known tech stack choices, e.g. “we will use React for frontend, Python for backend”). This step aligns with the V-model practice of having a system design up front, but scaled to an agile scope. If the project is small, this could be just a simple overview; if complex, it sets up a “component landscape” to be refined each sprint.
-
-1. Setup Project Memory and Repo: The CLI now has enough info to populate the persistent memory. It consolidates important details (maybe a summary of the product vision, key requirements, and architectural decisions) into the CLAUDE.md file for the project. This file acts as a quick reference for Claude in future sessions. For instance, it might import the backlog and architecture files (See @backlog.md for user stories; see @architecture.md for system overview) so Claude can easily access them ￼ ￼. The CLI might run the /init command of Claude-Code to set this up ￼. Additionally, Sprint 0 would initialize the code repository structure (creating empty directories for \<project_dir>/, tests/, etc., possibly even scaffolding a basic project if technology is known – Claude’s developer agent could be asked to generate a “Hello World” baseline). These actions ensure the environment is ready for actual development sprints.
-
-1. Review and Baselining: After these automated suggestions, the user can review the backlog.md and architecture.md produced. AgileVerifFlowCC could open these in an editor or print a summary. The user may adjust things (e.g. rename a feature, clarify a requirement). Once satisfied, the state is considered the baseline. The tool might commit these files to version control (if integrated with git) as the initial commit, labeled “Sprint 0 – initial backlog and design”. This baseline will serve as a reference to track changes in later sprints, enhancing traceability.
-
-Outcome of Sprint 0: a clear set of initial requirements (backlog) and a high-level design, stored in the project, plus the environment configured with Claude’s memory. At this point, the Agile V-model’s left-side is established enough to begin iterative development – we have defined “what to build” and “how to verify it” at a high level ￼ ￼. Stakeholders could sign off on this if needed (in a real scenario), but in our AI-driven flow, this just means the AI has a stable foundation to refer back to.
-
-### Sprint N - Iterative Development Cycle
-
-For each regular sprint (Sprint 1, 2, 3, … N), the process is a microcosm of the V-model – essentially each user story goes through all V-model phases within the sprint ￼. Sprint N (assuming N>0) follows these steps, typically focused on a single user story or a small set of related stories that the team (here, the AI and user) commits to deliver in that sprint:
-
-1. Sprint Planning & Story Selection: The orchestrator (CLI) picks the next ready user story from backlog.md (or the user chooses one via command). This becomes the scope of Sprint N. The CLI may display the story and acceptance criteria to the user for confirmation. For example: Sprint 3: Implement “Share To-Do List” feature (story #5). Acceptance: user can share a list via email, and the recipient can view it. The tool ensures any prerequisites (other stories or tasks) are completed or flags if not. Planning is kept lightweight – since each sprint should deliver a potentially shippable increment, we do them one by one. (If multiple stories are taken in one sprint, the tool would loop through this process for each or handle them in parallel threads, but initially we assume one story per sprint for clarity.)
-
-1. Requirements Refinement (Left-side V): The Requirements subagent is invoked to refine the selected story. Even though the story exists from the backlog, now is the time to elaborate details. The agent may ask questions or add detail: e.g., “What does the email content look like? Are there security requirements when sharing?” It updates the acceptance criteria if needed or notes any non-functional requirements related to this story (e.g. performance, security considerations to test). The output is an updated story in backlog.md with full details. If the backlog was just a summary, now it becomes a concrete specification for this sprint. This step ensures we have a solid requirement to verify later. (If the user is in interactive mode, the tool might show the new acceptance criteria and ask for approval or additional input, mimicking a grooming session.)
-
-1. Design & Planning: Next, the Design subagent takes the refined requirement and plans the implementation approach. This might involve updating the architecture: for instance, adding a new module or API endpoint for the “share” feature. The design agent could produce a short design proposal: which components will be affected, any new data structures, and how the feature will integrate. It could also outline the tasks for implementation (essentially, a mini plan that the Developer agent can follow, akin to an internal checklist). For example: “To implement sharing, we will add a ShareController with an endpoint, update the UI to include a ‘Share’ button, and send emails via an EmailService. We must also add a permission so only the list owner can share.” This design note is added to architecture.md or a sprint-specific notes file. The orchestrator can enforce that the design covers all acceptance criteria (perhaps by prompting, “Does the design address how we’ll verify the email was received?” to which the agent might add a note to send a confirmation email which will be tested). This step corresponds to the upper left of the V and its alignment with verification plans on the right ￼ ￼ – we’re essentially pairing each requirement detail with a design approach and noting how it will be tested later.
-
-1. Implementation (Code) – Bottom of the V: The Developer subagent now implements the feature according to the design. The orchestrator might break this down: it could instruct the Developer agent step-by-step (especially if using a plan-then-act approach ￼ ￼). For example, first “create ShareController and EmailService classes”, then “update UI with share button”, etc. In an automated run, the Developer agent might attempt the whole implementation in one go, but we encourage iterative development: the CLI could loop: generate code -> run basic tests -> refine code. Claude-Code’s toolset allows the agent to write code to files and even run it if needed. With hooks, we can automatically run formatters or linters after file edits ￼ to ensure code quality. During this phase, memory and context are crucial – the Developer agent uses the CLAUDE.md memory (which includes coding standards or project context) to maintain consistency, and it was given the relevant design and requirements context so it doesn’t forget what to build. If at any point the agent seems to drift (common in long AI sessions), the orchestrator can intervene by re-injecting the key points or using Claude’s /focus or /compact commands to manage context ￼. The outcome is one or more modified/created source files implementing the story. The CLI may generate a diff or summary of changes for the user to review (useful in interactive mode or logging).
-
-1. Verification (Testing) – Right side of V: Once the code is written, the QA/Test subagent takes over to verify that the implementation meets the requirements. It generates test cases corresponding to each acceptance criterion and any other test scenario it finds relevant. For instance, it writes a test (in the appropriate format, e.g. Python unittest or JavaScript test) to call the new share function and assert that an email was sent and the shared user has access. It could also test error cases (sharing with an invalid email, etc.), demonstrating thorough V&V. The CLI then allows the QA agent to run these tests. Using Claude-Code’s ability to run shell commands, it might execute pytest test_share.py or similar ￼. If running in strict mode, the tool would actually run the code (with user permission or via a configured safe environment) rather than just rely on Claude’s reasoning. This addresses a known limitation: without actual execution, the AI might “simulate” results in its head, which is not always reliable ￼. By integrating real test runs, we enforce ground truth verification.
-
-   - If tests pass: The QA agent reports success. The orchestrator moves to the validation step.
-   - If tests fail: The agent (or orchestrator logic) identifies the failures. At this point, AgileVerifFlowCC can do a few things.
-     In a fully automated run, it might re-engage the Developer subagent to fix the code immediately based on the failing test output. (Claude, seeing the error trace, can often debug and correct the code.) This essentially creates a rapid fix loop until tests pass – staying within the sprint until the V is closed. In interactive mode, the tool would present the failure to the user and ask whether to let the AI attempt a fix or if the user will fix manually. Either way, the cycle repeats: run tests again until all pass. This loop ensures correctness is enforced before proceeding – a core promise of the V-model that every requirement has matching verification ￼. Hard gating mode would not allow marking the story done until tests are green.
-
-1. Validation (Stakeholder Acceptance): With all tests green, the feature is functionally complete. AgileVerifFlowCC now simulates a validation step. This could be as simple as summarizing the feature’s behavior and checking it against the acceptance criteria in plain language. The Requirements subagent (or perhaps a special “Reviewer” agent) might re-read the original story: “User can share a list via email and recipient can view it” and confirm: “Yes, implemented as: clicking share sends an email with a link, recipient uses link to view – this matches the acceptance criteria.” This provides a final sanity check that we built the right thing, not just built it right. Optionally, the tool might involve the human user here: e.g. open a browser with the running app or show a demo output for the user to approve (if a UI, maybe show a screenshot or log output). In an enterprise setting, this is where a Product Owner would review the increment; in our AI-driven tool, we mimic that via a final QA agent affirmation. We want to ensure nothing was lost in translation – by cross-checking the end result with the initial requirement, we guard against the AI having gone off-track.
-
-1. Integration and Regression Testing: If this story was part of a larger system, the orchestrator can run a quick integration test suite to ensure the new code hasn’t broken existing features. This is essentially re-running all tests (or specifically those that might relate to the changed components). Because the Agile V-Model calls for continuous integration, our tool should facilitate that by possibly invoking a full test run (which could simply be another QA subagent action to run pytest with all tests). In a scenario with multiple teams or components, at certain intervals there might be a dedicated integration sprint where multiple features are tested together ￼. AgileVerifFlowCC can accommodate that by allowing a mode to run broader system tests beyond the scope of one story. For now, assume our single-story sprint includes verifying it integrates well (no test regressions).
-
-1. Artifact Update & Traceability: Before closing the sprint, the tool performs housekeeping to keep long-term artifacts up to date (this step is crucial per Agile V-model principles ￼). The orchestrator updates the backlog.md to mark the story as completed (and possibly record which sprint delivered it). It also might append a brief note in an appendix or a changelog.md: e.g. “Sprint 3: ‘Share To-Do List’ implemented and verified.” The architecture document might be updated with any changes made (if not already done by the design agent). Importantly, any new insights discovered are fed back: for example, if testing revealed a new requirement (“also needed to implement an email opt-out setting”), the tool could either automatically add a new story to the backlog or prompt the user to do so – ensuring nothing “falls through the cracks” ￼. This practice mirrors how real agile teams adjust the backlog and design continuously; our tool formalizes it. The persistent memory (CLAUDE.md) is also updated if needed – maybe adding new commands or gotchas that the AI should remember next time.
-   9\. Closing Sprint N: Finally, the sprint is formally closed. AgileVerifFlowCC could output a Sprint Report that includes: the initial requirement, confirmation of tests passed, any documentation updated, and a summary of time or tokens spent (for user awareness). In interactive usage, the tool might also prompt for a short retrospective note (optionally the user can record lessons learned or the AI can suggest improvements to the process). While not strictly required, this adds a nice agile touch and could feed into the CLAUDE.md as well (e.g. “Note: last sprint had a delay due to lack of clarity in requirements; in future, involve requirements agent more thoroughly.”). After this, the system is ready to start the next sprint with the next story.
-
-Throughout Sprint N, AgileVerifFlowCC enforces the V-model discipline but in an agile wrapper. Each increment delivered is verified and validated, and documentation is continuously updated to reflect the current state ￼ ￼. If the conversation with Claude became long, the orchestrator can at points clear the short-term context (using a /clear or new session) once it has saved all necessary info to files, then reload the context for the next sprint from those files ￼ ￼. This prevents the context window from growing unmanageably large over many sprints while preserving knowledge in long-term memory (the files) – essentially dividing memory into short-term vs long-term, which is a known strategy for scaling LLM-assisted development ￼. The next sprint begins fresh, but with up-to-date docs to pull in relevant context.
-
-Diagram – Sprint Workflow: The following sequence (in text form) summarizes Sprint N workflow:
-
-- Plan: Orchestrator selects story -> Requirements agent refines it (updates backlog).
-
-- Design: Design agent plans implementation (updates architecture/design notes).
-
-- Code: Developer agent writes code (source files updated).
-
-- Verify: QA agent writes & runs tests (green or red). If red, fix code and re-run tests.
-
-- Validate: Confirm output meets acceptance (AI checks criteria or user review).
-
-- Integrate: Run regression tests/integration (ensure no side-effects).
-
-- Document: Update backlog status, architecture, and memory with changes.
-
-- Close: Sprint done; ready for next cycle.
-
-Each sprint thus yields a fully verified increment (a “vertical slice” through the system with corresponding tests), embodying the idea that “each sprint becomes a complete V, including development and integration/test” ￼. This process, enforced by the tool, gives stakeholders higher confidence in each delivery, as every requirement is tied to tests and documentation at all times.
-
-## Architecture Overview
-
-The workflow is orchestrated by the CLI application acting as a controller, which implements the V-model as a series of gated stages.
-
-This design draws on Anthropic’s recommended patterns for effective AI agents: separating high-level planning from execution, and splitting complex tasks into phases handled by specialized contexts.
-
-Key components include:
-
-- Main Orchestrator (CLI Driver): A Python module that manages the sequence of steps (requirements → design → code → multi-level tests → integration) for each sprint ￼
-
-  - It uses Claude-Code’s SDK to send prompts and commands, ensuring the V-model order is followed for every increment. This orchestrator embodies the “workflow vs. agent” pattern, acting as a fixed workflow controller that delegates flexible tasks to AI agents ￼
-  - It can run in interactive mode (prompting the user at decision points) or fully automated mode for scripting.
-
-- Subagent Roles (AI Personas): Multiple Claude subagents (specialized AI “personas”) are configured to correspond to phases of the V-model. Each subagent has a dedicated system prompt and tools, operating in an isolated context window ￼ ￼ to avoid polluting the main memory. They act as virtual team members (requirements analyst, architect, developer, tester, etc.) that the orchestrator can invoke for each phase of the sprint. This specialization improves accuracy and keeps the main conversation focused.
-
-- Local Artifact Storage: Each project has a defined folder (./agilevv/) structure to hold all artifacts and context. For example, a backlog.md (story map & requirements), an architecture.md (design docs), source code files, and test files reside in the project directory. A project-specific CLAUDE.md memory file (and related files) stores persistent instructions and knowledge. This aligns with Claude-Code’s design where a ./CLAUDE.md carries project-wide context shared across sessions. The CLI orchestrator reads/writes these files to provide long-term memory to Claude and to persist outputs from each phase.
-
-- Configuration & Gating Controls: A config file (e.g. agilevv.yaml in the project root) or CLI flags allow tuning how strictly the workflow is enforced. The tool supports “hard gating” (no proceeding to next phase until current phase’s criteria are met) vs. “soft gating” (warnings on incomplete artifacts but with the option to continue). Under the hood, gating can be implemented via the orchestrator logic or Claude-Code hooks that automatically check conditions at certain events. For instance, a PreToolUse hook could block code execution if requirements or tests are not yet finalized, enforcing the V-model sequence at a low level. Hard gating provides strong compliance with the process (nothing moves forward unless all checks pass), whereas soft gating only notifies the user or asks for confirmation when rules are violated.
-
-This architecture ensures that every sprint or task goes through a mini V-model cycle within the AI-driven process. The CLI’s structured orchestration combined with Claude’s intelligence yields a “single source of truth” development flow: requirements lead to code, code leads to tests, and outputs circle back to updated requirements/design, mirroring the Agile V&V philosophy ￼. By centralizing control in the CLI (with hooks and subagents), we avoid the chaos of unmanaged multi-agent chatter while still reaping specialization benefits.
-
-## Claude-Code Subagents (Roles and Personas)
-
-To enforce each phase of the Agile V-model, AgileVerifFlowCC defines dedicated Claude-Code subagents, each with a persona aligned to a specific phase/role. Claude’s subagent mechanism allows creating AI “specialists” with separate context windows and tool permissions.
-
-This ensures that each phase is handled with full focus and domain-specific prompts, preserving the main session from context bloat. We propose the following subagents:
-
-- Requirements Analyst (Product Owner) Subagent: This persona is responsible for requirements gathering and validation. It takes high-level ideas or feature requests and turns them into well-defined user stories with clear acceptance criteria. Its system prompt might include instructions about engaging stakeholders’ perspective, ensuring each requirement is testable, and checking for completeness or ambiguity. In use, the orchestrator will prompt this subagent in Sprint 0 to create the initial Story Map (backlog) and in each sprint to refine the chosen story. The agent might output a markdown section for backlog.md (with user story, description, acceptance tests) which the CLI then saves. It ensures traceability by linking each requirement to how it will be verified (e.g. “As a user, I want X… Acceptance Criteria: Y must happen”). Tools: Likely minimal; it primarily generates text. It may have read-access to the backlog file to update or cross-check requirements. (Write access can be indirect: the CLI will apply its output to the file.)
-
-- Architect/Design Subagent: This agent handles system and component design for the feature. Its persona is that of a software architect or system designer. In Sprint 0, it drafts the initial high-level architecture (e.g. identifies components or modules and their responsibilities). In each sprint, when given a user story and its acceptance criteria, the design subagent determines what changes or additions to the architecture are needed (for example, updating a component diagram, choosing design patterns, or outlining functions/modules to implement). The system prompt emphasizes ensuring that design supports both the current story and maintains overall system integrity (i.e. no breaking of earlier features, consistent with previous architecture). It may produce outputs like updated diagrams (described in text or pseudo-DSL) or design notes which the CLI merges into architecture.md. This agent helps fulfill the left side of the V-model (design specs) on an ongoing basis, and sets the stage for corresponding integration tests on the right side. Tools: Possibly allowed to read architecture files and maybe to use a diagramming tool if available (e.g. if an MCP tool for generating ASCII diagrams exists). Generally, it produces markdown or pseudo-code design which can be later refined.
-
-- Developer (Implementation) Subagent: This is Claude’s coding persona, akin to a software engineer writing code for the story. Once requirements and design are in place, the Developer subagent is invoked to implement the feature. It has access to the project’s codebase (the CLI can grant it file read/write tools limited to the \<project_dir>/ directory, for example) and possibly a shell tool to run compilation or basic checks. Its prompt includes coding standards, the project’s tech stack info, and instructions to follow the acceptance criteria closely (essentially, “build it right”). The Developer subagent writes code in small, verifiable steps – potentially guided by a plan or checklist. (Claude-Code’s best practices recommend breaking down tasks and even using internal checklists to ensure completeness ￼.) If permitted by settings, the Developer can auto-run linters or static analysis via hooks after each file edit (using Claude Code’s ability to run formatting hooks ￼). Tools: File editing, reading, and perhaps running code (with sandboxing). Notably, we keep the Developer agent’s scope constrained – it shouldn’t directly run tests or modify requirements; it focuses on implementation. This adherence to single-responsibility helps maintain structure.
-
-- QA/Test Subagent: This persona is in charge of verification and validation activities. In practice, we might split this into two sub-roles, but a single well-crafted QA agent can handle both writing tests (verification) and simulating user acceptance checks (validation). The QA subagent is invoked after development is done (or alongside, in a test-driven approach if we choose). Its tasks include: generating unit tests and integration tests that map to the acceptance criteria, running those tests, and reporting results. The system prompt instructs it to be rigorous – e.g. “verify every acceptance criterion with at least one test” – and to think like a tester (cover edge cases, negative cases). When it runs, the CLI can enable Claude’s Bash tool to execute test commands (e.g. running pytest or npm test in the project) within a safe environment ￼. This provides real feedback: did tests pass or fail, what errors occurred. The QA agent then suggests fixes if tests fail, or confirms validation if all pass. (In case of failures, control goes back to the Developer agent to fix the code, or the orchestrator can have the QA agent attempt a fix – depending on configuration for automatic vs. manual fix.) The QA subagent essentially covers the right side of the V-model: verifying the implementation against requirements in a tangible way. Tools: Shell access to run test suites, perhaps HTTP tools if needed to simulate external API calls, etc., but only within the testing scope. It might also use documentation or requirements as input to ensure traceability (e.g. it might read backlog.md to confirm it tested every criterion).
-
-- Integration & Deployment Subagent (Optional): In some cases, especially for larger systems, we might include a specialized agent to handle system integration or deployment tasks. This could be invoked at the end of a sprint or after multiple features have been built to ensure everything works together (e.g. perform system testing or package a release). Its persona would be a DevOps or integration engineer. It might run broader integration tests (across features) or prepare a demo environment. However, this role might be combined with the QA agent for simplicity unless the project is complex. We mention it for completeness as the V-Model often includes a dedicated integration phase ￼ (and even dedicated “integration sprints” for complex projects ￼). In AgileVerifFlowCC, integration testing can be triggered at any time (for example, a command agileverif test --all could instruct the QA agent to run the full test suite, not just new tests). So a separate subagent might not be strictly necessary – the orchestrator can orchestrate integration checks using the QA agent plus some scripting.
-
-Each subagent is implemented as a Claude persona with its own Markdown file definition (in .claude/agents/ for project-specific ones) containing a YAML frontmatter and detailed instructions ￼ ￼. For example, a requirements-agent.md with name: requirements-agent, a description trigger like “handles user story elaboration and acceptance criteria definition”, and a carefully written system prompt defining its approach. By storing these in the project (or user’s global config for reuse), we allow customization – teams can tweak an agent’s prompt as they learn what yields best results.
-
-Justification – Why subagents? This design aligns with Anthropic’s guidance of using subagents for complex workflows: it preserves context (each agent has a separate context window so the requirement details don’t get overwritten by code and vice versa) ￼, and provides specialized expertise (each agent’s prompt is optimized for its task, improving accuracy) ￼. Additionally, using subagents with limited tool permissions is a safety measure: e.g., the Requirements agent doesn’t need shell access, and the Developer agent doesn’t need internet, etc. This “least privilege” approach contains the impact of each phase and prevents errors from cascading widely ￼ ￼.
-
-Finally, to avoid the pitfalls of naïvely splitting tasks among agents, the orchestrator ensures that all subagents share essential context. For example, when the Developer agent runs, the orchestrator will feed it the requirements and design context (from files or memory) so it knows what to implement. Similarly, the QA agent gets both the code and the acceptance criteria to validate against. This addresses the concern highlighted by multi-agent research: if agents work in isolation without shared context, they risk misinterpreting the task or producing inconsistent results ￼ ￼. AgileVerifFlowCC avoids this by using the shared project memory and explicit prompt injection so that each subagent operates with knowledge of what came before. In summary, these subagents function like an AI project team, each with a clear role but all coordinated around the same unified project context.
-
-## File Structure and Toolchain
-
-A well-organized project structure will aid in maintaining the VerifFlowCC codebase. Below is a recommended file/directory layout and the technologies used:
-
-```text
-AgileVerifFlowCC/                   # Project root (could be a pip package)
-├── verifflowcc_cli.py        # Entry point for the CLI (argument parsing, main loop)
-├── agents/
-│   ├── planner_agent.py      # Opus 4.1 Planner agent logic (prompt templates, schema, API call)
-│   ├── design_agent.py       # Sonnet 4 Design agent logic
-│   ├── coding_agent.py       # Sonnet 4 Coding agent logic
-│   ├── testing_agent.py      # Sonnet 4 Testing agent logic (including test execution handling)
-│   └── validation_agent.py   # Sonnet/Opus Validation agent (or this could be part of planner_agent)
-├── prompts/
-│   ├── planner_prompt.jinja  # Jinja2 template for planning prompts (requirements & plan checklist)
-│   ├── design_prompt.jinja   # Template for design stage
-│   ├── coding_prompt.jinja   # Template for coding stage (e.g. with placeholders for file context)
-│   ├── testing_prompt.jinja  # Template for running tests or analyzing test output
-│   └── validation_prompt.jinja # Template for final validation queries
-├── schemas/
-│   ├── plan_schema.py        # Pydantic models for structured outputs (Plan, Task, etc.):contentReference[oaicite:125]{index=125}
-│   ├── code_schema.py        # (If needed) models for code change or diff representation
-│   └── test_schema.py        # Model for test results (pass/fail, failures list) etc.
-├── core/
-│   ├── orchestrator.py       # Implements the V-model workflow control (stage transitions, gating logic)
-│   ├── context_manager.py    # Handles context assembly, memory loading, and prompt injection:contentReference[oaicite:126]{index=126}
-│   ├── file_manager.py       # Handles file operations, git checkpoints, rollbacks:contentReference[oaicite:127]{index=127}
-│   ├── tool_interface.py     # Abstractions for MCP tool calls (shell execute, etc.)
-│   └── logger.py             # Structured logging and event tracing:contentReference[oaicite:128]{index=128}
-├── memory/
-│   └── CLAUDE.md             # Persistent memory file (project journal) loaded into contexts:contentReference[oaicite:129]{index=129}
-├── tests/                    # (Optional) internal tests for VerifFlowCC itself
-└── pyproject.toml/setup.py   # Project metadata, dependencies (Claude SDK, Pydantic, Jinja2, etc.)
+# 4) Verify Claude Code + SDK availability
+claude --help
+python -c "import claude_code_sdk; print('ok')"
 ```
 
-**Toolchain and Technologies:**
+**Prereqs:** Python ≥3.10, Node.js ≥18, Git. Set API keys for MCP servers you enable.
 
-- **Claude Code SDK:** VerifFlowCC now uses Anthropic's `claude-code-sdk` Python package to interface with the Claude models. This SDK provides methods to send prompts, handle streaming responses, and manage tool usage. All V-Model agents (Requirements Analyst, Architect, Developer, QA Tester, Integration) are fully integrated with the Claude Code SDK, supporting both live AI interaction and mock mode for testing. The SDK enables session persistence, context management, and quality validation across all development stages. Using the SDK ensures compatibility with Claude's latest features and simplifies authentication.
+______________________________________________________________________
 
-- **Jinja2:** All prompt templates are defined with Jinja2 for clarity and reuse. For example, `planner_prompt.jinja` might look like:
+## Quick Start
 
-  ```jinja
-  Please read the user story and acceptance criteria below, then output a YAML plan.
+```bash
+# Initialize Agile V&V scaffolding in the current repo (Sprint 0)
+uv run veriflowcc init
 
-  User Story:
-  {{ user_story }}
+# Plan the sprint
+uv run veriflowcc plan
 
-  Acceptance Criteria:
-  {% for crit in acceptance_criteria %} - {{ crit }}{% endfor %}
+# Run one sprint (next story in backlog)
+uv run veriflowcc sprint
 
-  Plan Format:
-  (Provide "Requirements", "DesignOutline", and "TaskList" as shown...)
+# Optional: interactive REPL session (pause/inspect/fix between gates)
+uv run veriflowcc repl
+```
 
-  ```
+```bash
+VeriFlowCC on  context-subagent-standardization [$✘!?] via 🐍 v3.8.0
+❯ uv run verifflowcc
+╭─────────────────────────────────────────────── Authentication Notice ───────────────────────────────────────────────╮
+│ Authentication Required: VeriFlowCC requires Claude Code authentication.                                            │
+│ Please configure through VeriFlow's guidelines before using this tool.                                              │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
-  At runtime, the context_manager fills in these templates with the actual user input and context. Using templates enforces consistency in how we ask things, making it easier for the model to follow our expected format.
+ Usage: verifflowcc [OPTIONS] COMMAND [ARGS]...
 
-- **Pydantic:** We utilize Pydantic for defining data models corresponding to the structured outputs and for validating AI responses. For instance, `PlanSchema` might have fields: `requirements: List[str]`, `tasks: List[Task]`, etc. After getting the Planner’s YAML/JSON output, we attempt to parse it via Pydantic. If it fails (due to model deviating from format), we can either correct the prompt or apply a retry logic (possibly asking the model to output JSON explicitly). Pydantic helps convert the free-form text into reliable Python objects that the orchestrator can use (e.g. iterating over tasks easily). This adds a layer of robustness given the unpredictability of LLM outputs.
+ VeriFlowCC - Agile V-Model development pipeline command center. Requires Claude Code authentication.
 
-- **Shell Integration (MCP & Subprocess):** For running tests or other commands, the toolchain includes either using **subprocess calls** (Python’s `subprocess.run`) or routing through Claude’s MCP. Since Claude Code supports a built-in bash tool, we could let the model invoke it. However, to keep more control, VerifFlowCC might intercept requests to run commands and run them itself. The `tool_interface.py` abstracts this: it could parse a special token or format in Claude’s output indicating a tool use (e.g. the model might respond with `<RUN> pytest</RUN>` or some agreed pattern), then the orchestrator (via tool_interface) executes that command locally and captures output to feed back. This approach is similar to how an agent framework would operate, ensuring the AI’s desire to use a tool is fulfilled in a safe manner. We will ensure that these calls are sandboxed (for example, using a testing database, not production DB, when running integration tests, etc.).
 
-- **Git for Checkpointing:** The file_manager uses Git for version control. It will initialize a repo if not already (or integrate with an existing one). Before major stages (end of coding, after fixes), it commits changes with a message. For rollback, it uses `git reset --hard HEAD~1` or keeps a pointer to the last good commit and resets to it. This leverages a well-tested tool (git) for preserving and restoring state, instead of writing our own backup system. Additionally, using git means the developer can inspect diffs and history outside the tool, and it dovetails into their normal workflow (they can push the commits to remote, etc.).
+╭─ Options ───────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --version  -v        Show version information                                                                       │
+│ --help               Show this message and exit.                                                                    │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ──────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ init         Initialize a new VeriFlowCC project.                                                                   │
+│ plan         Plan a new sprint with story selection and refinement.                                                 │
+│ sprint       Execute a sprint with the Agile V-Model workflow.                                                      │
+│ status       Show project status and current V-Model stage.                                                         │
+│ validate     Validate the current sprint against acceptance criteria.                                               │
+│ checkpoint   Create or manage checkpoints                                                                           │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
 
-- **Configuration & Extensibility:** The CLI could use a config file (e.g. `verifflowcc.config.yml`) to specify settings: which model versions to use (Opus vs Sonnet), authentication preferences, toggling auto-approval, etc. Tool integrations (like additional MCP servers for Jira, Figma, etc.) could also be configured here for future extension, but by default the tool focuses on the code/test scope.
+______________________________________________________________________
 
-**Dependencies:** Aside from the Claude SDK, Jinja2, Pydantic, and Git (which is external), we’d use standard libraries. If needed, we might use `rich` library to pretty-print things in the terminal (like coloring diffs or rendering the planning checklist with checkboxes for fun). The overall footprint should remain lightweight, as simplicity is a priority.
+## Why this exists
 
-This file structure and tech stack ensure that the project is maintainable: prompt templates are separate from code, agent logic is separated by concern, and everything converges in the orchestrator. Developers contributing to VerifFlowCC can easily find where to tweak a prompt or adjust how testing is executed, etc., without wading through one giant script. The use of widely adopted libraries (Jinja2, Pydantic) aligns with the goal of clarity and reliability in how we handle LLM I/O.
+- **Agentic Agile V&V**: Each V‑Model stage is driven by a dedicated Claude **sub‑agent** with scoped, template‑built context. Outputs are structured (docs, code, tests) and verified in‑loop.
+- **Dynamic context**: Prompts are composed at runtime from **Jinja2** templates + project memory (e.g., `CLAUDE.md`, run artifacts). The orchestrator injects only the relevant slices.
+- **Client‑side verification**: Generated code is linted, type‑checked, and tested locally (shell tools, test runners) before being accepted.
+- **Long‑context via MCP**: The **Model Context Protocol** exposes file systems, linters, search, planners, etc., as tools—letting agents read/write files, run checks, and persist plans **outside** the token window.
 
-## Observability and Checkpointing Features
+______________________________________________________________________
 
-VerifFlowCC includes robust observability to make its autonomous processes as transparent and controllable as possible:
+## Architecture (Orchestrator + Sub‑Agents)
 
-- **Structured Logging:** Every significant event is logged with details. This includes: prompts sent to the model (we might log a trimmed version or just the intent, to avoid huge logs), model responses, any tool commands executed and their outputs, and decisions made by the orchestrator (e.g. “Tests failed, triggering fix loop”). Logs are timestamped and categorized by stage. Using a structured format (e.g. JSON lines or YAML) for logs allows easy filtering – for example, a user could grep for `"stage": "TESTING"` to see all test-related actions. These logs could be written to a file (`verifflowcc.log`) for later review, or even just printed to console in debug mode. The key is **traceability** – one should be able to trace how a code change came to be by reading the logs, which is important in collaborative environments or when diagnosing an AI mistake.
-- **Live Progress Feedback:** During a run, the CLI provides live feedback to the user. For instance, as the Planner agent produces a checklist, the CLI could render it interactively (Claude Code’s UI shows a live checklist of actions in progress; in CLI we might simulate that by printing each task as it comes). During coding, we might show which files are being edited. During testing, we can stream test output or at least a progress bar. This keeps the developer engaged and aware of what the AI is doing, avoiding a “black box” feel. If something looks wrong (say the plan misses a requirement), the user can interrupt the process (Ctrl+C or a specific abort command) and intervene.
-- **Session Summary:** At the end of each session (or feature run), VerifFlowCC prints a **session summary** similar to Claude Code’s own summary. This includes the number of Claude API calls made, total tokens consumed (if available from the API usage info), time taken, and a recap of outcomes: e.g. “Plan generated, 3 files changed, all tests passed.” It may also include cost estimation (since we know Opus and Sonnet token pricing). For the developer, this provides immediate insight into efficiency, and for teams, it could be logged to track usage over time. The summary might also note if any steps required manual intervention (e.g. “User adjusted requirement 2 in planning stage”) as a mini post-mortem.
-- **Checkpoints & Rollback Mechanism:** As described, the tool creates checkpoints using git commits at key points. This not only allows rollback but also serves as an audit log of changes. Each commit message can reference the task from the plan it addressed (e.g. “Task 3: Implemented X, tests failing on Y”). If something goes awry and the user wants to undo the AI’s changes, they can use the CLI to rollback (e.g. `AgileVerifFlowCC rollback 1` to go to the previous checkpoint) or do it manually via git. The orchestrator itself will invoke rollback automatically on critical failures: for example, if after multiple fix attempts a test still fails, it might decide to rollback to the pre-coding state and ask the Planner to reconsider the approach (thus ensuring a bad partial implementation doesn’t pollute the codebase). The tool will clearly inform the user of such rollbacks: “Tests failed repeatedly, rolled back to last known good state. Please revise the requirements or design.” This prevents the codebase from entering a broken state.
-- **Error Handling and Alerts:** If the AI produces an output that triggers a safety rule or is invalid (say the coding agent tries to delete a critical file, or the plan is missing sections), the system will log a warning and either fix it or ask for user guidance. We will integrate Claude’s own safety signals if available (Anthropic models might return a flag if something unsafe was attempted). For instance, if a tool execution returns an error (like a test command crashes), that’s logged and presented to the AI for analysis, but also surfaced to the user in case it’s an environment issue (like “could not find `pytest` command”). The user is never left guessing what went wrong – the tool should always either handle it or explain it.
-- **Analytics & Metrics (future):** We can imagine adding optional telemetry, such as measuring how many iterations the fix loop usually takes, or success rate of tests first-pass. For now, these are out of scope, but the structured logs would allow computing such metrics. Another observability enhancement could be an interactive trace visualization (like outputting a Mermaid sequence diagram of what happened, generated from the logs). Given our comprehensive logging, such features could be built on top later.
+```
+User/CLI ──▶ Orchestrator
+               ├─ Requirements Agent
+               ├─ Architect Agent
+               ├─ Coder Agent
+               ├─ Lint/Fix Agent
+               ├─ Test Agent
+               └─ Validation Agent
 
-With these observability features, VerifFlowCC aims to be **developer-friendly and trustworthy**. The user should feel in control: they can see what the AI is planning and doing at each step, and they have mechanisms to intervene (approve, rollback, adjust inputs). The thorough logging and memory of decisions also means the process is **auditable** – important in production scenarios where one might need to review why the AI made a certain change (the decision will be in CLAUDE.md or in the commit message, etc., because we prompted it to explain as it goes). This transparency addresses one of the main concerns with agentic coding: by not hiding the agent’s chain-of-thought, we avoid the “opaque automation” problem and instead create a partnership between the human and the AI, with the tool as the facilitating framework.
+Persistence & Context:
+- Git history & checkpoints
+- Memory files (CLAUDE.md, plan.json, run logs)
+- Artifacts: {requirements.md, architecture.md, src/, tests/, reports/}
 
-## Conclusion
+Tooling layer:
+- MCP servers (files, planners, search, code exec, external APIs)
+- Local runners (pytest, ruff, mypy, pre-commit)
+```
 
-The VerifFlowCC CLI architecture combines the strengths of **Agile’s adaptability** with the **V-Model’s discipline**, using AI agents as intelligent collaborators in the development process. By employing a Planner-Orchestrator (Claude Opus 4.1) to strategize and specialized Worker agents (Claude Sonnet 4) to execute each development phase, the system ensures complex software tasks are broken down, tackled methodically, and rigorously verified. We applied _context engineering_ throughout – from Jinja-crafted prompts and isolated agent contexts to persistent memory logs – to keep the models focused and informed without overrunning their context limits. The result is an architecture that is **modular, extensible, and efficient** in token usage, as each agent sees just what it needs and nothing more.
+**Key ideas**
 
-Crucially, VerifFlowCC never loses sight of the developer’s oversight: every action is logged and check-pointed, and no code goes untested or unvalidated before moving forward. This enforces a quality bar that gives developers confidence in the AI’s contributions. Yet, the process remains _agile_ – by keeping iterations small (feature-focused) and allowing mid-course corrections (via user input or automated rollback), we avoid long cascades of errors and ensure the AI can quickly adapt to changes in requirements or design discoveries.
+- **Scoped prompts**: Each sub‑agent gets only the relevant inputs (requirements ⇒ design ⇒ code ⇒ tests).
+- **Write context, don’t just chat**: Persist decisions and artifacts; inject them on demand.
+- **Gating**: Advance to the next stage only when verification passes (configurable “soft/hard”).
 
-In summary, the designed architecture meets the project’s goals: it provides a **structured, agentic software generation** workflow that is **reliable and observable**, marries advanced Claude capabilities with practical engineering principles, and lays a foundation that can grow with future needs (new agents, more tools, bigger projects) thanks to its clarity and modularity. VerifFlowCC can become a powerful assistant for developers building production software, handling the heavy lifting of coding and verification while developers steer and supervise – ultimately speeding up development cycles without sacrificing quality.
+______________________________________________________________________
 
-**Sources:** The architectural concepts and best practices referenced here draw upon Anthropic’s documentation and community insights on Claude Code’s design and agent orchestration, ensuring that VerifFlowCC is built on proven foundations for effective AI-driven development. The emphasis on context management, tool integration, and sequential control are informed by state-of-the-art discussions in the AI dev community, aligning VerifFlowCC with the cutting edge of AI-assisted programming workflows.
+## Project Structure
 
-# Other resources
+```text
+.agilevv/                       # State & artifacts per sprint (requirements, test reports, summaries) generated by veriflowcc and its agents
+   ├─ README.md
+   ├─ catalog.yaml              # single source of truth: activities/steps/stories/releases
+   ├─ vision.md
+   ├─ story-map/
+   │  └─ story_map.md           # overview (table + Mermaid)
+   ├─ backlog/
+   │  └─ backlog.csv            # flattened view, easy to sort/filter
+   ├─ stories/                  # one file per story with acceptance criteria
+   │  └─ ACT-01/
+   │     └─ STEP-01/
+   │        └─ STO-0001.md
+   ├─ releases/
+   │  ├─ R1.yaml
+   │  └─ R2.yaml
+   ├─ roadmap/
+   │  └─ gantt.md
+   ├─ traceability.md           # story ↔ code ↔ test ↔ docs
+   └─ _generated/               # auto-indexes, don’t edit by hand
+.claude/                 # Agent instructions & Jinja2 prompt templates (role‑scoped)
+   ├─  settings.local.json  # Local overrides (MCP servers, verbosity, dry-run, etc.)
+   ├─ memory/              # durable notes (summaries, decisions) referenced across sprints
+   ├─ hooks/                 # pre/post user prompt hooks
+   ├─ commands/              # simple commands (create-spec, review-spec, etc.)
+   ├─ instructions/          # core instructions (V‑Model steps, pre-flight, spec review, etc.)
+   ├─ agents/                # role‑specific instructions + schemas
+   │  └─ generic/             # shared sub‑agents (file-creator, context-fetcher, etc.)
+   │  └─ teams/               # role-specific sub-agents (implementer, test-runner, etc.)
+.mcp.json                # MCP servers & tool discovery
+CLAUDE.md                # Project rules, coding conventions, FAQs (auto‑included by Claude Code)
+docs/                    # Human‑readable docs
+src/                      # Your source code (created/edited by agents within gated flow)
+   ├─ __init__.py
+   ├─ cli.py                  # Your main application entrypoint
+   ├─ templates/              # Jinja templates (if applicable)
+    ├─ contexts/            # Context templates (e.g., CLAUDE.md snippets, agent input/output, file excerpts)
+    ├─ instructions/        # Instruction templates (e.g., create-spec, test-plan, create-task, etc.). Dynamic version of .claude/instructions/core/
+    ├─ personas/            # Persona templates (e.g., requirements, architect, developer, tester, reviewer, etc.)
+    ├─ hooks/               # Hook templates (e.g., pre/post user prompt, etc.)
+    ├─ policies/            # Policy templates (e.g., security, compliance, etc.)
+    ├─ requirements/        # Requirement templates (e.g., functional, non-functional, etc.)
+    └─ agents/              # Agent templates
+         ├─ helpers/         # Shared partials (e.g., file creator, context fetcher, etc.)
+         └─ teams/           # Team‑specific templates (e.g., implementer, test-runner, code-reviewer, etc.)
+    ├─ standards/           # Project-wide standards (e.g., coding conventions, best practices)
+      ├─ <language>/         # Language-specific standards (e.g., python.md, js.md)
+      ├─ <domain>/           # Domain-specific standards (e.g., web.md, cli.md, api.md)
+      └─ <...>/              # Other categorizations as needed
+    ├─ tools/                # Tool usage templates (e.g., read, write, grep, glob, bash, etc.)
+   ├─ core/                   # Core logic for orchestration, V‑flow, and agent management
+    ├─ sessions/             # Claude Code session management
+    ├─ memory/               # Project memory management (summaries, decisions)
+    ├─ vmodel/               # V‑Model flow logic
+    └─ <...>/                # Other categorizations as needed
+    └─ orchestrator.py       # Main orchestrator logic for V‑Model flow
+   ├─ utils/                  # Utility functions
+   ├─ schemas/                # Pydantic models for agent IO validation
+   ├─ agents/                 # Custom agent logic (if any)
+   ├─ commands/               # CLI commands
+   ├─ validation/             # Validation logic
+    ├─ code/                 # Code validation (linting, type checking)
+    ├─ tests/                # Test validation (test discovery, execution)
+    ├─ vmodel/               # V‑Model specific validation
+    └─ project/              # Project‑specific validation (e.g., spec completeness)
+tests/                    # tests
+```
 
-- [Requirements](docs/requirements/README.md): Detailed requirements for the VerifFlowCC project
+______________________________________________________________________
+
+## Template Source of Truth → `.claude/` Generation
+
+**Canonical templates live in the *main project*** and define the **inputs/outputs**, **persona instructions**, **standards**, and **context‑preserving sub‑agent** prompts. The **CLI uses the Claude Code SDK** to instantiate a Claude session and **render concrete documents into `.claude/`** for the current repository.
+
+### Why this split?
+
+- Keep **authoritative templates** versioned centrally (reuse across projects).
+- Render **project‑specific instances** (with Jinja2 variables + memory) locally per repo.
+- Allow upgrades: bump templates in the main project → re‑render here with no manual editing.
+
+### How it works (at a glance)
+
+1. Orchestrator loads a **template manifest** from the main project (packaged path or `AGILEVV_TEMPLATE_ROOT`).
+1. Context is assembled (repo facts, backlog slice, memory summaries, file excerpts, failing traces).
+1. The **Claude Code SDK** session is created; prompts are built from Jinja2 templates.
+1. Outputs are **materialized under `.claude/`** (role folders + rendered instructions) and referenced by sub‑agents during the V‑flow.
+
+> **Override the template root:** set `AGILEVV_TEMPLATE_ROOT=/path/to/main-project/templates`
+> If unset, the packaged templates shipped with AgileVerifFlowCC are used.
+
+### Contract guarantees
+
+- **Idempotent:** safe to re‑run; only updates changed outputs.
+- **Deterministic:** same inputs → same output files.
+- **Validated:** rendered docs pass a schema check (Pydantic) before writing.
+
+## MCP: How we use it (and why)
+
+**What it gives us.** A **unified protocol** to connect agents to tools and data (filesystems, Git, linters, CI, web, DBs). Agents don’t need ad‑hoc integrations; they **discover** tools via `.mcp.json` and call them with a standard schema. This **solves the NxM “tool × model” problem**, keeps actions auditable, and lets us **externalize context** (read files, write memory, run tests) beyond the model’s token window.
+
+**Your `.mcp.json` example (drop‑in):**
+
+```jsonc
+{
+  "mcpServers": {
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "mcp-sequentialthinking-tools"],
+      "env": { "MAX_HISTORY_SIZE": "1000" }
+    },
+    "perplexity-ask": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "PERPLEXITY_API_KEY", "mcp/perplexity-ask"],
+      "env": { "PERPLEXITY_API_KEY": "TODO-API-KEY" }
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "type": "stdio"
+    },
+    "serena": {
+      "command": "uvx",
+      "args": [
+        "--from", "git+https://github.com/oraios/serena",
+        "serena-mcp-server",
+        "--context", "ide-assistant",
+        "--project", "${PWD}",
+        "--tool-timeout", "20",
+        "--mode", "planning",
+        "--mode", "one-shot",
+        "--enable-web-dashboard", "false"
+      ],
+      "type": "stdio"
+    },
+    "consult7": {
+      "command": "uvx",
+      "args": ["consult7", "google", "TODO-API-KEY"],
+      "type": "stdio"
+    }
+  }
+}
+```
+
+**Typical calls inside the flow:**
+
+- *Filesystem:* read/write source files, inject file fragments into prompts, persist “memory” summaries.
+- *Linters/formatters:* run Ruff/Black/pylint; return diagnostics + suggested fixes.
+- *Type checks/tests:* run mypy/pytest and capture exit codes, failing traces.
+- *Git:* `git diff` for review; checkpoint commits on green; branch per story.
+- *Web/research:* controlled lookups (Perplexity/Context7); unify notes into `docs/` for auditability.
+
+> **Design note:** Tools act as **ground truth**. The orchestrator trusts files, tests, and VCS state over model text. MCP makes those checks first‑class actions.
+
+______________________________________________________________________
+
+## Long‑Context Strategy
+
+1. **Write, don’t remember:** persist decisions into `CLAUDE.md` and `.agilevv/memory/`.
+1. **Select, don’t dump:** each sub‑agent’s prompt templates (Jinja2) inject only **relevant excerpts** (file slices, signatures, failing traces).
+1. **Summarize aggressively:** after each gate, compress outputs into step summaries for future sprints.
+1. **Verify continuously:** immediately run tests/linters on the client; sub‑agents fix until green.
+1. **Parallelize safely:** orchestrator can spawn independent sub‑agents (code‑gen, lint‑fix) and then merge diffs under Git discipline.
+
+> Even with very large model windows, **externalized state + selective injection** remains more reliable and cheaper than dumping entire codebases into prompts.
+
+______________________________________________________________________
+
+## CLI Commands
+
+```bash
+uv run veriflowcc init         # scaffold .agilevv/, .claude/, docs, example templates
+uv run veriflowcc plan         # make an executable plan for the next story (saved to state + memory)
+uv run veriflowcc sprint       # execute V‑Model gates for the current story
+uv run veriflowcc repl         # interactive, confirm actions between gates
+uv run veriflowcc status       # show artifacts, failing gates, next fixes
+uv run veriflowcc agent lint   # run lint/format sub‑agent via MCP + auto‑fix loop
+uv run veriflowcc agent test   # run test sub‑agent (pytest/mypy) with fix cycles
+uv run veriflowcc agent gen    # code generation sub‑agent for a specific file/pattern
+```
+
+All commands honor `--dry-run`, `--verbose`, and `--hard-gates` (block on failures).
+
+______________________________________________________________________
+
+## Templates & Contracts
+
+- **Prompt templates (`src/templates/*.j2`):** per role (requirements/design/dev/test/review). Keep **short, explicit** outputs (JSON/Pydantic models, diffs).
+- **Schemas (Pydantic):** define structures for requirements, design notes, test results, and diffs; the orchestrator validates every agent response.
+- **Memory rules:** what to persist (decisions, APIs, constants), where to read it, how to refresh summaries.
+
+```jinja2
+{# src/templates/dev_impl.j2 #}
+## Task: Implement {{ story.title }}
+### Acceptance criteria
+{% for c in story.criteria -%}
+- {{ c }}
+{%- endfor %}
+
+### Relevant code context
+{% for f in files -%}
+- {{ f.path }} — {{ f.summary }}
+{%- endfor %}
+
+### Output
+Return ONLY a unified diff (udiff) against the working tree.
+```
+
+______________________________________________________________________
+
+## Client‑Side Verification & Drift Guards
+
+In order to ensure code quality and consistency throughout the development process using hooks and VeriflowCC,
+Here is an example for a project using python, the following verification and drift guard measures are implemented:
+
+- **Lint & format**: `ruff`, `black`, **auto‑fix** via Lint/Fix agent, commit only on clean tree.
+- **Types**: `mypy` baseline enforced for changed files.
+- **Tests**: Run focused `pytest -k <story>` after Coder; full suite on `integration` stage.
+- **Token discipline**: cap context; summarize; prefer **file fetch via MCP** over raw text injection.
+- **Traceability**: Every tool run emits artifacts (logs, junit XML, coverage) into `reports/` and links in the run summary.
+
+______________________________________________________________________
+
+## Security & Safety
+
+- **Allowlist tools** only; prompt templates must never invoke arbitrary exec without user confirmation.
+- **Sandbox execution** (Docker/uvx) for risky tools.
+- **Git hygiene:** branch per story; checkpoint only on green; review diffs before merge.
+
+______________________________________________________________________
+
+## Roadmap
+
+- Full template library per role + domain‑specific variants
+- Rich **memory subsystem** (summaries, embeddings) with freshness policies
+- **Hard/soft gating** modes + policy file (per project)
+- Deeper MCP coverage (GitHub PRs, code search, LSIF/LSP hints)
+- **Interactive TUI/REPL** for explain/fix‑then‑continue workflows
+- Metrics dashboard (gate times, first‑pass success rate, rework cycles)
+- CI that replays a sprint on sample projects (self‑test)

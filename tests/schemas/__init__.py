@@ -1,1 +1,0 @@
-"""Tests for VeriFlowCC schemas."""

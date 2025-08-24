@@ -29,6 +29,8 @@ encoding: UTF-8
 
 - **Subagent inputs/outputs.** For steps with `<inputs_template>` or `<outputs_template>`, **strictly adhere** to the specified XML structure. Do not add/remove fields or change formats. If a required input is unavailable, **stop** and ask numbered questions.
 
+- **Main agent inputs/outputs.** For steps with `<inputs>` or `<outputs>`, **strictly adhere** to the specified XML structure. Do not add/remove fields or change formats. If a required input is unavailable, **stop** and ask numbered questions.
+
 - **Idempotency & duplication guards.** Reruns must not create duplicate lines/sections. When appending, prefer sentinels such as:
   - `<!-- AUTO:BEGIN <section-name> -->` … `<!-- AUTO:END <section-name> -->`
     and replace within those bounds on subsequent runs.
